@@ -6,6 +6,8 @@ import types
 import sys
 import os
 import io
+from pathlib import Path
+from urllib.parse import urlparse
 
 class GC(GirderClient):
 
@@ -98,16 +100,46 @@ def cli(folder, image_list_url, api_url, api_key):
     gc = GC(api_url=api_url, api_key=api_key)
     base_url = image_list_url.rsplit('/', 1)[0]
     # First fetch the image list
-    image_list_request = requests.get(image_list_url, stream=True)
-    for line in image_list_request.iter_lines():
-        line = line.decode()
-        # Try to fetch to see if we are dealing with a file or folder
-        r = requests.get('%s/%s' % (base_url, line))
+    image_list_request = requests.get(image_list_url)
 
-        if r.status_code == 200:
-            _process_file(gc, folder, r, line)
-        elif r.status_code == 403:
-            # folder
-            pass
-        else:
-            r.raise_for_status()
+    # Do we have a retry file from a previous run?
+    retry_filename = '.%s.adash' % urlparse(image_list_url).path.replace('/', '_')
+    retry_file_path = Path.home() / retry_filename
+    # The last file processed loaded from the retry file
+    retry_last_processed = None
+    if retry_file_path.exists():
+        with retry_file_path.open() as fp:
+            retry_last_processed = fp.readline()
+
+    # The last file processed on this run
+    last_processed = None
+    try:
+        for line in image_list_request.text.splitlines():
+
+            # Skip until we find the file we last processed
+            if retry_last_processed is not None and line != retry_last_processed:
+                continue
+            else:
+                retry_last_processed = None
+
+            # Try to fetch to see if we are dealing with a file or folder
+            r = requests.get('%s/%s' % (base_url, line))
+
+            if r.status_code == 200:
+                _process_file(gc, folder, r, line)
+            elif r.status_code == 403:
+                # folder
+                pass
+            else:
+                r.raise_for_status()
+
+            last_processed = line
+    except:
+        if last_processed is not None:
+            with retry_file_path.open('w') as fp:
+                fp.write(last_processed)
+        raise
+
+    # If we get to the end remove any retry file
+    if retry_file_path.exists():
+        retry_file_path.unlink()
