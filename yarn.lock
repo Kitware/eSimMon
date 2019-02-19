@@ -666,10 +666,9 @@
     lodash "^4.17.10"
     to-fast-properties "^2.0.0"
 
-"@girder/components@3.0.0-alpha.2":
+"@girder/components@https://github.com/girder/girder_web_components#a1fd25e68db54bfefba8108ffcde5a3f72ca4aa9":
   version "3.0.0-alpha.2"
-  resolved "https://registry.yarnpkg.com/@girder/components/-/components-3.0.0-alpha.2.tgz#100610f4a04164be0443262e679aad827faaa690"
-  integrity sha512-H87jen8sfcXF58Jaf7u4PKCJfXuXkJV7/a/O+/GKBQ7JJ3k1Gu45v3MOs98vhdco8GN7mVGiZx7uK35s2tjoPg==
+  resolved "https://github.com/girder/girder_web_components#a1fd25e68db54bfefba8108ffcde5a3f72ca4aa9"
   dependencies:
     "@mdi/font" "^2.8.94"
     axios "^0.18.0"
@@ -2697,7 +2696,7 @@ debug@=3.1.0:
   dependencies:
     ms "2.0.0"
 
-debug@^3.1.0, debug@^3.2.5:
+debug@^3.1.0, debug@^3.2.5, debug@^3.2.6:
   version "3.2.6"
   resolved "https://registry.yarnpkg.com/debug/-/debug-3.2.6.tgz#e83d17de16d8a7efb7717edbe5fb10135eee629b"
   integrity sha512-mel+jf7nrtEl5Pn1Qx46zARXKDpBbvzezse7p7LqINmdoIk8PYP5SySaxEmYv6TZ0JyEKA1hsCId6DIhgITtWQ==
@@ -3653,12 +3652,19 @@ flush-write-stream@^1.0.0:
     inherits "^2.0.3"
     readable-stream "^2.3.6"
 
-follow-redirects@^1.0.0, follow-redirects@^1.3.0:
+follow-redirects@^1.0.0:
   version "1.6.1"
   resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.6.1.tgz#514973c44b5757368bad8bddfe52f81f015c94cb"
   integrity sha512-t2JCjbzxQpWvbhts3l6SH1DKzSrx8a+SsaVf4h6bG4kOXUuPYS/kg2Lr4gQSb7eemaHqJkOThF1BGyjlUkO1GQ==
   dependencies:
     debug "=3.1.0"
+
+follow-redirects@^1.3.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.7.0.tgz#489ebc198dc0e7f64167bd23b03c4c19b5784c76"
+  integrity sha512-m/pZQy4Gj287eNy94nivy5wchN3Kp+Q5WgUPNy5lJSZ3sgkVKSYV/ZChMAQVIgx1SqfZ2zBZtPA2YlXIWxxJOQ==
+  dependencies:
+    debug "^3.2.6"
 
 for-in@^0.1.3:
   version "0.1.8"
@@ -8423,9 +8429,9 @@ void-elements@^2.0.1:
   integrity sha1-wGavtYK7HLQSjWDqkjkulNXp2+w=
 
 vue-async-computed@^3.4.1:
-  version "3.5.2"
-  resolved "https://registry.yarnpkg.com/vue-async-computed/-/vue-async-computed-3.5.2.tgz#8909770b94d4b3870d07ad538690702ac365c11c"
-  integrity sha512-PoLY788L5YJ+xOggmGqoxMgJoRlVAYoa5e1rXa8/W9knGZIJusALApNFsrfAeo7FaD2s5ZB5ato6D8QJ847zhw==
+  version "3.6.1"
+  resolved "https://registry.yarnpkg.com/vue-async-computed/-/vue-async-computed-3.6.1.tgz#6b790e2125347c678d1b82b10a5b03b41d7b86d0"
+  integrity sha512-8FFDTqfdvKrzK5Fr7nNHZgP6sQ2hTUELTrLn25i8VW/g06MztD+FOe1gs0RYVpRkPlcrykf2hbJxNYra1c4OGg==
 
 vue-cli-plugin-vuetify@^0.4.6:
   version "0.4.6"
@@ -8505,10 +8511,15 @@ vuetify-loader@^1.0.5:
   dependencies:
     loader-utils "^1.1.0"
 
-vuetify@^1.3.0, vuetify@^1.3.8:
+vuetify@^1.3.0:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-1.5.1.tgz#422e0ec31c080494446559bfcf0b0ba0c749f74e"
   integrity sha512-f/9al/DZzUEk5YWNaF/AMRZEQViSBjIqx/fRz6DF397O/rCOZt1VnjmqHqQizioiWy6M2zWVbrUvx4pCfQK3Ig==
+
+vuetify@^1.3.8:
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-1.5.2.tgz#7563b3ff4b7305f2dff724873f70b024f3672d96"
+  integrity sha512-OzXHXklOpfYufV1l8v/av99gty6osJ/acTKqd/4CsRPOW+eyJA4nABXWk+4Qm9eAF/Uuf/fSHOprv4donvTeLw==
 
 watchpack@^1.5.0:
   version "1.6.0"

@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Vuetify from 'vuetify/lib'
-import Girder, { utils, RestClient } from '@girder/components';
+import Girder, { utils, RestClient } from '@girder/components/src';
 
 let vuetifyConfig = utils.vuetifyConfig;
 vuetifyConfig.icons.logout = 'mdi-logout';
