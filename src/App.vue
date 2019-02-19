@@ -1,7 +1,6 @@
 <template lang="pug">
 v-app.app
   v-toolbar
-    v-toolbar-title Controls
     v-spacer
     v-toolbar-items
       v-layout.pt-3(row, align-center, justify-center)
@@ -17,42 +16,60 @@ v-app.app
     v-card
       image-gallery(ref="girderBrowser",
           v-if="itemId",
-          :itemId.sync="itemId",
-          )
+          :itemId.sync="itemId")
+      girder-data-browser(ref="girderBrowser",
+          v-if="location",
+          v-on:itemclick="setItem",
+          :location.sync="location",
+          :select-enabled="selectEnabled",
+          :new-item-enabled="newItemEnabled",
+          :new-folder-enabled="newFolderEnabled")
 </template>
 
 <script>
 import ImageGallery from './components/ImageGallery.vue'
-import {Authentication as GirderAuth} from '@girder/components/src/components';
+import {
+  Authentication as GirderAuth,
+  DataBrowser as GirderDataBrowser,
+} from '@girder/components/src/components';
 
 export default {
   name: 'App',
   inject: ['girderRest'],
   components: {
+    GirderAuth,
+    GirderDataBrowser,
     ImageGallery,
-    GirderAuth
   },
   data() {
     return {
-      multiple: true,
-      uploader: false,
-      newFolder: false,
       browserLocation: null,
       forgotPasswordUrl: '/#?dialog=resetpassword',
       item: null,
+      itemId: null,
+      selectEnabled: false,
+      newItemEnabled: false,
+      newFolderEnabled: false,
     };
   },
   asyncComputed: {
     async get() {
-      const endpoint = `item/${this.itemId}`;
-      const response = await this.girderRest.get(endpoint);
-      this.item = response.data;
+      if (this.itemId) {
+        const endpoint = `item/${this.itemId}`;
+        const response = await this.girderRest.get(endpoint);
+        this.item = response.data;
+      }
     }
   },
   computed: {
-    itemId: {
+    location: {
       get() {
-        return '5c5b45a38d777f072b2fd21d';
+        if (this.browserLocation) {
+          return this.browserLocation;
+        } else if (this.girderRest.user) {
+          return { _modelType: 'collection', _id: '5c5b42678d777f072b2f955c' };
+        }
+        return null;
       },
       set(newVal) {
         this.browserLocation = newVal;
@@ -62,12 +79,10 @@ export default {
       return this.girderRest.user === null;
     },
   },
+  methods: {
+    setItem: function (item) {
+      this.itemId = item._id;
+    }
+  }
 };
 </script>
-
-<style lang="scss">
-.app {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-</style>
