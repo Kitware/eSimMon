@@ -6,7 +6,7 @@ let vuetifyConfig = utils.vuetifyConfig;
 vuetifyConfig.icons.logout = 'mdi-logout';
 Vue.use(Vuetify, vuetifyConfig);
 Vue.use(Girder);
-const girderRest = new RestClient({ apiRoot: 'https://data.kitware.com/api/v1' });
+const girderRest = new RestClient({ apiRoot: `${window.location}/api/v1` });
 
 import App from './App.vue'
 
