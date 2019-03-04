@@ -1,7 +1,7 @@
 version: '2'
 services:
   adash-app:
-    image: cjh1/adash
+    image: kitware/adios-dashboard
     build:
       context: ../../
       dockerfile: devops/docker/nginx/Dockerfile
