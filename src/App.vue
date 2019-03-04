@@ -16,7 +16,8 @@ v-app.app
     v-card
       image-gallery(ref="girderBrowser",
           v-if="itemId",
-          :itemId.sync="itemId")
+          :itemId.sync="itemId",
+          :key="itemId")
       girder-data-browser(ref="girderBrowser",
           v-if="location",
           v-on:itemclick="setItem",
