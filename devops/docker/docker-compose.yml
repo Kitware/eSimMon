@@ -1,0 +1,9 @@
+version: '2'
+services:
+  adash-app:
+    image: kitware/adios-dashboard
+    build:
+      context: ../../
+      dockerfile: devops/docker/nginx/Dockerfile
+    ports:
+      - 80:80
