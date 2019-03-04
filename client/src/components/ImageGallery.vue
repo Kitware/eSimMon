@@ -25,8 +25,8 @@ export default {
     };
   },
   asyncComputed: {
-    counts: {
-      default: { nRows: 0 },
+    rows: {
+      default: [],
       async get() {
         const endpoint = `item/${this.itemId}/files?limit=0`;
         const response = await this.girderRest.get(endpoint);
@@ -36,41 +36,27 @@ export default {
             name: val.name
           };
         }, this);
-
-        return {
-          nRows: this.rows.length || 0
-        };
+        return this.rows;
       },
     },
   },
-  watch: {
-    async counts() {
-      this.rows = await this.fetchPaginatedRows();
-    },
-  },
-  methods: {
-    async fetchPaginatedRows() {
-      if (!this.counts.nRows) {
-        return [];
-      }
-      return this.rows;
-    }
-  },
+
   updated () {
     if (this.rows.length < 1) {
       return;
     }
-    if (!this.galleryRendered) {
-      $('.gallery').slick({
-        autoplay: true,
-        autoplaySpeed: 1500,
-        dots: true,
-        dotsClass: 'gallery-dots',
-        lazyLoad: 'ondemand',
-        speed: 0
-      });
-      this.galleryRendered = true;
+    if (this.galleryRendered) {
+      $('.gallery').slick('unslick');
     }
+    $('.gallery').slick({
+      autoplay: true,
+      autoplaySpeed: 1000,
+      dots: true,
+      dotsClass: 'gallery-dots',
+      lazyLoad: 'progressive',
+      speed: 0
+    });
+    this.galleryRendered = true;
   },
 };
 </script>
