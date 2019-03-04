@@ -63,10 +63,10 @@ export default {
     if (!this.galleryRendered) {
       $('.gallery').slick({
         autoplay: true,
-        autoplaySpeed: 1500,
+        autoplaySpeed: 1000,
         dots: true,
         dotsClass: 'gallery-dots',
-        lazyLoad: 'ondemand',
+        lazyLoad: 'progressive',
         speed: 0
       });
       this.galleryRendered = true;
