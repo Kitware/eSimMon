@@ -1,0 +1,37 @@
+ul.gallery-dots {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  padding-left: 30px;
+  padding-right: 30px;
+
+  li {
+    display: table-cell;
+    width: auto;
+    text-align: center;
+
+    button {
+      background-color: #eee;
+      cursor: pointer;
+      height: 10px;
+      width: 10px;
+      font-size: 0;
+      &:hover {
+        background-color: #000;
+      }
+    }
+  }
+  li.slick-active button {
+    background-color: #000;
+  }
+}
+
+.slide img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.slide p {
+  text-align: center;
+}
