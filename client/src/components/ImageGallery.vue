@@ -53,7 +53,7 @@ export default {
       autoplaySpeed: 1000,
       dots: true,
       dotsClass: 'gallery-dots',
-      lazyLoad: 'progressive',
+      lazyLoad: 'anticipated',
       speed: 0
     });
     this.galleryRendered = true;
