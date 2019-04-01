@@ -35,3 +35,16 @@ ul.gallery-dots {
 .slide p {
   text-align: center;
 }
+
+.slick-dotted.slick-slider {
+  margin-bottom: 0px;
+}
+
+div.controls button {
+  margin: auto;
+  display: block;
+  outline: 0;
+  span {
+    font-size: 20px;
+  }
+}

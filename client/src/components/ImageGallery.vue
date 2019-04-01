@@ -1,8 +1,13 @@
 <template lang="pug">
-div.gallery
-  div.slide(v-for="row in rows")
-    img(v-bind:data-lazy="row.img")
-    p {{row.name}}
+div
+  div.gallery
+    div.slide(v-for="row in rows")
+      img(v-bind:data-lazy="row.img")
+      p {{row.name}}
+  div.controls
+    button(v-on:click="togglePlayPause")
+      span(v-show="paused") &#9654;
+      span(v-show="!paused") &#9208;
 </template>
 
 <script>
@@ -20,10 +25,28 @@ export default {
   inject: ['girderRest'],
   data() {
     return {
-      rows: [],
       galleryRendered: false,
+      itemIdChanged: true,
+      paused: false,
+      rows: [],
     };
   },
+
+  methods: {
+    togglePlayPause() {
+      if (this.paused) {
+        $('.gallery')
+          .slick('slickPlay')
+          .slick('slickSetOption', 'pauseOnDotsHover', true);
+      } else {
+        $('.gallery')
+          .slick('slickPause')
+          .slick('slickSetOption', 'pauseOnDotsHover', false);
+      }
+      this.paused = !this.paused;
+    },
+  },
+
   asyncComputed: {
     rows: {
       default: [],
@@ -41,8 +64,17 @@ export default {
     },
   },
 
+  watch: {
+    itemId: {
+      immediate: true,
+      handler () {
+        this.itemIdChanged = true;
+      }
+    }
+  },
+
   updated () {
-    if (this.rows.length < 1) {
+    if (!this.itemIdChanged || this.rows.length < 1) {
       return;
     }
     if (this.galleryRendered) {
@@ -53,10 +85,13 @@ export default {
       autoplaySpeed: 1000,
       dots: true,
       dotsClass: 'gallery-dots',
-      lazyLoad: 'progressive',
+      lazyLoad: 'anticipated',
+      pauseOnHover: false,
+      pauseOnFocus: false,
       speed: 0
     });
     this.galleryRendered = true;
+    this.itemIdChanged = false;
   },
 };
 </script>
