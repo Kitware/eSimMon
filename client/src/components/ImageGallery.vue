@@ -1,13 +1,15 @@
 <template lang="pug">
-div
-  div.gallery
-    div.slide(v-for="row in rows")
-      img(v-bind:data-lazy="row.img")
-      p {{row.name}}
-  div.controls
-    button(v-on:click="togglePlayPause")
-      span(v-show="paused") &#9654;
-      span(v-show="!paused") &#9208;
+v-card.vertical-center(height="300px"
+       v-on:drop="loadGallery($event)"
+       v-on:dragover="preventDefault($event)")
+  v-card-title(v-if="item") {{item.name}}
+  v-card-text.text-xs-center
+    div(v-if="itemId")
+      div(v-bind:class="'gallery-' + uid")
+        div.slide(v-for="row in rows")
+          img(v-bind:data-lazy="row.img")
+          p {{row.name}}
+    v-icon(v-if="!itemId" large) input
 </template>
 
 <script>
@@ -17,40 +19,36 @@ import('slick-carousel');
 
 export default {
   props: {
-    itemId: {
+    currentTimeStep: {
+      type: Number,
+      required: true
+    },
+
+    uid: {
       type: String,
       required: true
-    }
-  },
-  inject: ['girderRest'],
-  data() {
-    return {
-      galleryRendered: false,
-      itemIdChanged: true,
-      paused: false,
-      rows: [],
-    };
+    },
   },
 
-  methods: {
-    togglePlayPause() {
-      if (this.paused) {
-        $('.gallery')
-          .slick('slickPlay')
-          .slick('slickSetOption', 'pauseOnDotsHover', true);
-      } else {
-        $('.gallery')
-          .slick('slickPause')
-          .slick('slickSetOption', 'pauseOnDotsHover', false);
-      }
-      this.paused = !this.paused;
-    },
+  inject: ['girderRest'],
+
+  data() {
+    return {
+      item: null,
+      itemId: null,
+      itemIdChanged: true,
+      galleryRendered: false,
+      rows: [],
+    };
   },
 
   asyncComputed: {
     rows: {
       default: [],
       async get() {
+        if (!this.itemId) {
+          return [];
+        }
         const endpoint = `item/${this.itemId}/files?limit=0`;
         const response = await this.girderRest.get(endpoint);
         this.rows = response.data.map(function(val) {
@@ -59,18 +57,34 @@ export default {
             name: val.name
           };
         }, this);
+        // Not sure why this level of parent chaining is required
+        // to get the app to be able to hear the event.
+        this.$parent.$parent.$emit("data-loaded", this.rows.length);
         return this.rows;
       },
     },
   },
 
   watch: {
+    currentTimeStep: {
+      immediate: true,
+      handler () {
+        $(this.selector)
+          .slick('slickGoTo', this.currentTimeStep, true);
+      }
+    },
     itemId: {
       immediate: true,
       handler () {
         this.itemIdChanged = true;
       }
-    }
+    },
+    uid: {
+      immediate: true,
+      handler () {
+        this.selector = '.gallery-' + this.uid;
+      },
+    },
   },
 
   updated () {
@@ -78,20 +92,28 @@ export default {
       return;
     }
     if (this.galleryRendered) {
-      $('.gallery').slick('unslick');
+      $(this.selector).slick('unslick');
     }
-    $('.gallery').slick({
-      autoplay: true,
-      autoplaySpeed: 1000,
-      dots: true,
-      dotsClass: 'gallery-dots',
+    $(this.selector).slick({
+      arrows: false,
+      autoplay: false,
+      dots: false,
       lazyLoad: 'anticipated',
-      pauseOnHover: false,
-      pauseOnFocus: false,
-      speed: 0
     });
     this.galleryRendered = true;
     this.itemIdChanged = false;
+  },
+
+  methods: {
+    preventDefault: function (event) {
+      event.preventDefault();
+    },
+
+    loadGallery: function (event) {
+      event.preventDefault();
+      var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
+      this.itemId = items[0];
+    },
   },
 };
 </script>
