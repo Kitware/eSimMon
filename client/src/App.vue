@@ -14,7 +14,7 @@ v-app.app.pr-3
         :forgot-password-url="forgotPasswordUrl")
   v-layout(row fluid)
     // Navigation panel on the left.
-    v-flex(xs3)
+    v-flex(xs2)
       girder-data-browser(ref="girderBrowser",
           v-if="location",
           :location.sync="location",
@@ -23,7 +23,7 @@ v-app.app.pr-3
           :new-folder-enabled="false",
           :draggable="true")
     // Everything else on the right.
-    v-flex(xs9)
+    v-flex(xs10)
       // 2x2 image gallery.
       template(v-for="i in numrows")
         v-layout(row)
