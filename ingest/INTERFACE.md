@@ -1,12 +1,10 @@
 # Proposed Static Site Interface
-The basic idea here is to provide a simple hierarchy of JSON files that mimick a RESTful API. These can be used to monitor a number of runs and the parameters assocated with the runs. By breaking things down into a hierarchy the idea is that any of the individual files shouldn't get too large, so they can be fetched and parsed quickly within a polling loop.
+The basic idea here is to provide a simple hierarchy of JSON files that mimick a RESTful API. These can be used to monitor a number of runs and the variables assocated with the runs. By breaking things down into a hierarchy the idea is that any of the individual files shouldn't get too large, so they can be fetched and parsed quickly within a polling loop.
 
 ` /runs/index.json` - The list of runs to monitor. This the top level file that will be monitored to identify which runs should be monitored.
 
 ```json
-{
-    "runs": ["<runName1>", "<runNameN>"]
-}
+["<runName1>", "<runNameN>"]
 ```
 
 `/runs/<runName>/meta.json` - Any metadata assocated with the run. 
@@ -25,15 +23,13 @@ The basic idea here is to provide a simple hierarchy of JSON files that mimick a
 }
 ```
 
-`/runs/<runName>/parameters/index.json` - The list of parameters associated with the run.
+`/runs/<runName>/variables/index.json` - The list of variables associated with the run.
 
 ```json
-{
-    "parameters": ["parameter1", "parameterN"]
-}
+["variable1", "variableN"]
 ```
 
-`/runs/<runName>/parameters/<parameterName>/meta.json` - Any metadata associated with the parameter.
+`/runs/<runName>/variables/<variableName>/meta.json` - Any metadata associated with the variable.
 
 ```json
 {
@@ -42,4 +38,4 @@ The basic idea here is to provide a simple hierarchy of JSON files that mimick a
 }
 ```
 
-`/runs/<runName>/parameters/<parameterName>/images/<timestep>.png` - The image associated with this particular parameter.
+`/runs/<runName>/variables/<variableName>/images/<timestep>.png` - The image associated with this particular variable.
