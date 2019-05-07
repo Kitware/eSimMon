@@ -1,12 +1,5 @@
 <template lang="pug">
 v-app.app.pr-3
-  // Header bar with "Logout" button
-  v-toolbar
-    v-spacer
-    v-toolbar-items
-      v-layout.pt-3(row, align-center, justify-center)
-      v-btn(flat, icon, @click="girderRest.logout()")
-        v-icon $vuetify.icons.logout
   v-dialog(:value="loggedOut", persistent, full-width, max-width="600px")
     girder-auth(
         :register="true",
@@ -33,24 +26,27 @@ v-app.app.pr-3
                 v-bind:uid="i + '-' + j",
                 :currentTimeStep.sync="currentTimeStep")
       // Playback controls.
-      v-layout(row fluid).mt-3.mb-0
+      v-layout(row fluid).mt-0.mb-0
         v-flex(xs1)
-          v-btn(v-on:click="decrementTimeStep(true)"
-                :disabled="!dataLoaded"
-                flat icon)
-            v-icon arrow_back_ios
+          div.text-xs-center
+            v-btn(v-on:click="decrementTimeStep(true)"
+                  :disabled="!dataLoaded"
+                  flat icon small)
+              v-icon arrow_back_ios
         v-flex(xs10)
           v-slider(v-model="currentTimeStep"
                    :max="maxTimeStep"
                    :disabled="!dataLoaded"
                    width="100%"
+                   height="1px"
                    thumb-label="always")
         v-flex(xs1)
-          v-btn(v-on:click="incrementTimeStep(true)"
-                :disabled="!dataLoaded"
-                flat icon)
-            v-icon arrow_forward_ios
-      v-layout(row fluid).mt-0
+          div.text-xs-center
+            v-btn(v-on:click="incrementTimeStep(true)"
+                  :disabled="!dataLoaded"
+                  flat icon small)
+              v-icon arrow_forward_ios
+      v-layout(row fluid).mt-0.mb-0
         v-flex(xs12)
           div.controls.text-xs-center
             button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
