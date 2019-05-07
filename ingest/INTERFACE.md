@@ -15,7 +15,7 @@ The basic idea here is to provide a simple hierarchy of JSON files that mimick a
     "keyN": "valueN"
 }
 ```
-` /runs/<runName>/timestep.json` - The current timestep associated with this run. This would be monitored to determine when a new timestep is available for this run. -1 could be using to indicate that this run is complete, so monitoring of this run can be stopped.
+` /runs/<runName>/timestep.json` - The current timestep associated with this run. This would be monitored to determine when a new timestep is available for this run. -1 could be using to indicate that this run is complete, so monitoring of this run can be stopped. Note that the current timestep should be incremented after all the files associated with the timestep have been written.
 
 ```json
 {
@@ -29,7 +29,7 @@ The basic idea here is to provide a simple hierarchy of JSON files that mimick a
 ["variable1", "variableN"]
 ```
 
-`/runs/<runName>/variables/<variableName>/meta.json` - Any metadata associated with the variable.
+`/runs/<runName>/variables/<variableName>/meta.json` - Any metadata associated with the variable. One example of a useful piece of metadata would be the 'stride' of the variable ( if its available ), as in, is a image for this parameter produced every timestep or every N timesteps.
 
 ```json
 {
