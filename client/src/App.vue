@@ -73,6 +73,8 @@ v-app.app.pr-3
                     :disabled="numcols > 7"
                     flat icon small)
                 span +
+              v-btn(flat icon small @click="girderRest.logout()")
+                v-icon $vuetify.icons.logout
 </template>
 
 <script>
