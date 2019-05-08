@@ -47,12 +47,32 @@ v-app.app.pr-3
                     flat icon small)
                 v-icon arrow_forward_ios
         v-layout(row fluid).mt-0.mb-0
-          v-flex(xs12)
+          v-flex(shrink)
+              v-btn(v-on:click="removeRow()"
+                    :disabled="numrows < 2"
+                    flat icon small)
+                span -
+              span rows
+              v-btn(v-on:click="addRow()"
+                    :disabled="numrows > 7"
+                    flat icon small)
+                span +
+          v-flex(grow)
             div.controls.text-xs-center
               button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
               button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
                 span(v-show="paused") &#9654;
                 span(v-show="!paused") &#9208;
+          v-flex(shrink)
+              v-btn(v-on:click="removeColumn()"
+                    :disabled="numcols < 2"
+                    flat icon small)
+                span -
+              span cols
+              v-btn(v-on:click="addColumn()"
+                    :disabled="numcols > 7"
+                    flat icon small)
+                span +
 </template>
 
 <script>
@@ -86,6 +106,14 @@ export default {
   },
 
   methods: {
+    addColumn() {
+      this.numcols += 1;
+    },
+
+    addRow() {
+      this.numrows += 1;
+    },
+
     decrementTimeStep(should_pause) {
       this.currentTimeStep -= 1;
       if (this.currentTimeStep < 0) {
@@ -112,6 +140,14 @@ export default {
       }
       this.dataLoaded = true;
       this.maxTimeStep = num_timesteps - 1;
+    },
+
+    removeColumn() {
+      this.numcols -= 1;
+    },
+
+    removeRow() {
+      this.numrows -= 1;
     },
 
     tick() {
