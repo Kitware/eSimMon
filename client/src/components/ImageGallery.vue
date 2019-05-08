@@ -4,7 +4,6 @@ v-card.vertical-center(
        width="300px"  min-width="300px"
        v-on:drop="loadGallery($event)"
        v-on:dragover="preventDefault($event)")
-  v-card-title(v-if="item") {{item.name}}
   v-card-text.text-xs-center
     div(v-if="itemId")
       div(v-bind:class="'gallery-' + uid")
@@ -36,7 +35,6 @@ export default {
 
   data() {
     return {
-      item: null,
       itemId: null,
       itemIdChanged: true,
       galleryRendered: false,
