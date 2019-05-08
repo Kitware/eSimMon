@@ -25,33 +25,34 @@ v-app.app.pr-3
               v-bind:uid="i + '-' + j",
               :currentTimeStep.sync="currentTimeStep")
       // Playback controls.
-      v-layout(row fluid).mt-0.mb-0
-        v-flex(xs1)
-          div.text-xs-center
-            v-btn(v-on:click="decrementTimeStep(true)"
-                  :disabled="!dataLoaded"
-                  flat icon small)
-              v-icon arrow_back_ios
-        v-flex(xs10)
-          v-slider(v-model="currentTimeStep"
-                   :max="maxTimeStep"
-                   :disabled="!dataLoaded"
-                   width="100%"
-                   height="1px"
-                   thumb-label="always")
-        v-flex(xs1)
-          div.text-xs-center
-            v-btn(v-on:click="incrementTimeStep(true)"
-                  :disabled="!dataLoaded"
-                  flat icon small)
-              v-icon arrow_forward_ios
-      v-layout(row fluid).mt-0.mb-0
-        v-flex(xs12)
-          div.controls.text-xs-center
-            button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
-            button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
-              span(v-show="paused") &#9654;
-              span(v-show="!paused") &#9208;
+      div.playback-controls
+        v-layout(row fluid).mt-0.mb-0
+          v-flex(xs1)
+            div.text-xs-center
+              v-btn(v-on:click="decrementTimeStep(true)"
+                    :disabled="!dataLoaded"
+                    flat icon small)
+                v-icon arrow_back_ios
+          v-flex(xs10)
+            v-slider(v-model="currentTimeStep"
+                     :max="maxTimeStep"
+                     :disabled="!dataLoaded"
+                     width="100%"
+                     height="1px"
+                     thumb-label="always")
+          v-flex(xs1)
+            div.text-xs-center
+              v-btn(v-on:click="incrementTimeStep(true)"
+                    :disabled="!dataLoaded"
+                    flat icon small)
+                v-icon arrow_forward_ios
+        v-layout(row fluid).mt-0.mb-0
+          v-flex(xs12)
+            div.controls.text-xs-center
+              button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
+              button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
+                span(v-show="paused") &#9654;
+                span(v-show="!paused") &#9208;
 </template>
 
 <script>

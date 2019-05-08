@@ -67,3 +67,12 @@ table.v-table tbody td {
 .main-content {
   overflow-x: scroll;
 }
+
+// Float the control panel at the bottom of the screen.
+.playback-controls {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(225, 225, 225, 0.375);
+}
