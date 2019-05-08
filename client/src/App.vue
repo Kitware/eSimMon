@@ -16,15 +16,14 @@ v-app.app.pr-3
           :new-folder-enabled="false",
           :draggable="true")
     // Everything else on the right.
-    v-flex(xs10)
-      // 2x2 image gallery.
+    v-flex.main-content(xs10)
+      // image gallery grid.
       template(v-for="i in numrows")
         v-layout(row)
           template(v-for="j in numcols")
-            v-flex(xs6)
-              image-gallery(
-                v-bind:uid="i + '-' + j",
-                :currentTimeStep.sync="currentTimeStep")
+            image-gallery(
+              v-bind:uid="i + '-' + j",
+              :currentTimeStep.sync="currentTimeStep")
       // Playback controls.
       v-layout(row fluid).mt-0.mb-0
         v-flex(xs1)

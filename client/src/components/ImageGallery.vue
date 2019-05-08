@@ -1,5 +1,7 @@
 <template lang="pug">
-v-card.vertical-center(height="300px"
+v-card.vertical-center(
+       height="300px" min-height="300px"
+       width="300px"  min-width="300px"
        v-on:drop="loadGallery($event)"
        v-on:dragover="preventDefault($event)")
   v-card-title(v-if="item") {{item.name}}

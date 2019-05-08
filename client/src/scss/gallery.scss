@@ -58,7 +58,12 @@ div.controls button {
   height: 100%;
 }
 
+// Make text smaller in the data browser.
 table.v-table tbody td {
   font-size: 0.5rem;
 }
 
+// Scroll horizontal scrollbar for gallery grid.
+.main-content {
+  overflow-x: scroll;
+}
