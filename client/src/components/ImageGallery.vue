@@ -1,7 +1,6 @@
 <template lang="pug">
 v-card.vertical-center(
-       height="300px" min-height="300px"
-       width="300px"  min-width="300px"
+       height="100%"
        v-on:drop="loadGallery($event)"
        v-on:dragover="preventDefault($event)")
   v-card-text.text-xs-center

@@ -18,12 +18,14 @@ v-app.app.pr-3
     // Everything else on the right.
     v-flex.main-content(xs10)
       // image gallery grid.
-      template(v-for="i in numrows")
-        v-layout(row)
-          template(v-for="j in numcols")
-            image-gallery(
-              v-bind:uid="i + '-' + j",
-              :currentTimeStep.sync="currentTimeStep")
+      v-layout(column)
+        template(v-for="i in numrows")
+          v-layout
+            template(v-for="j in numcols")
+              v-flex(v-bind:style="{ width: cellWidth, height: cellHeight }")
+                image-gallery(
+                  v-bind:uid="i + '-' + j",
+                  :currentTimeStep.sync="currentTimeStep")
       // Playback controls.
       div.playback-controls
         v-layout(row fluid).mt-0.mb-0
@@ -97,12 +99,14 @@ export default {
   data() {
     return {
       browserLocation: null,
+      cellWidth: '100%',
+      cellHeight: '100vh',
       currentTimeStep: 0,
       dataLoaded: false,
       forgotPasswordUrl: '/#?dialog=resetpassword',
       maxTimeStep: 0,
-      numrows: 2,
-      numcols: 2,
+      numrows: 1,
+      numcols: 1,
       paused: true,
     };
   },
@@ -110,10 +114,12 @@ export default {
   methods: {
     addColumn() {
       this.numcols += 1;
+      this.updateCellWidth();
     },
 
     addRow() {
       this.numrows += 1;
+      this.updateCellHeight();
     },
 
     decrementTimeStep(should_pause) {
@@ -146,10 +152,12 @@ export default {
 
     removeColumn() {
       this.numcols -= 1;
+      this.updateCellWidth();
     },
 
     removeRow() {
       this.numrows -= 1;
+      this.updateCellHeight();
     },
 
     tick() {
@@ -168,6 +176,14 @@ export default {
       if (!this.paused) {
         this.tick();
       }
+    },
+
+    updateCellWidth() {
+      this.cellWidth = (100 / this.numcols) + "%";
+    },
+
+    updateCellHeight() {
+      this.cellHeight = (100 / this.numrows) + "vh";
     },
   },
 
