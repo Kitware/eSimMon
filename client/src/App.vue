@@ -25,7 +25,9 @@ v-app.app.pr-3
               v-flex(v-bind:style="{ width: cellWidth, height: cellHeight }")
                 image-gallery(
                   v-bind:uid="i + '-' + j",
-                  :currentTimeStep.sync="currentTimeStep")
+                  :currentTimeStep.sync="currentTimeStep",
+                  :numCells.sync="numCells",
+                  )
       // Playback controls.
       div.playback-controls
         v-layout(row fluid).mt-0.mb-0
@@ -105,6 +107,7 @@ export default {
       dataLoaded: false,
       forgotPasswordUrl: '/#?dialog=resetpassword',
       maxTimeStep: 0,
+      numCells: 1,
       numrows: 1,
       numcols: 1,
       paused: true,
@@ -180,10 +183,16 @@ export default {
 
     updateCellWidth() {
       this.cellWidth = (100 / this.numcols) + "%";
+      this.updateNumCells();
     },
 
     updateCellHeight() {
       this.cellHeight = (100 / this.numrows) + "vh";
+      this.updateNumCells();
+    },
+
+    updateNumCells() {
+      this.numCells = this.numrows * this.numcols;
     },
   },
 

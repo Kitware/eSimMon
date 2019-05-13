@@ -24,6 +24,11 @@ export default {
       required: true
     },
 
+    numCells: {
+      type: Number,
+      required: true
+    },
+
     uid: {
       type: String,
       required: true
@@ -35,7 +40,7 @@ export default {
   data() {
     return {
       itemId: null,
-      itemIdChanged: true,
+      needsReRender: true,
       galleryRendered: false,
       rows: [],
     };
@@ -75,7 +80,16 @@ export default {
     itemId: {
       immediate: true,
       handler () {
-        this.itemIdChanged = true;
+        this.needsReRender = true;
+      }
+    },
+    numCells: {
+      immediate: true,
+      handler () {
+        this.needsReRender = true;
+        if (this.galleryRendered) {
+          this.renderGallery();
+        }
       }
     },
     uid: {
@@ -87,20 +101,7 @@ export default {
   },
 
   updated () {
-    if (!this.itemIdChanged || this.rows.length < 1) {
-      return;
-    }
-    if (this.galleryRendered) {
-      $(this.selector).slick('unslick');
-    }
-    $(this.selector).slick({
-      arrows: false,
-      autoplay: false,
-      dots: false,
-      lazyLoad: 'anticipated',
-    });
-    this.galleryRendered = true;
-    this.itemIdChanged = false;
+    this.renderGallery();
   },
 
   methods: {
@@ -113,6 +114,25 @@ export default {
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
       this.itemId = items[0];
     },
+
+    renderGallery: function () {
+      if (!this.needsReRender || this.rows.length < 1) {
+        return;
+      }
+      if (this.galleryRendered) {
+        $(this.selector).slick('unslick');
+      }
+      $(this.selector).slick({
+        arrows: false,
+        autoplay: false,
+        dots: false,
+        lazyLoad: 'anticipated',
+      });
+      $(this.selector).slick('slickGoTo', this.currentTimeStep, true);
+      this.galleryRendered = true;
+      this.needsReRender = false;
+    },
+
   },
 };
 </script>
