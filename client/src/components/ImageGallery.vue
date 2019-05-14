@@ -8,7 +8,6 @@ v-card.vertical-center(
       div(v-bind:class="'gallery-' + uid")
         div.slide(v-for="row in rows")
           img(v-bind:data-lazy="row.img")
-          p {{row.name}}
     v-icon(v-if="!itemId" large) input
 </template>
 
