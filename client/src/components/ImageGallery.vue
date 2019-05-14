@@ -1,14 +1,13 @@
 <template lang="pug">
-v-card.vertical-center(height="300px"
+v-card.vertical-center(
+       height="100%"
        v-on:drop="loadGallery($event)"
        v-on:dragover="preventDefault($event)")
-  v-card-title(v-if="item") {{item.name}}
   v-card-text.text-xs-center
     div(v-if="itemId")
       div(v-bind:class="'gallery-' + uid")
         div.slide(v-for="row in rows")
           img(v-bind:data-lazy="row.img")
-          p {{row.name}}
     v-icon(v-if="!itemId" large) input
 </template>
 
@@ -24,6 +23,11 @@ export default {
       required: true
     },
 
+    numCells: {
+      type: Number,
+      required: true
+    },
+
     uid: {
       type: String,
       required: true
@@ -34,9 +38,8 @@ export default {
 
   data() {
     return {
-      item: null,
       itemId: null,
-      itemIdChanged: true,
+      needsReRender: true,
       galleryRendered: false,
       rows: [],
     };
@@ -76,7 +79,16 @@ export default {
     itemId: {
       immediate: true,
       handler () {
-        this.itemIdChanged = true;
+        this.needsReRender = true;
+      }
+    },
+    numCells: {
+      immediate: true,
+      handler () {
+        this.needsReRender = true;
+        if (this.galleryRendered) {
+          this.renderGallery();
+        }
       }
     },
     uid: {
@@ -88,20 +100,7 @@ export default {
   },
 
   updated () {
-    if (!this.itemIdChanged || this.rows.length < 1) {
-      return;
-    }
-    if (this.galleryRendered) {
-      $(this.selector).slick('unslick');
-    }
-    $(this.selector).slick({
-      arrows: false,
-      autoplay: false,
-      dots: false,
-      lazyLoad: 'anticipated',
-    });
-    this.galleryRendered = true;
-    this.itemIdChanged = false;
+    this.renderGallery();
   },
 
   methods: {
@@ -114,6 +113,25 @@ export default {
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
       this.itemId = items[0];
     },
+
+    renderGallery: function () {
+      if (!this.needsReRender || this.rows.length < 1) {
+        return;
+      }
+      if (this.galleryRendered) {
+        $(this.selector).slick('unslick');
+      }
+      $(this.selector).slick({
+        arrows: false,
+        autoplay: false,
+        dots: false,
+        lazyLoad: 'anticipated',
+      });
+      $(this.selector).slick('slickGoTo', this.currentTimeStep, true);
+      this.galleryRendered = true;
+      this.needsReRender = false;
+    },
+
   },
 };
 </script>

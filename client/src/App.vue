@@ -1,12 +1,5 @@
 <template lang="pug">
 v-app.app.pr-3
-  // Header bar with "Logout" button
-  v-toolbar
-    v-spacer
-    v-toolbar-items
-      v-layout.pt-3(row, align-center, justify-center)
-      v-btn(flat, icon, @click="girderRest.logout()")
-        v-icon $vuetify.icons.logout
   v-dialog(:value="loggedOut", persistent, full-width, max-width="600px")
     girder-auth(
         :register="true",
@@ -14,7 +7,7 @@ v-app.app.pr-3
         :forgot-password-url="forgotPasswordUrl")
   v-layout(row fluid)
     // Navigation panel on the left.
-    v-flex(xs3)
+    v-flex(xs2)
       girder-data-browser(ref="girderBrowser",
           v-if="location",
           :location.sync="location",
@@ -23,40 +16,69 @@ v-app.app.pr-3
           :new-folder-enabled="false",
           :draggable="true")
     // Everything else on the right.
-    v-flex(xs9)
-      // 2x2 image gallery.
-      template(v-for="i in numrows")
-        v-layout(row)
-          template(v-for="j in numcols")
-            v-flex(xs6)
-              image-gallery(
-                v-bind:uid="i + '-' + j",
-                :currentTimeStep.sync="currentTimeStep")
+    v-flex.main-content(xs10)
+      // image gallery grid.
+      v-layout(column)
+        template(v-for="i in numrows")
+          v-layout
+            template(v-for="j in numcols")
+              v-flex(v-bind:style="{ width: cellWidth, height: cellHeight }")
+                image-gallery(
+                  v-bind:uid="i + '-' + j",
+                  :currentTimeStep.sync="currentTimeStep",
+                  :numCells.sync="numCells",
+                  )
       // Playback controls.
-      v-layout(row fluid).mt-3.mb-0
-        v-flex(xs1)
-          v-btn(v-on:click="decrementTimeStep(true)"
-                :disabled="!dataLoaded"
-                flat icon)
-            v-icon arrow_back_ios
-        v-flex(xs10)
-          v-slider(v-model="currentTimeStep"
-                   :max="maxTimeStep"
-                   :disabled="!dataLoaded"
-                   width="100%"
-                   thumb-label="always")
-        v-flex(xs1)
-          v-btn(v-on:click="incrementTimeStep(true)"
-                :disabled="!dataLoaded"
-                flat icon)
-            v-icon arrow_forward_ios
-      v-layout(row fluid).mt-0
-        v-flex(xs12)
-          div.controls.text-xs-center
-            button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
-            button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
-              span(v-show="paused") &#9654;
-              span(v-show="!paused") &#9208;
+      div.playback-controls
+        v-layout(row fluid).mt-0.mb-0
+          v-flex(xs1)
+            div.text-xs-center
+              v-btn(v-on:click="decrementTimeStep(true)"
+                    :disabled="!dataLoaded"
+                    flat icon small)
+                v-icon arrow_back_ios
+          v-flex(xs10)
+            v-slider(v-model="currentTimeStep"
+                     :max="maxTimeStep"
+                     :disabled="!dataLoaded"
+                     width="100%"
+                     height="1px"
+                     thumb-label="always")
+          v-flex(xs1)
+            div.text-xs-center
+              v-btn(v-on:click="incrementTimeStep(true)"
+                    :disabled="!dataLoaded"
+                    flat icon small)
+                v-icon arrow_forward_ios
+        v-layout(row fluid).mt-0.mb-0
+          v-flex(shrink)
+              v-btn(v-on:click="removeRow()"
+                    :disabled="numrows < 2"
+                    flat icon small)
+                span -
+              span rows
+              v-btn(v-on:click="addRow()"
+                    :disabled="numrows > 7"
+                    flat icon small)
+                span +
+          v-flex(grow)
+            div.controls.text-xs-center
+              button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
+              button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
+                span(v-show="paused") &#9654;
+                span(v-show="!paused") &#9208;
+          v-flex(shrink)
+              v-btn(v-on:click="removeColumn()"
+                    :disabled="numcols < 2"
+                    flat icon small)
+                span -
+              span cols
+              v-btn(v-on:click="addColumn()"
+                    :disabled="numcols > 7"
+                    flat icon small)
+                span +
+              v-btn(flat icon small @click="girderRest.logout()")
+                v-icon $vuetify.icons.logout
 </template>
 
 <script>
@@ -79,17 +101,30 @@ export default {
   data() {
     return {
       browserLocation: null,
+      cellWidth: '100%',
+      cellHeight: '100vh',
       currentTimeStep: 0,
       dataLoaded: false,
       forgotPasswordUrl: '/#?dialog=resetpassword',
       maxTimeStep: 0,
-      numrows: 2,
-      numcols: 2,
+      numCells: 1,
+      numrows: 1,
+      numcols: 1,
       paused: true,
     };
   },
 
   methods: {
+    addColumn() {
+      this.numcols += 1;
+      this.updateCellWidth();
+    },
+
+    addRow() {
+      this.numrows += 1;
+      this.updateCellHeight();
+    },
+
     decrementTimeStep(should_pause) {
       this.currentTimeStep -= 1;
       if (this.currentTimeStep < 0) {
@@ -118,6 +153,16 @@ export default {
       this.maxTimeStep = num_timesteps - 1;
     },
 
+    removeColumn() {
+      this.numcols -= 1;
+      this.updateCellWidth();
+    },
+
+    removeRow() {
+      this.numrows -= 1;
+      this.updateCellHeight();
+    },
+
     tick() {
       if (this.paused) {
         return;
@@ -134,6 +179,20 @@ export default {
       if (!this.paused) {
         this.tick();
       }
+    },
+
+    updateCellWidth() {
+      this.cellWidth = (100 / this.numcols) + "%";
+      this.updateNumCells();
+    },
+
+    updateCellHeight() {
+      this.cellHeight = (100 / this.numrows) + "vh";
+      this.updateNumCells();
+    },
+
+    updateNumCells() {
+      this.numCells = this.numrows * this.numcols;
     },
   },
 
