@@ -16,7 +16,8 @@ For example:
     "shot_name": "myShot",
     "run_name": "myRun",
     "username": "cjh1",
-    "data": "2019-05-16T15:54:35+0000"
+    "machine_name": "titan",
+    "date": "2019-05-16T15:54:35+0000"
 }]
 ```
 
