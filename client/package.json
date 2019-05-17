@@ -8,9 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@girder/components": "https://github.com/girder/girder_web_components#09eb0bf22bfdbc99f7a4d8e55fb2d33bd1d5fd1a",
-    "jquery": "^3.3.1",
-    "slick-carousel": "^1.8.1"
+    "@girder/components": "https://github.com/girder/girder_web_components#09eb0bf22bfdbc99f7a4d8e55fb2d33bd1d5fd1a"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.4.0",
