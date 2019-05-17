@@ -1,35 +1,22 @@
 <template lang="pug">
-v-card.vertical-center(
-       height="100%"
-       v-on:drop="loadGallery($event)"
-       v-on:dragover="preventDefault($event)")
+v-card.vertical-center(height="100%"
+                       v-on:drop="loadGallery($event)"
+                       v-on:dragover="preventDefault($event)")
   v-card-text.text-xs-center
     div(v-if="itemId")
-      div(v-bind:class="'gallery-' + uid")
-        div.slide(v-for="row in rows")
-          img(v-bind:data-lazy="row.img")
+      v-img(v-for="image in loadedImages"
+            v-show="image.timestep == currentTimeStep"
+            :key="image.timestep"
+            :src="image.src"
+            contain=true)
     v-icon(v-if="!itemId" large) input
 </template>
 
 <script>
-import JQuery from 'jquery'
-let $ = JQuery
-import('slick-carousel');
-
 export default {
   props: {
     currentTimeStep: {
       type: Number,
-      required: true
-    },
-
-    numCells: {
-      type: Number,
-      required: true
-    },
-
-    uid: {
-      type: String,
       required: true
     },
   },
@@ -39,8 +26,7 @@ export default {
   data() {
     return {
       itemId: null,
-      needsReRender: true,
-      galleryRendered: false,
+      loadedImages: [],
       rows: [],
     };
   },
@@ -60,6 +46,7 @@ export default {
             name: val.name
           };
         }, this);
+        this.loadNextImages();
         // Not sure why this level of parent chaining is required
         // to get the app to be able to hear the event.
         this.$parent.$parent.$emit("data-loaded", this.rows.length);
@@ -72,35 +59,16 @@ export default {
     currentTimeStep: {
       immediate: true,
       handler () {
-        $(this.selector)
-          .slick('slickGoTo', this.currentTimeStep, true);
+        this.loadNextImages();
       }
     },
     itemId: {
       immediate: true,
       handler () {
-        this.needsReRender = true;
+        this.rows = [];
+        this.loadedImages = [];
       }
     },
-    numCells: {
-      immediate: true,
-      handler () {
-        this.needsReRender = true;
-        if (this.galleryRendered) {
-          this.renderGallery();
-        }
-      }
-    },
-    uid: {
-      immediate: true,
-      handler () {
-        this.selector = '.gallery-' + this.uid;
-      },
-    },
-  },
-
-  updated () {
-    this.renderGallery();
   },
 
   methods: {
@@ -114,39 +82,30 @@ export default {
       this.itemId = items[0];
     },
 
-    renderGallery: function () {
-      if (!this.needsReRender || this.rows.length < 1) {
+    loadNextImages: function () {
+      // Return early if we haven't loaded the list of images from Girder yet.
+      if (this.rows === null || this.rows.constructor !== Array || this.rows.length < 1) {
         return;
       }
-      if (this.galleryRendered) {
-        $(this.selector).slick('unslick');
+      // Load the current image and the next two.
+      for (var i = this.currentTimeStep; i < this.currentTimeStep + 3; i++) {
+        // Only load this image we haven't done so already.
+        var load_image = true;
+        for (var j = 0; j < this.loadedImages.length; j++) {
+          if (this.loadedImages[j].timestep === i) {
+            load_image = false;
+            break;
+          }
+        }
+        if (load_image) {
+          this.loadedImages.push({timestep: i, src: this.rows[i].img});
+        }
       }
-      $(this.selector).slick({
-        arrows: false,
-        autoplay: false,
-        dots: false,
-        lazyLoad: 'anticipated',
-      });
-      $(this.selector).slick('slickGoTo', this.currentTimeStep, true);
-      this.galleryRendered = true;
-      this.needsReRender = false;
     },
-
   },
 };
 </script>
 
 <style lang="scss" type="text/scss">
-    /** Import required slick styling. */
-    @import 'slick-carousel/slick/slick.scss';
-
-    /** Use their optional themes too, but fixup some broken paths first. */
-    $slick-font-path: "~slick-carousel/slick/fonts/" !default;
-    $slick-font-family: "slick" !default;
-    $slick-loader-path: "~slick-carousel/slick/" !default;
-    $slick-arrow-color: black !default;
-    @import 'slick-carousel/slick/slick-theme.scss';
-
-    /** Finally load our own custom styling. */
     @import '../scss/gallery.scss';
 </style>
