@@ -39,7 +39,7 @@ This is for a project. If we have multiple projects, then we need multiple dashb
 ```json
 [{
     "variable_name": "myVar",
-    "image_namge": "myVarImage.png"
+    "image_name": "myVarImage.png"
 }]
 ```
 
