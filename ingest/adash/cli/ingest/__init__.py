@@ -8,6 +8,8 @@ import os
 import io
 from pathlib import Path
 from urllib.parse import urlparse
+from flask import Flask, send_from_directory, jsonify
+
 
 class GC(GirderClient):
 
@@ -88,15 +90,14 @@ def _process_file(gc, root_folder, file_request, path):
         else:
             click.echo(click.style('File already exists: %s' % file_path, fg='yellow'))
 
-
-@click.command('adash', help='Ingest data into Girder')
+@click.command('ingest', help='Ingest data into Girder')
 @click.option('-f', '--folder', help='the folder to ingest into', required=True)
 @click.option('-r', '--image-list-url', help='the URL to the image list file to ingest', required=True)
 @click.option('-u', '--api-url', default='http://localhost:8080/api/v1', help='RESTful API URL '
                    '(e.g https://girder.example.com/api/v1)')
 @click.option('-k', '--api-key', envvar='GIRDER_API_KEY', default=None,
               help='[default: GIRDER_API_KEY env. variable]', required=True)
-def cli(folder, image_list_url, api_url, api_key):
+def main(folder, image_list_url, api_url, api_key):
     gc = GC(api_url=api_url, api_key=api_key)
     base_url = image_list_url.rsplit('/', 1)[0]
     # First fetch the image list
