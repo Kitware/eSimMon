@@ -128,4 +128,3 @@ def main(shots, runs, run_interval, timestep_interval, data_path):
         threading.Thread(target=app.run).start()
         asyncio.run(mock_runs(Path(data_path), Path(static_content_dir), shots,
                               runs, run_interval, timestep_interval))
-        print('done!')
