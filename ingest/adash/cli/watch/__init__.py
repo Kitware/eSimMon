@@ -204,9 +204,9 @@ async def upload_image(gc, folder, shot_name, run_name, variable, timestep, br, 
     if check_exists:
         create = not await gc.file_exist(variable_item, image_name)
 
-    log.info('Uploading "%s/%s/%s".' % ('/'.join([str(i) for i in image_folders]), variable['name'], image_name))
-
-    await gc.upload_file(variable_item, image_name, br, size)
+    if create:
+        log.info('Uploading "%s/%s/%s".' % ('/'.join([str(i) for i in image_folders]), variable['name'], image_name))
+        await gc.upload_file(variable_item, image_name, br, size)
 
 @tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
                 wait=tenacity.wait_exponential(max=10),
@@ -352,13 +352,17 @@ async def watch_run(session, gc, folder, upload_site_url, shot_name, run_name,
                                  shot_name, run_name, t,
                                  metadata_semaphore)
                 )
-        # We successfully processed the late timestep so just schedule the processing
+        # We successfully processed the last timestep so just schedule the processing
         # of the next.
         elif delta == 1:
             fetch_images_queue.put_nowait(
                 fetch_images(session, gc, folder, upload_site_url,
                              shot_name, run_name, new_timestep,
-                             metadata_semaphore)
+                             metadata_semaphore,
+                             # If we processing the first timestep we need to check
+                             # the existence of the files, as the fetching of this
+                             # timestep may have failed before.
+                             last_timestep == 0)
             )
 
         last_timestep = new_timestep
