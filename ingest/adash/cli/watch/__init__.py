@@ -214,6 +214,11 @@ async def upload_image(gc, folder, shot_name, run_name, variable, timestep, br, 
 async def fetch_variables(session, upload_site_url, shot_name, run_name, timestep):
     async with session.get('%s/shots/%s/%s/%d/variables.json' % (upload_site_url, shot_name,
                                                                  run_name, timestep)) as r:
+        if r.status == 404:
+            return None
+
+        r.raise_for_status()
+
         return await r.json()
 
 @tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
@@ -223,6 +228,11 @@ async def fetch_images_archive(session, upload_site_url, shot_name,
                                run_name, timestep):
     async with session.get('%s/shots/%s/%s/%d/images.tar.gz' % (upload_site_url, shot_name,
                                                             run_name, timestep)) as r:
+        if r.status == 404:
+            return None
+
+        r.raise_for_status()
+
         return await r.read()
 
 
@@ -233,23 +243,25 @@ async def fetch_images(session, gc, folder, upload_site_url, shot_name, run_name
 
     # Fetch variables.json
     variables = await fetch_variables(session, upload_site_url, shot_name, run_name, timestep)
-
-    log.info('Fetching images.tar.gz for timestep: "%d".' % timestep)
-    buffer = BytesIO(await fetch_images_archive(session, upload_site_url, shot_name, run_name, timestep))
-    tasks = []
-    with tarfile.open(fileobj=buffer) as tgz:
-        for v in variables:
-            info = tgz.getmember('./%s' % v['image_name'])
-            br = tgz.extractfile(info)
-            tasks.append(
-                asyncio.create_task(
-                    upload_image(gc, folder, shot_name, run_name, v,
-                                 timestep, br, info.size, check_exists)
+    if variables is None:
+        log.warning('Unable to fetch variables.json. Timestep "%d" is missing.' % timestep)
+    else:
+        log.info('Fetching images.tar.gz for timestep: "%d".' % timestep)
+        buffer = BytesIO(await fetch_images_archive(session, upload_site_url, shot_name, run_name, timestep))
+        tasks = []
+        with tarfile.open(fileobj=buffer) as tgz:
+            for v in variables:
+                info = tgz.getmember('./%s' % v['image_name'])
+                br = tgz.extractfile(info)
+                tasks.append(
+                    asyncio.create_task(
+                        upload_image(gc, folder, shot_name, run_name, v,
+                                     timestep, br, info.size, check_exists)
+                    )
                 )
-            )
-    # Gather, so we fetch all images for this timestep before moving on to the
-    # next one!
-    await asyncio.gather(*tasks)
+        # Gather, so we fetch all images for this timestep before moving on to the
+        # next one!
+        await asyncio.gather(*tasks)
 
     # Set the current timestep
     metadata = {
