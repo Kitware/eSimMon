@@ -37,7 +37,7 @@ async def add_shot_entry(output_path, shot_entry):
     with shots_index_path.open('w') as f:
         json.dump(shots_index, f)
 
-async def update_timestep(output_path, shot_name, run_name, timestep):
+async def update_timestep(output_path, shot_name, run_name, timestep, complete):
     time_path = output_path / 'shots' / shot_name / run_name / 'time.json'
     log.info('Updating "%s" timestep="%d"' % (os.path.join('shots', shot_name, run_name,'time.json'),
                                               timestep ))
@@ -49,6 +49,8 @@ async def update_timestep(output_path, shot_name, run_name, timestep):
         time = {
             'current': timestep
         }
+        if complete:
+            time['complete'] = True
         json.dump(time, f)
 
 
@@ -73,13 +75,20 @@ async def mock_run(images_path, output_path, shot, run, username, run_interval, 
     while True:
         await asyncio.sleep(timestep_interval)
         timestep_path = images_path / str(timestep)
+        complete = False
         if not timestep_path.exists():
             # We are done!
-            break
+            complete = True
+
         target_run_path = output_path / 'shots' / shot / run_name / str(timestep)
         loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, shutil.copytree, timestep_path, target_run_path)
-        await update_timestep(output_path, shot, run_name, timestep)
+        if not complete:
+            await loop.run_in_executor(None, shutil.copytree, timestep_path, target_run_path)
+        await update_timestep(output_path, shot, run_name, timestep, complete)
+        if complete:
+            # We need to wait so the watching client gets the message
+            await asyncio.sleep(60)
+            break
         timestep += 1
 
 async def mock_runs(images_path, output_path, shots, runs, run_interval, timestep_interval):
@@ -100,10 +109,7 @@ async def mock_runs(images_path, output_path, shots, runs, run_interval, timeste
                 )
             )
 
-    print(tasks)
     await asyncio.gather(*tasks)
-    print(tasks)
-    print('end')
 
 @click.command('mock', help='Mock simulation web upload site')
 @click.option('-s', '--shots', default=2, type=int, help='number of shots to simulate')

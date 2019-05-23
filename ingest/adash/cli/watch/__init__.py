@@ -323,10 +323,10 @@ async def watch_run(session, gc, folder, upload_site_url, shot_name, run_name,
             continue
 
         new_timestep = time['current']
-
-        # TODO: We need need to store the end timestep as well. So that we know if
-        # we missed any timesteps.
-        if new_timestep == -1:
+        complete = time.get('complete', False)
+        # Are we done. The run is marked as complete and we have ingested all the
+        # timesteps.
+        if complete and last_timestep == new_timestep:
             log.info('Run "%s" is complete.' % run_name)
             await fetch_images_queue.join()
             scheduler.cancel()
