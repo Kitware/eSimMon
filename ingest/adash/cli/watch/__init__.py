@@ -17,6 +17,7 @@ from girder_client import GirderClient
 from flask import Flask, send_from_directory, jsonify
 import aiohttp
 from async_lru import alru_cache
+import tenacity
 
 
 class AsyncGirderClient(object):
@@ -37,6 +38,9 @@ class AsyncGirderClient(object):
             'Girder-Token': auth['authToken']['token']
         }
 
+    @tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
+                    wait=tenacity.wait_exponential(max=10),
+                    stop=tenacity.stop_after_attempt(10))
     async def post(self, path, headers=None, params=None, raise_for_status=True, **kwargs):
         if params is not None:
             params = {k:str(v) for (k,v) in params.items()}
@@ -54,6 +58,9 @@ class AsyncGirderClient(object):
                     r.raise_for_status()
                 return await r.json()
 
+    @tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
+                    wait=tenacity.wait_exponential(max=10),
+                    stop=tenacity.stop_after_attempt(10))
     async def put(self, path, headers=None, params=None, raise_for_status=True, **kwargs):
         if params is not None:
             params = {k:str(v) for (k,v) in params.items()}
@@ -71,6 +78,9 @@ class AsyncGirderClient(object):
                     r.raise_for_status()
                 return await r.json()
 
+    @tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
+                    wait=tenacity.wait_exponential(max=10),
+                    stop=tenacity.stop_after_attempt(10))
     async def get(self, path, raise_for_status=True, params=None, **kwargs):
         if params is not None:
             params = {k:str(v) for (k,v) in params.items()}
@@ -193,47 +203,60 @@ async def upload_image(gc, folder, shot_name, run_name, variable, timestep, br, 
     create = True
     if check_exists:
         create = not await gc.file_exist(variable_item, image_name)
-        print('create: %s' % create)
 
     log.info('Uploading "%s/%s/%s".' % ('/'.join([str(i) for i in image_folders]), variable['name'], image_name))
 
     await gc.upload_file(variable_item, image_name, br, size)
 
+@tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
+                wait=tenacity.wait_exponential(max=10),
+                stop=tenacity.stop_after_attempt(10))
+async def fetch_variables(session, upload_site_url, shot_name, run_name, timestep):
+    async with session.get('%s/shots/%s/%s/%d/variables.json' % (upload_site_url, shot_name,
+                                                                 run_name, timestep)) as r:
+        return await r.json()
+
+@tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
+                wait=tenacity.wait_exponential(max=10),
+                stop=tenacity.stop_after_attempt(10))
+async def fetch_images_archive(session, upload_site_url, shot_name,
+                               run_name, timestep):
+    async with session.get('%s/shots/%s/%s/%d/images.tar.gz' % (upload_site_url, shot_name,
+                                                            run_name, timestep)) as r:
+        return await r.read()
+
+
 async def fetch_images(session, gc, folder, upload_site_url, shot_name, run_name, timestep,
                        metadata_semaphore, check_exists=False):
     log = logging.getLogger('adash')
     log.info('Fetching variables.json for timestep: "%d".' % timestep)
+
     # Fetch variables.json
-    async with session.get('%s/shots/%s/%s/%d/variables.json' % (upload_site_url, shot_name,
-                                                                 run_name, timestep)) as r:
-        variables = await r.json()
+    variables = await fetch_variables(session, upload_site_url, shot_name, run_name, timestep)
 
     log.info('Fetching images.tar.gz for timestep: "%d".' % timestep)
-    async with session.get('%s/shots/%s/%s/%d/images.tar.gz' % (upload_site_url, shot_name,
-                                                  run_name, timestep)) as r:
-
-        buffer = BytesIO(await r.read())
-        tasks = []
-        with tarfile.open(fileobj=buffer) as tgz:
-            for v in variables:
-                info = tgz.getmember('./%s' % v['image_name'])
-                br = tgz.extractfile(info)
-                tasks.append(
-                    asyncio.create_task(
-                        upload_image(gc, folder, shot_name, run_name, v,
-                                     timestep, br, info.size, check_exists)
-                    )
+    buffer = BytesIO(await fetch_images_archive(session, upload_site_url, shot_name, run_name, timestep))
+    tasks = []
+    with tarfile.open(fileobj=buffer) as tgz:
+        for v in variables:
+            info = tgz.getmember('./%s' % v['image_name'])
+            br = tgz.extractfile(info)
+            tasks.append(
+                asyncio.create_task(
+                    upload_image(gc, folder, shot_name, run_name, v,
+                                 timestep, br, info.size, check_exists)
                 )
-        # Gather, so we fetch all images for this timestep before moving on to the
-        # next one!
-        await asyncio.gather(*tasks)
+            )
+    # Gather, so we fetch all images for this timestep before moving on to the
+    # next one!
+    await asyncio.gather(*tasks)
 
-        # Set the current timestep
-        metadata = {
-            'currentTimestep': timestep
-        }
-        run_folder = await ensure_folders(gc, folder, [shot_name, run_name])
-        await gc.set_metadata('folder', run_folder['_id'], metadata, metadata_semaphore)
+    # Set the current timestep
+    metadata = {
+        'currentTimestep': timestep
+    }
+    run_folder = await ensure_folders(gc, folder, [shot_name, run_name])
+    await gc.set_metadata('folder', run_folder['_id'], metadata, metadata_semaphore)
 
 # scheduler used to schedule fetch_images request inorder, so we fetch the images
 # in timestep order.
@@ -250,6 +273,18 @@ async def fetch_images_scheduler(queue):
         except:
             log.exception('Exception occured fetching images.')
 
+
+@tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
+                wait=tenacity.wait_exponential(max=10),
+                stop=tenacity.stop_after_attempt(10))
+async def fetch_run_time(session, upload_site_url, shot_name, run_name):
+
+    run_path = 'shots/%s/%s/time.json' % (shot_name, run_name)
+    async with session.get('%s/%s' % (upload_site_url, run_path),
+                           raise_for_status=False) as r:
+        if r.status == 404:
+            return None
+        return await r.json()
 
 async def watch_run(session, gc, folder, upload_site_url, shot_name, run_name,
                     username, machine, run_poll_interval):
@@ -280,17 +315,12 @@ async def watch_run(session, gc, folder, upload_site_url, shot_name, run_name,
 
         # Now see where the simulation upload has got to
         run_path = 'shots/%s/%s/time.json' % (shot_name, run_name)
-        async with session.get('%s/%s' % (upload_site_url, run_path),
-                               raise_for_status=False) as r:
-
-            # Wait for time.json to appear
-            if r.status == 404:
-                log.warn('Unable to fetch "%s", waiting for 1 sec.' % run_path)
-                await asyncio.sleep(1)
-                continue
-            else:
-                r.raise_for_status()
-            time = await r.json()
+        time = await fetch_run_time(session, upload_site_url, shot_name, run_name)
+        # Wait for time.json to appear
+        if time is None:
+            log.warn('Unable to fetch "%s", waiting for 1 sec.' % run_path)
+            await asyncio.sleep(1)
+            continue
 
         new_timestep = time['current']
 
@@ -335,6 +365,17 @@ async def watch_run(session, gc, folder, upload_site_url, shot_name, run_name,
 
         await asyncio.sleep(run_poll_interval)
 
+@tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
+                wait=tenacity.wait_exponential(max=10),
+                stop=tenacity.stop_after_attempt(10))
+async def fetch_shot_index(session, upload_site_url):
+    async with session.get('%s/shots/index.json' % upload_site_url) as r:
+        if r.status == 404:
+            return None
+        else:
+            r.raise_for_status()
+
+        return await r.json()
 
 async def watch_shots_index(session, gc, folder, upload_site_url, api_url,
                             api_key, shot_poll_interval, run_poll_internval):
@@ -349,15 +390,12 @@ async def watch_shots_index(session, gc, folder, upload_site_url, api_url,
 
     while True:
         log.info('Fetching /shots/index.json')
-        async with session.get('%s/shots/index.json' % upload_site_url) as r:
-            if r.status == 404:
-                # Just wait for index.json to appear
-                log.warn('Unable to fetch "shots/index.json", waiting for 1 sec.')
-                await asyncio.sleep(1)
-                continue
-            else:
-                r.raise_for_status()
-            index = await r.json()
+        index = await fetch_shot_index(session, upload_site_url)
+        if index is None:
+            # Just wait for index.json to appear
+            log.warn('Unable to fetch "shots/index.json", waiting for 1 sec.')
+            await asyncio.sleep(1)
+            continue
 
         for shot in index:
             username = shot['username']

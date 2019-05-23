@@ -24,7 +24,8 @@ setup(
         'aiohttp',
         'click_plugins',
         'async_lru',
-        'coloredlogs'
+        'coloredlogs',
+        'tenacity'
     ],
     entry_points= {
         'console_scripts': [
