@@ -24,13 +24,14 @@ For example:
 This is for a project. If we have multiple projects, then we need multiple dashboards; i.e. a dashboard per project.
 
 
-`/shots/<shot_number>/<run_number>/time.json` - The current timestep associated with this run. This would be monitored to determine when a new timestep is available for this run. -1 could be using to indicate that this run is complete, so monitoring of this run can be stopped. Note that the current timestep should be incremented after all the files associated with the timestep have been written.
+`/shots/<shot_number>/<run_number>/time.json` - The current timestep associated with this run. This would be monitored to determine when a new timestep is available for this run. The `complete` flag is used to indicate that the simulation is complete. Note that the current timestep should be incremented after all the files associated with the timestep have been written.
 
 **TODO: Where do we get `shot_number` and `run_number` from? Should they be included in `/shots/index.json`?**
 
 ```json
 {
-    "current": 1
+    "current": 1,
+    "complete": false
 }
 ```
 
@@ -42,7 +43,6 @@ This is for a project. If we have multiple projects, then we need multiple dashb
     "image_name": "myVarImage.png"
 }]
 ```
-
 **TODO: Where in the heiarchy will the images go? `/shots/<shot_number>/<run_number>/<physical_time>/images.tar.gz`?**
 
 **TODO: What about metadata from the variables?**
