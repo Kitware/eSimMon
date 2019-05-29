@@ -18,11 +18,24 @@ setup(
     install_requires=[
         'girder_client',
         'click',
-        'requests'
+        'requests',
+        'faker',
+        'flask',
+        'aiohttp',
+        'click_plugins',
+        'async_lru',
+        'coloredlogs',
+        'tenacity'
     ],
     entry_points= {
         'console_scripts': [
-            'adash=adash.ingest:cli'
+            'adash=adash.cli:main'
+        ],
+        'adash.cli_plugins': [
+            'ingest = adash.cli.ingest:main',
+            'mock = adash.cli.mock:main',
+            'watch = adash.cli.watch:main'
         ]
-    }
+    },
+
 )
