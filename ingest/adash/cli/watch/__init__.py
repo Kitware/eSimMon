@@ -401,8 +401,8 @@ async def watch_shots_index(session, gc, folder, upload_site_url, api_url,
 
     # Get users and machines
     metadata = await gc.get_metadata('folder', folder['_id'])
-    users = set(metadata.get('users', []))
-    machines = set(metadata.get('machines', []))
+    users = set(metadata.get('users', [])) if metadata is not None else set()
+    machines = set(metadata.get('machines', [])) if metadata is not None else set()
 
     while True:
         log.info('Fetching /shots/index.json')
