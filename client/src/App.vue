@@ -23,7 +23,8 @@ v-app.app.pr-3
           v-layout
             template(v-for="j in numcols")
               v-flex(v-bind:style="{ width: cellWidth, height: cellHeight }")
-                image-gallery(:currentTimeStep.sync="currentTimeStep")
+                image-gallery(:currentTimeStep.sync="currentTimeStep"
+                              :maxTimeStep.sync="maxTimeStep")
       // Playback controls.
       div.playback-controls
         v-layout(row fluid).mt-0.mb-0
@@ -106,6 +107,7 @@ export default {
       numrows: 1,
       numcols: 1,
       paused: true,
+      runId: null,
     };
   },
 
@@ -133,19 +135,56 @@ export default {
     incrementTimeStep(should_pause) {
       this.currentTimeStep += 1;
       if (this.currentTimeStep > this.maxTimeStep) {
-        this.currentTimeStep = 0;
+        this.currentTimeStep = this.maxTimeStep;
       }
       if (should_pause) {
         this.paused = true;
       }
     },
 
-    initialDataLoaded(num_timesteps) {
+    initialDataLoaded(num_timesteps, itemId) {
       if (this.dataLoaded) {
         return;
       }
       this.dataLoaded = true;
       this.maxTimeStep = num_timesteps - 1;
+
+      // Setup polling to watch for new data.
+      this.poll(itemId);
+    },
+
+    lookupRunId(itemId) {
+      // Get the grandparent folder for this item. Its metadata will tell us
+      // what timestamps are available.
+      this.girderRest.get(`/item/${itemId}`)
+      .then((response) => {
+        return this.girderRest.get(`/folder/${response.data.folderId}`);
+      })
+      .then((response) => {
+        this.runId = response.data.parentId;
+        return this.poll(itemId);
+      });
+    },
+
+    poll(itemId) {
+      if (!this.runId) {
+        return this.lookupRunId(itemId);
+      }
+
+      this._poller = setTimeout(async () => {
+        try {
+          const { data } = await this.girderRest.get(`/folder/${this.runId}`);
+          if (data.hasOwnProperty('meta') && data.meta.hasOwnProperty('currentTimestep')) {
+            // Javascript arrays are 0-indexed but our simulation timesteps are 1-indexed.
+            var new_timestep = data.meta.currentTimestep - 1;
+            if (new_timestep > this.maxTimeStep) {
+              this.maxTimeStep = new_timestep;
+            }
+          }
+        } finally {
+          this.poll(itemId);
+        }
+      }, 10000);
     },
 
     removeColumn() {

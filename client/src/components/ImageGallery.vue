@@ -5,7 +5,7 @@ v-card.vertical-center(height="100%"
   v-card-text.text-xs-center
     div(v-if="itemId")
       v-img(v-for="image in loadedImages"
-            v-show="image.timestep == currentTimeStep"
+            v-show="image.timestep == step"
             :key="image.timestep"
             :src="image.src"
             contain=true)
@@ -19,15 +19,22 @@ export default {
       type: Number,
       required: true
     },
+    maxTimeStep: {
+      type: Number,
+      required: true
+    },
   },
 
   inject: ['girderRest'],
 
   data() {
     return {
+      bleedingEdge: false,
+      initialLoad: true,
       itemId: null,
       loadedImages: [],
       rows: [],
+      step: 0,
     };
   },
 
@@ -38,18 +45,10 @@ export default {
         if (!this.itemId) {
           return [];
         }
-        const endpoint = `item/${this.itemId}/files?limit=0`;
-        const response = await this.girderRest.get(endpoint);
-        this.rows = response.data.map(function(val) {
-          return {
-            img: this.girderRest.apiRoot + "/file/" + val._id + "/download?contentDisposition=inline",
-            name: val.name
-          };
-        }, this);
-        this.preCacheImages();
-        // Not sure why this level of parent chaining is required
-        // to get the app to be able to hear the event.
-        this.$parent.$parent.$emit("data-loaded", this.rows.length);
+
+        if (this.rows.length == 0) {
+          this.loadImageUrls();
+        }
         return this.rows;
       },
     },
@@ -59,6 +58,8 @@ export default {
     currentTimeStep: {
       immediate: true,
       handler () {
+        this.bleedingEdge = (this.currentTimeStep == this.maxTimeStep);
+        this.step = this.currentTimeStep;
         this.preCacheImages();
       }
     },
@@ -69,11 +70,45 @@ export default {
         this.loadedImages = [];
       }
     },
+    maxTimeStep: {
+      immediate: true,
+      handler () {
+        this.loadImageUrls();
+        if (this.bleedingEdge) {
+          this.step = this.maxTimeStep;
+        }
+      }
+    },
   },
 
   methods: {
     preventDefault: function (event) {
       event.preventDefault();
+    },
+
+    loadImageUrls: async function () {
+      if (!this.itemId) {
+        return;
+      }
+
+      const endpoint = `item/${this.itemId}/files?limit=0`;
+      const response = await this.girderRest.get(endpoint);
+
+      this.rows = response.data.map(function(val) {
+        return {
+          img: this.girderRest.apiRoot + "/file/" + val._id + "/download?contentDisposition=inline",
+          name: val.name
+        };
+      }, this);
+
+      this.preCacheImages();
+
+      if (this.initialLoad) {
+        // Not sure why this level of parent chaining is required
+        // to get the app to be able to hear the event.
+        this.$parent.$parent.$emit("data-loaded", this.rows.length, this.itemId);
+        this.initialLoad = false;
+      }
     },
 
     loadGallery: function (event) {
@@ -88,7 +123,11 @@ export default {
         return;
       }
       // Load the current image and the next two.
-      for (var i = this.currentTimeStep; i < this.currentTimeStep + 3; i++) {
+      for (var i = this.step; i < this.step + 3; i++) {
+        if (i > this.maxTimeStep || i >= this.rows.length) {
+          break;
+        }
+
         // Only load this image we haven't done so already.
         var load_image = true;
         for (var j = 0; j < this.loadedImages.length; j++) {
