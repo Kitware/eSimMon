@@ -46,7 +46,7 @@ export default {
             name: val.name
           };
         }, this);
-        this.loadNextImages();
+        this.preCacheImages();
         // Not sure why this level of parent chaining is required
         // to get the app to be able to hear the event.
         this.$parent.$parent.$emit("data-loaded", this.rows.length);
@@ -59,7 +59,7 @@ export default {
     currentTimeStep: {
       immediate: true,
       handler () {
-        this.loadNextImages();
+        this.preCacheImages();
       }
     },
     itemId: {
@@ -82,7 +82,7 @@ export default {
       this.itemId = items[0];
     },
 
-    loadNextImages: function () {
+    preCacheImages: function () {
       // Return early if we haven't loaded the list of images from Girder yet.
       if (this.rows === null || this.rows.constructor !== Array || this.rows.length < 1) {
         return;
