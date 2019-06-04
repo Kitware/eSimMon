@@ -36,6 +36,7 @@ v-app.app.pr-3
                 v-icon arrow_back_ios
           v-flex(xs10)
             v-slider(v-model="currentTimeStep"
+                     :min="1"
                      :max="maxTimeStep"
                      :disabled="!dataLoaded"
                      width="100%"
@@ -100,7 +101,7 @@ export default {
       browserLocation: null,
       cellWidth: '100%',
       cellHeight: '100vh',
-      currentTimeStep: 0,
+      currentTimeStep: 1,
       dataLoaded: false,
       forgotPasswordUrl: '/#?dialog=resetpassword',
       maxTimeStep: 0,
@@ -123,9 +124,8 @@ export default {
     },
 
     decrementTimeStep(should_pause) {
-      this.currentTimeStep -= 1;
-      if (this.currentTimeStep < 0) {
-        this.currentTimeStep = this.maxTimeStep;
+      if (this.currentTimeStep > 1) {
+        this.currentTimeStep -= 1;
       }
       if (should_pause) {
         this.paused = true;
@@ -133,9 +133,8 @@ export default {
     },
 
     incrementTimeStep(should_pause) {
-      this.currentTimeStep += 1;
-      if (this.currentTimeStep > this.maxTimeStep) {
-        this.currentTimeStep = this.maxTimeStep;
+      if (this.currentTimeStep < this.maxTimeStep) {
+        this.currentTimeStep += 1;
       }
       if (should_pause) {
         this.paused = true;
@@ -147,7 +146,7 @@ export default {
         return;
       }
       this.dataLoaded = true;
-      this.maxTimeStep = num_timesteps - 1;
+      this.maxTimeStep = num_timesteps;
 
       // Setup polling to watch for new data.
       this.poll(itemId);
@@ -175,8 +174,7 @@ export default {
         try {
           const { data } = await this.girderRest.get(`/folder/${this.runId}`);
           if (data.hasOwnProperty('meta') && data.meta.hasOwnProperty('currentTimestep')) {
-            // Javascript arrays are 0-indexed but our simulation timesteps are 1-indexed.
-            var new_timestep = data.meta.currentTimestep - 1;
+            var new_timestep = data.meta.currentTimestep;
             if (new_timestep > this.maxTimeStep) {
               this.maxTimeStep = new_timestep;
             }

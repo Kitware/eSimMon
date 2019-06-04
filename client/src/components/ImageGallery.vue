@@ -124,7 +124,7 @@ export default {
       }
       // Load the current image and the next two.
       for (var i = this.step; i < this.step + 3; i++) {
-        if (i > this.maxTimeStep || i >= this.rows.length) {
+        if (i > this.maxTimeStep || i > this.rows.length) {
           break;
         }
 
@@ -137,7 +137,8 @@ export default {
           }
         }
         if (load_image) {
-          this.loadedImages.push({timestep: i, src: this.rows[i].img});
+          // Javascript arrays are 0-indexed but our simulation timesteps are 1-indexed.
+          this.loadedImages.push({timestep: i, src: this.rows[i - 1].img});
         }
       }
     },
