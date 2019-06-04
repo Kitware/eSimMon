@@ -87,7 +87,7 @@ import {
 
 export default {
   name: 'App',
-  inject: ['girderRest'],
+  inject: ['girderRest', 'defaultLocation'],
 
   components: {
     GirderAuth,
@@ -234,7 +234,7 @@ export default {
         if (this.browserLocation) {
           return this.browserLocation;
         } else if (this.girderRest.user) {
-          return { _modelType: 'collection', _id: '5c5b42678d777f072b2f955c' };
+          return this.defaultLocation;
         }
         return null;
       },
