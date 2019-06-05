@@ -23,7 +23,8 @@ v-app.app.pr-3
           v-layout
             template(v-for="j in numcols")
               v-flex(v-bind:style="{ width: cellWidth, height: cellHeight }")
-                image-gallery(:currentTimeStep.sync="currentTimeStep")
+                image-gallery(:currentTimeStep.sync="currentTimeStep"
+                              :maxTimeStep.sync="maxTimeStep")
       // Playback controls.
       div.playback-controls
         v-layout(row fluid).mt-0.mb-0
@@ -35,6 +36,7 @@ v-app.app.pr-3
                 v-icon arrow_back_ios
           v-flex(xs10)
             v-slider(v-model="currentTimeStep"
+                     :min="1"
                      :max="maxTimeStep"
                      :disabled="!dataLoaded"
                      width="100%"
@@ -86,7 +88,7 @@ import {
 
 export default {
   name: 'App',
-  inject: ['girderRest'],
+  inject: ['girderRest', 'defaultLocation'],
 
   components: {
     GirderAuth,
@@ -99,13 +101,14 @@ export default {
       browserLocation: null,
       cellWidth: '100%',
       cellHeight: '100vh',
-      currentTimeStep: 0,
+      currentTimeStep: 1,
       dataLoaded: false,
       forgotPasswordUrl: '/#?dialog=resetpassword',
       maxTimeStep: 0,
       numrows: 1,
       numcols: 1,
       paused: true,
+      runId: null,
     };
   },
 
@@ -121,9 +124,8 @@ export default {
     },
 
     decrementTimeStep(should_pause) {
-      this.currentTimeStep -= 1;
-      if (this.currentTimeStep < 0) {
-        this.currentTimeStep = this.maxTimeStep;
+      if (this.currentTimeStep > 1) {
+        this.currentTimeStep -= 1;
       }
       if (should_pause) {
         this.paused = true;
@@ -131,21 +133,56 @@ export default {
     },
 
     incrementTimeStep(should_pause) {
-      this.currentTimeStep += 1;
-      if (this.currentTimeStep > this.maxTimeStep) {
-        this.currentTimeStep = 0;
+      if (this.currentTimeStep < this.maxTimeStep) {
+        this.currentTimeStep += 1;
       }
       if (should_pause) {
         this.paused = true;
       }
     },
 
-    initialDataLoaded(num_timesteps) {
+    initialDataLoaded(num_timesteps, itemId) {
       if (this.dataLoaded) {
         return;
       }
       this.dataLoaded = true;
-      this.maxTimeStep = num_timesteps - 1;
+      this.maxTimeStep = num_timesteps;
+
+      // Setup polling to watch for new data.
+      this.poll(itemId);
+    },
+
+    lookupRunId(itemId) {
+      // Get the grandparent folder for this item. Its metadata will tell us
+      // what timestamps are available.
+      this.girderRest.get(`/item/${itemId}`)
+      .then((response) => {
+        return this.girderRest.get(`/folder/${response.data.folderId}`);
+      })
+      .then((response) => {
+        this.runId = response.data.parentId;
+        return this.poll(itemId);
+      });
+    },
+
+    poll(itemId) {
+      if (!this.runId) {
+        return this.lookupRunId(itemId);
+      }
+
+      this._poller = setTimeout(async () => {
+        try {
+          const { data } = await this.girderRest.get(`/folder/${this.runId}`);
+          if (data.hasOwnProperty('meta') && data.meta.hasOwnProperty('currentTimestep')) {
+            var new_timestep = data.meta.currentTimestep;
+            if (new_timestep > this.maxTimeStep) {
+              this.maxTimeStep = new_timestep;
+            }
+          }
+        } finally {
+          this.poll(itemId);
+        }
+      }, 10000);
     },
 
     removeColumn() {
@@ -195,7 +232,7 @@ export default {
         if (this.browserLocation) {
           return this.browserLocation;
         } else if (this.girderRest.user) {
-          return { _modelType: 'collection', _id: '5c5b42678d777f072b2f955c' };
+          return this.defaultLocation;
         }
         return null;
       },

@@ -7,6 +7,7 @@ vuetifyConfig.icons.logout = 'mdi-logout';
 Vue.use(Vuetify, vuetifyConfig);
 Vue.use(Girder);
 const girderRest = new RestClient({ apiRoot: `${window.location}/api/v1` });
+const defaultLocation = { _modelType: 'collection', _id: '5c5b42678d777f072b2f955c' };
 
 import App from './App.vue'
 
@@ -14,7 +15,7 @@ Vue.config.productionTip = false
 
 girderRest.fetchUser().then(() => {
   new Vue({
-    provide: { girderRest },
+    provide: { girderRest, defaultLocation },
     render: h => h(App),
   }).$mount('#app')
 });
