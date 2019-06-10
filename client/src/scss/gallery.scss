@@ -35,3 +35,16 @@ table.v-table tbody td {
   right: 0;
   background: rgba(225, 225, 225, 0.375);
 }
+
+// Hide disk space indicator in girder data table.
+.girder-data-table {
+  .v-datatable {
+    tbody {
+      tr {
+        td.secondary--text {
+          display: none;
+        }
+      }
+    }
+  }
+}
