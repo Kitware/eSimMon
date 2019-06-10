@@ -17,13 +17,13 @@ v-app.app.pr-3
           :new-folder-enabled="false",
           :draggable="true")
       // Playback controls.
-      div.playback-controls
+      div.playback-controls.pl-2.pr-1
         v-layout(row fluid).mt-0.mb-0
           v-flex(xs1)
             div.text-xs-center
               v-icon(v-on:click="decrementTimeStep(true)"
                      :disabled="!dataLoaded") arrow_back_ios
-          v-flex(xs10)
+          v-flex(xs8 offset-xs1)
             v-slider(v-model="currentTimeStep"
                      :min="1"
                      :max="maxTimeStep"
