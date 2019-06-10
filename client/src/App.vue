@@ -35,12 +35,21 @@ v-app.app.pr-3
             div.text-xs-center
               v-icon(v-on:click="incrementTimeStep(true)"
                      :disabled="!dataLoaded") arrow_forward_ios
-        v-layout(row fluid).mt-0.mb-0
-          v-flex
-            div.controls.text-xs-center
-              button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
-                span(v-show="paused") &#9654;
-                span(v-show="!paused") &#9208;
+        v-layout(row justify-space-between).mt-0.mb-0
+          v-flex(xs6).text-xs-center
+            v-icon(v-show="paused"
+                   v-on:click="togglePlayPause"
+                   :disabled="!dataLoaded") &#9654;
+            v-icon(v-show="!paused"
+                   v-on:click="togglePlayPause"
+                   :disabled="!dataLoaded") &#9208;
+          v-flex(xs6).text-xs-center
+            input(v-model="currentTimeStep"
+                  type="number"
+                  min="1"
+                  :max="maxTimeStep"
+                  size="4"
+                  :disabled="!dataLoaded")
         v-layout(row justify-space-between).mt-0.mb-0
           v-flex(xs2)
             v-icon(v-on:click="removeRow()"
