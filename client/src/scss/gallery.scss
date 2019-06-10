@@ -27,13 +27,16 @@ table.v-table tbody td {
   overflow-x: scroll;
 }
 
-// Float the control panel at the bottom of the screen.
+// Girder browser takes up 80% of the left column
+// and shows a scrollbar when necessary.
+.girder-data-table {
+  height: 80vh;
+  overflow: auto;
+}
+
+// Playback controls take up 20% of the left column.
 .playback-controls {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(225, 225, 225, 0.375);
+  height: 20vh;
 }
 
 // Hide disk space indicator in girder data table.

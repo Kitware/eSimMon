@@ -8,6 +8,7 @@ v-app.app.pr-3
   v-layout(row fluid)
     // Navigation panel on the left.
     v-flex(xs2)
+      // Girder data table browser.
       girder-data-browser(ref="girderBrowser",
           v-if="location",
           :location.sync="location",
@@ -15,25 +16,13 @@ v-app.app.pr-3
           :new-item-enabled="false",
           :new-folder-enabled="false",
           :draggable="true")
-    // Everything else on the right.
-    v-flex.main-content(xs10)
-      // image gallery grid.
-      v-layout(column)
-        template(v-for="i in numrows")
-          v-layout
-            template(v-for="j in numcols")
-              v-flex(v-bind:style="{ width: cellWidth, height: cellHeight }")
-                image-gallery(:currentTimeStep.sync="currentTimeStep"
-                              :maxTimeStep.sync="maxTimeStep")
       // Playback controls.
       div.playback-controls
         v-layout(row fluid).mt-0.mb-0
           v-flex(xs1)
             div.text-xs-center
-              v-btn(v-on:click="decrementTimeStep(true)"
-                    :disabled="!dataLoaded"
-                    flat icon small)
-                v-icon arrow_back_ios
+              v-icon(v-on:click="decrementTimeStep(true)"
+                     :disabled="!dataLoaded") arrow_back_ios
           v-flex(xs10)
             v-slider(v-model="currentTimeStep"
                      :min="1"
@@ -44,39 +33,45 @@ v-app.app.pr-3
                      thumb-label="always")
           v-flex(xs1)
             div.text-xs-center
-              v-btn(v-on:click="incrementTimeStep(true)"
-                    :disabled="!dataLoaded"
-                    flat icon small)
-                v-icon arrow_forward_ios
+              v-icon(v-on:click="incrementTimeStep(true)"
+                     :disabled="!dataLoaded") arrow_forward_ios
         v-layout(row fluid).mt-0.mb-0
-          v-flex(shrink)
-              v-btn(v-on:click="removeRow()"
-                    :disabled="numrows < 2"
-                    flat icon small)
-                span -
-              span rows
-              v-btn(v-on:click="addRow()"
-                    :disabled="numrows > 7"
-                    flat icon small)
-                span +
-          v-flex(grow)
+          v-flex
             div.controls.text-xs-center
-              button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
               button(v-on:click="togglePlayPause" :disabled="!dataLoaded")
                 span(v-show="paused") &#9654;
                 span(v-show="!paused") &#9208;
-          v-flex(shrink)
-              v-btn(v-on:click="removeColumn()"
-                    :disabled="numcols < 2"
-                    flat icon small)
-                span -
-              span cols
-              v-btn(v-on:click="addColumn()"
-                    :disabled="numcols > 7"
-                    flat icon small)
-                span +
-              v-btn(flat icon small @click="girderRest.logout()")
-                v-icon $vuetify.icons.logout
+        v-layout(row justify-space-between).mt-0.mb-0
+          v-flex(xs2)
+            v-icon(v-on:click="removeRow()"
+                   :disabled="numrows < 2") remove_circle_outline
+          v-flex(xs2)
+            span rows
+          v-flex(xs2)
+            v-icon(v-on:click="addRow()"
+                   :disabled="numrows > 7") add_circle_outline
+        v-layout(row justify-space-between).mt-0.mb-0
+          v-flex(xs2)
+            v-icon(v-on:click="removeColumn()"
+                   :disabled="numcols < 2") remove_circle_outline
+          v-flex(xs2)
+            span cols
+          v-flex(xs2)
+            v-icon(v-on:click="addColumn()"
+                  :disabled="numcols > 7")  add_circle_outline
+        v-layout(row justify-center).mt-0.mb-0
+          v-icon(v-on:click="girderRest.logout()") $vuetify.icons.logout
+
+    // Scientific data on the right.
+    v-flex.main-content(xs10)
+      // image gallery grid.
+      v-layout(column)
+        template(v-for="i in numrows")
+          v-layout
+            template(v-for="j in numcols")
+              v-flex(v-bind:style="{ width: cellWidth, height: cellHeight }")
+                image-gallery(:currentTimeStep.sync="currentTimeStep"
+                              :maxTimeStep.sync="maxTimeStep")
 </template>
 
 <script>
