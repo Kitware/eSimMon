@@ -9,6 +9,7 @@ v-app.app.pr-3
     // Navigation panel on the left.
     v-flex(xs2)
       // Girder data table browser.
+      div.girder-placeholder(v-if="!location")
       girder-data-browser(ref="girderBrowser",
           v-if="location",
           :location.sync="location",
