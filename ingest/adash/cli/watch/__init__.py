@@ -1,4 +1,3 @@
-import re
 import types
 import sys
 import os
