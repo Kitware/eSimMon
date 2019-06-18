@@ -81,16 +81,20 @@ class AsyncGirderClient(object):
     @tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
                     wait=tenacity.wait_exponential(max=10),
                     stop=tenacity.stop_after_attempt(10))
-    async def get(self, path, raise_for_status=True, params=None, **kwargs):
+    async def get(self, path, raise_for_status=True, params=None, status=False, **kwargs):
         if params is not None:
             params = {k:str(v) for (k,v) in params.items()}
 
         async with self._ratelimit_semaphore:
             async with self._session.get('%s/%s' % (self._api_url, path),
                                         headers=self._headers, params=params, **kwargs) as r:
-                if raise_for_status:
+                if raise_for_status and not status:
                     r.raise_for_status()
-                return await r.json()
+
+                if status:
+                    return (r.status, await r.json())
+                else:
+                    return await r.json()
 
     @alru_cache(maxsize=1000)
     async def create_folder(self, parent_id, parent_type, name):
@@ -179,7 +183,11 @@ class AsyncGirderClient(object):
             'test': True
         }
 
-        return await self.get('resource/lookup', params=params)
+        (status, json_body) = await self.get('resource/lookup', params=params, status=True)
+        if status == 400:
+            return None
+        else:
+            return json_body
 
     async def file_exist(self, item, name):
         item_path = await self.resource_path(item['_id'], 'item')
