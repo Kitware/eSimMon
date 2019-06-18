@@ -145,8 +145,7 @@ class AsyncGirderClient(object):
         }
 
         headers = {
-            'Content-Length': str(size),
-            'Content-Type': 'image/png'
+            'Content-Length': str(size)
         }
         headers.update(self._headers)
         upload = await self.post('file', params=params, headers=headers, data=br)
@@ -202,18 +201,32 @@ async def ensure_folders(gc, parent, folders):
 
 async def upload_image(gc, folder, shot_name, run_name, variable, timestep, br, size, check_exists=False):
     log = logging.getLogger('adash')
-    type = Path(variable['image_name']).parent
+    image_path = Path(variable['image_name'])
+    type = image_path.parent
+    if str(type) == '.':
+        type = '1d'
+
     image_folders = [shot_name, run_name, type]
     parent_folder = await ensure_folders(gc, folder, image_folders)
-    variable_item = await gc.create_item(parent_folder['_id'], variable['name'])
-    image_name = '%s.png' % str(timestep).zfill(4)
+
+    name = None
+    for k in ['name', 'variable_name']:
+        name = variable.get(k)
+        if name is not None:
+            break
+
+    if name is None:
+        raise Exception('Unable to extract variable name.')
+
+    variable_item = await gc.create_item(parent_folder['_id'], name)
+    image_name = '%s%s' % (str(timestep).zfill(4), image_path.suffix)
 
     create = True
     if check_exists:
         create = not await gc.file_exist(variable_item, image_name)
 
     if create:
-        log.info('Uploading "%s/%s/%s".' % ('/'.join([str(i) for i in image_folders]), variable['name'], image_name))
+        log.info('Uploading "%s/%s/%s".' % ('/'.join([str(i) for i in image_folders]), name, image_name))
         await gc.upload_file(variable_item, image_name, br, size)
 
 @tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
@@ -259,7 +272,17 @@ async def fetch_images(session, gc, folder, upload_site_url, shot_name, run_name
         tasks = []
         with tarfile.open(fileobj=buffer) as tgz:
             for v in variables:
-                info = tgz.getmember('./%s' % v['image_name'])
+                info = None
+                # Try both possibilities
+                for k in ['./%s' % v['image_name'], v['image_name']]:
+                    try:
+                        info = tgz.getmember(k)
+                    except KeyError:
+                        pass
+
+                if info is None:
+                    raise Exception('Unable to extract image: "%s"' % v['image_name'])
+
                 br = tgz.extractfile(info)
                 tasks.append(
                     asyncio.create_task(
@@ -267,9 +290,9 @@ async def fetch_images(session, gc, folder, upload_site_url, shot_name, run_name
                                      timestep, br, info.size, check_exists)
                     )
                 )
-        # Gather, so we fetch all images for this timestep before moving on to the
-        # next one!
-        await asyncio.gather(*tasks)
+            # Gather, so we fetch all images for this timestep before moving on to the
+            # next one!
+            await asyncio.gather(*tasks)
 
     # Set the current timestep
     metadata = {
