@@ -54,9 +54,8 @@ async def update_timestep(output_path, shot_name, run_name, timestep, complete):
         json.dump(time, f)
 
 
-async def mock_run(images_path, output_path, shot, run, username, run_interval, timestep_interval):
+async def mock_run(images_path, output_path, shot, run_name, username, run_interval, timestep_interval, machine):
     create_time = random.randrange(run_interval)
-    run_name = 'run%d' % run
     log.info('Starting run "%s" in %s seconds.' % (run_name, create_time))
     await asyncio.sleep(create_time)
 
@@ -64,9 +63,10 @@ async def mock_run(images_path, output_path, shot, run, username, run_interval, 
         'shot_name': shot,
         'run_name': run_name,
         'username': username,
-        'machine_name': random.choice(machines),
+        'machine_name': machine,
         'date': datetime.now().isoformat()
     }
+
     await add_shot_entry(output_path, shot_entry)
     log.info('Starting run')
     log.info(json.dumps(shot_entry, indent=2))
@@ -94,6 +94,26 @@ async def mock_run(images_path, output_path, shot, run, username, run_interval, 
 async def mock_runs(images_path, output_path, shots, runs, run_interval, timestep_interval):
     shot_names = ['shot%d' % x for x in range(0, shots)]
     usernames = [fake.user_name() for x in range(0, runs)]
+    run_names = ['run%d' % run for run in range(0, runs)]
+    image_paths = [images_path]*runs
+    machine_names = [random.choice(machines) for x in range(0, runs)]
+
+    index_path = images_path / 'index.json'
+    # If we are using a real data set then we can use the index file.
+    if index_path.exists():
+        usernames = []
+        shot_names = []
+        run_names = []
+        image_paths = []
+        machine_names = []
+        with index_path.open('r') as fp:
+            shots = json.load(fp)
+            for shot in shots:
+                usernames.append(shot['username'])
+                shot_names.append(shot['shot_name'])
+                run_names.append(shot['run_name'])
+                image_paths.append( images_path / shot['shot_name'] / shot['run_name'])
+                machine_names.append(shot['machine_name'])
 
     shots_path = output_path / 'shots'
     if not shots_path.exists():
@@ -101,11 +121,11 @@ async def mock_runs(images_path, output_path, shots, runs, run_interval, timeste
 
     tasks = []
     for shot in shot_names:
-        for run in range(0, runs):
+        for path, run, user, machine in zip(image_paths, run_names, usernames, machine_names):
             tasks.append(
                 asyncio.create_task(
-                    mock_run(images_path, output_path, shot, run,
-                    random.choice(usernames), run_interval, timestep_interval)
+                    mock_run(path, output_path, shot, run,
+                    user, run_interval, timestep_interval, machine)
                 )
             )
 
