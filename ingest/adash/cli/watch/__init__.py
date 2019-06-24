@@ -202,11 +202,8 @@ async def ensure_folders(gc, parent, folders):
 async def upload_image(gc, folder, shot_name, run_name, variable, timestep, br, size, check_exists=False):
     log = logging.getLogger('adash')
     image_path = Path(variable['image_name'])
-    type = image_path.parent
-    if str(type) == '.':
-        type = '1d'
 
-    image_folders = [shot_name, run_name, type]
+    image_folders = [shot_name, run_name, variable['group_name']]
     parent_folder = await ensure_folders(gc, folder, image_folders)
 
     name = None
@@ -273,15 +270,14 @@ async def fetch_images(session, gc, folder, upload_site_url, shot_name, run_name
         with tarfile.open(fileobj=buffer) as tgz:
             for v in variables:
                 info = None
-                # Try both possibilities
-                for k in ['./%s' % v['image_name'], v['image_name']]:
-                    try:
-                        info = tgz.getmember(k)
-                    except KeyError:
-                        pass
+                k = '%s/%s' % (v['group_name'], v['image_name'])
+                try:
+                    info = tgz.getmember(k)
+                except KeyError:
+                    pass
 
                 if info is None:
-                    raise Exception('Unable to extract image: "%s"' % v['image_name'])
+                    raise Exception('Unable to extract image: "%s"' % k)
 
                 br = tgz.extractfile(info)
                 tasks.append(
