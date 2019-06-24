@@ -133,7 +133,7 @@ class AsyncGirderClient(object):
         async with self._item_create_semaphore:
             return await self.post('item', params=params)
 
-    async def upload_file(self, item, file_name, br, size):
+    async def upload_file(self, item, file_name, bits, size):
         mime_type, _ = mimetypes.guess_type(file_name)
 
         params = {
@@ -148,7 +148,7 @@ class AsyncGirderClient(object):
             'Content-Length': str(size)
         }
         headers.update(self._headers)
-        upload = await self.post('file', params=params, headers=headers, data=br)
+        upload = await self.post('file', params=params, headers=headers, data=bits)
 
         return upload
 
@@ -199,7 +199,7 @@ async def ensure_folders(gc, parent, folders):
 
     return parent
 
-async def upload_image(gc, folder, shot_name, run_name, variable, timestep, br, size, check_exists=False):
+async def upload_image(gc, folder, shot_name, run_name, variable, timestep, bits, size, check_exists=False):
     log = logging.getLogger('adash')
     image_path = Path(variable['image_name'])
 
@@ -224,7 +224,7 @@ async def upload_image(gc, folder, shot_name, run_name, variable, timestep, br, 
 
     if create:
         log.info('Uploading "%s/%s/%s".' % ('/'.join([str(i) for i in image_folders]), name, image_name))
-        await gc.upload_file(variable_item, image_name, br, size)
+        await gc.upload_file(variable_item, image_name, bits, size)
 
 @tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
                 wait=tenacity.wait_exponential(max=10),
@@ -280,10 +280,11 @@ async def fetch_images(session, gc, folder, upload_site_url, shot_name, run_name
                     raise Exception('Unable to extract image: "%s"' % k)
 
                 br = tgz.extractfile(info)
+                bits = br.read()
                 tasks.append(
                     asyncio.create_task(
                         upload_image(gc, folder, shot_name, run_name, v,
-                                     timestep, br, info.size, check_exists)
+                                     timestep, bits, info.size, check_exists)
                     )
                 )
             # Gather, so we fetch all images for this timestep before moving on to the
