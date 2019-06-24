@@ -1,4 +1,3 @@
-import re
 import types
 import sys
 import os
@@ -11,6 +10,7 @@ import tarfile
 from io import BytesIO
 import mimetypes
 import functools
+import ssl
 
 import click
 from girder_client import GirderClient
@@ -81,16 +81,20 @@ class AsyncGirderClient(object):
     @tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
                     wait=tenacity.wait_exponential(max=10),
                     stop=tenacity.stop_after_attempt(10))
-    async def get(self, path, raise_for_status=True, params=None, **kwargs):
+    async def get(self, path, raise_for_status=True, params=None, status=False, **kwargs):
         if params is not None:
             params = {k:str(v) for (k,v) in params.items()}
 
         async with self._ratelimit_semaphore:
             async with self._session.get('%s/%s' % (self._api_url, path),
                                         headers=self._headers, params=params, **kwargs) as r:
-                if raise_for_status:
+                if raise_for_status and not status:
                     r.raise_for_status()
-                return await r.json()
+
+                if status:
+                    return (r.status, await r.json())
+                else:
+                    return await r.json()
 
     @alru_cache(maxsize=1000)
     async def create_folder(self, parent_id, parent_type, name):
@@ -141,8 +145,7 @@ class AsyncGirderClient(object):
         }
 
         headers = {
-            'Content-Length': str(size),
-            'Content-Type': 'image/png'
+            'Content-Length': str(size)
         }
         headers.update(self._headers)
         upload = await self.post('file', params=params, headers=headers, data=br)
@@ -179,7 +182,11 @@ class AsyncGirderClient(object):
             'test': True
         }
 
-        return await self.get('resource/lookup', params=params)
+        (status, json_body) = await self.get('resource/lookup', params=params, status=True)
+        if status == 400:
+            return None
+        else:
+            return json_body
 
     async def file_exist(self, item, name):
         item_path = await self.resource_path(item['_id'], 'item')
@@ -194,18 +201,32 @@ async def ensure_folders(gc, parent, folders):
 
 async def upload_image(gc, folder, shot_name, run_name, variable, timestep, br, size, check_exists=False):
     log = logging.getLogger('adash')
-    type = Path(variable['image_name']).parent
+    image_path = Path(variable['image_name'])
+    type = image_path.parent
+    if str(type) == '.':
+        type = '1d'
+
     image_folders = [shot_name, run_name, type]
     parent_folder = await ensure_folders(gc, folder, image_folders)
-    variable_item = await gc.create_item(parent_folder['_id'], variable['name'])
-    image_name = '%s.png' % str(timestep).zfill(4)
+
+    name = None
+    for k in ['name', 'variable_name']:
+        name = variable.get(k)
+        if name is not None:
+            break
+
+    if name is None:
+        raise Exception('Unable to extract variable name.')
+
+    variable_item = await gc.create_item(parent_folder['_id'], name)
+    image_name = '%s%s' % (str(timestep).zfill(4), image_path.suffix)
 
     create = True
     if check_exists:
         create = not await gc.file_exist(variable_item, image_name)
 
     if create:
-        log.info('Uploading "%s/%s/%s".' % ('/'.join([str(i) for i in image_folders]), variable['name'], image_name))
+        log.info('Uploading "%s/%s/%s".' % ('/'.join([str(i) for i in image_folders]), name, image_name))
         await gc.upload_file(variable_item, image_name, br, size)
 
 @tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
@@ -251,7 +272,17 @@ async def fetch_images(session, gc, folder, upload_site_url, shot_name, run_name
         tasks = []
         with tarfile.open(fileobj=buffer) as tgz:
             for v in variables:
-                info = tgz.getmember('./%s' % v['image_name'])
+                info = None
+                # Try both possibilities
+                for k in ['./%s' % v['image_name'], v['image_name']]:
+                    try:
+                        info = tgz.getmember(k)
+                    except KeyError:
+                        pass
+
+                if info is None:
+                    raise Exception('Unable to extract image: "%s"' % v['image_name'])
+
                 br = tgz.extractfile(info)
                 tasks.append(
                     asyncio.create_task(
@@ -259,9 +290,9 @@ async def fetch_images(session, gc, folder, upload_site_url, shot_name, run_name
                                      timestep, br, info.size, check_exists)
                     )
                 )
-        # Gather, so we fetch all images for this timestep before moving on to the
-        # next one!
-        await asyncio.gather(*tasks)
+            # Gather, so we fetch all images for this timestep before moving on to the
+            # next one!
+            await asyncio.gather(*tasks)
 
     # Set the current timestep
     metadata = {
@@ -439,6 +470,50 @@ async def watch_shots_index(session, gc, folder, upload_site_url, api_url,
 
 async def watch(folder_id, upload_site_url, api_url, api_key,
                 shot_poll_interval, run_poll_internval):
+    def ignore_aiohttp_ssl_eror(loop, aiohttpversion='3.5.4'):
+        """Ignore aiohttp #3535 issue with SSL data after close
+
+        There appears to be an issue on Python 3.7 and aiohttp SSL that throws a
+        ssl.SSLError fatal error (ssl.SSLError: [SSL: KRB5_S_INIT] application data
+        after close notify (_ssl.c:2609)) after we are already done with the
+        connection. See GitHub issue aio-libs/aiohttp#3535
+
+        Given a loop, this sets up a exception handler that ignores this specific
+        exception, but passes everything else on to the previous exception handler
+        this one replaces.
+
+        If the current aiohttp version is not exactly equal to aiohttpversion
+        nothing is done, assuming that the next version will have this bug fixed.
+        This can be disabled by setting this parameter to None
+
+        """
+        if aiohttpversion is not None and aiohttp.__version__ != aiohttpversion:
+            return
+
+        orig_handler = loop.get_exception_handler()
+
+        def ignore_ssl_error(loop, context):
+            if context.get('message') == 'SSL error in data received':
+                # validate we have the right exception, transport and protocol
+                exception = context.get('exception')
+                protocol = context.get('protocol')
+                if (
+                    isinstance(exception, ssl.SSLError) and exception.reason == 'KRB5_S_INIT' and
+                    isinstance(protocol, asyncio.sslproto.SSLProtocol) and
+                    isinstance(protocol._app_protocol, aiohttp.client_proto.ResponseHandler)
+                ):
+                    if loop.get_debug():
+                        asyncio.log.logger.debug('Ignoring aiohttp SSL KRB5_S_INIT error')
+                    return
+            if orig_handler is not None:
+                orig_handler(loop, context)
+            else:
+                loop.default_exception_handler(context)
+
+        loop.set_exception_handler(ignore_ssl_error)
+
+    ignore_aiohttp_ssl_eror(asyncio.get_running_loop())
+
     async with aiohttp.ClientSession() as session:
         gc = AsyncGirderClient(session, api_url)
         await gc.authenticate(api_key)
