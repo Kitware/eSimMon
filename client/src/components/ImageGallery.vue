@@ -30,7 +30,6 @@ export default {
 
   data() {
     return {
-      bleedingEdge: false,
       initialLoad: true,
       itemId: null,
       loadedImages: [],
@@ -60,7 +59,6 @@ export default {
     currentTimeStep: {
       immediate: true,
       handler () {
-        this.bleedingEdge = (this.currentTimeStep == this.maxTimeStep);
         this.step = this.currentTimeStep;
         this.preCacheImages();
       }
@@ -76,9 +74,6 @@ export default {
       immediate: true,
       handler () {
         this.loadImageUrls();
-        if (this.bleedingEdge) {
-          this.step = this.maxTimeStep;
-        }
       }
     },
 
