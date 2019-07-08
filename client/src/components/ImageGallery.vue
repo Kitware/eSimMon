@@ -8,6 +8,7 @@ v-card.vertical-center(height="100%"
             v-show="image.timestep == step"
             :key="image.timestep"
             :src="image.src"
+            v-on:load="imageLoaded()"
             contain=true)
     v-icon(v-if="!itemId" large) input
 </template>
@@ -33,6 +34,7 @@ export default {
       initialLoad: true,
       itemId: null,
       loadedImages: [],
+      pendingImages: 0,
       rows: [],
       step: 0,
     };
@@ -76,6 +78,18 @@ export default {
         this.loadImageUrls();
         if (this.bleedingEdge) {
           this.step = this.maxTimeStep;
+        }
+      }
+    },
+
+    pendingImages: {
+      immediate: true,
+      handler () {
+        if (!this.itemId) {
+          return;
+        }
+        if (this.pendingImages == 0) {
+          this.$parent.$parent.$emit("gallery-ready");
         }
       }
     },
@@ -123,6 +137,7 @@ export default {
         return;
       }
       // Load the current image and the next two.
+      var any_images_loaded = false;
       for (var i = this.step; i < this.step + 3; i++) {
         if (i > this.maxTimeStep || i > this.rows.length) {
           break;
@@ -138,9 +153,20 @@ export default {
         }
         if (load_image) {
           // Javascript arrays are 0-indexed but our simulation timesteps are 1-indexed.
+          any_images_loaded = true;
+          this.pendingImages += 1;
           this.loadedImages.push({timestep: i, src: this.rows[i - 1].img});
         }
       }
+
+      // Report this gallery as ready if we didn't need to load any new images.
+      if (!any_images_loaded && this.pendingImages == 0) {
+        this.$parent.$parent.$emit("gallery-ready");
+      }
+    },
+
+    imageLoaded: function () {
+      this.pendingImages -= 1;
     },
   },
 };

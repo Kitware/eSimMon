@@ -112,6 +112,8 @@ export default {
       maxTimeStep: 0,
       numrows: 1,
       numcols: 1,
+      numLoadedGalleries: 0,
+      numReady: 0,
       paused: true,
       runId: null,
     };
@@ -140,6 +142,7 @@ export default {
     incrementTimeStep(should_pause) {
       if (this.currentTimeStep < this.maxTimeStep) {
         this.currentTimeStep += 1;
+        this.numReady = 0;
       }
       if (should_pause) {
         this.paused = true;
@@ -147,6 +150,7 @@ export default {
     },
 
     initialDataLoaded(num_timesteps, itemId) {
+      this.numLoadedGalleries += 1;
       if (this.dataLoaded) {
         return;
       }
@@ -204,11 +208,15 @@ export default {
       if (this.paused) {
         return;
       }
-      this.incrementTimeStep(false);
+      var wait_ms = 2000;
+      if (this.numReady >= this.numLoadedGalleries) {
+        this.incrementTimeStep(false);
+        wait_ms = 1000;
+      }
       var self = this;
       setTimeout(function() {
         self.tick();
-      }, 1000);
+      }, wait_ms);
     },
 
     togglePlayPause() {
@@ -225,10 +233,15 @@ export default {
     updateCellHeight() {
       this.cellHeight = (100 / this.numrows) + "vh";
     },
+
+    incrementReady() {
+      this.numReady += 1;
+    },
   },
 
   created: function () {
     this.$on('data-loaded', this.initialDataLoaded);
+    this.$on('gallery-ready', this.incrementReady);
   },
 
   computed: {
