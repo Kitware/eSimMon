@@ -154,6 +154,11 @@ export default {
         }
       }
 
+      // Reduce memory footprint by only keeping ten images per gallery.
+      if (this.loadedImages.length > 10) {
+        this.loadedImages = this.loadedImages.slice(-10);
+      }
+
       // Report this gallery as ready if we didn't need to load any new images.
       if (!any_images_loaded && this.pendingImages == 0) {
         this.$parent.$parent.$emit("gallery-ready");
