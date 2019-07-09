@@ -37,7 +37,7 @@ async def add_shot_entry(output_path, shot_entry):
     with shots_index_path.open('w') as f:
         json.dump(shots_index, f)
 
-async def update_timestep(output_path, shot_name, run_name, timestep, complete):
+async def update_timestep(output_path, shot_name, run_name, timestep, final_step):
     time_path = output_path / 'shots' / shot_name / run_name / 'time.json'
     log.info('Updating "%s" timestep="%d"' % (os.path.join('shots', shot_name, run_name,'time.json'),
                                               timestep ))
@@ -49,7 +49,7 @@ async def update_timestep(output_path, shot_name, run_name, timestep, complete):
         time = {
             'current': timestep
         }
-        if complete:
+        if final_step:
             time['complete'] = True
         json.dump(time, f)
 
@@ -75,17 +75,17 @@ async def mock_run(images_path, output_path, shot, run_name, username, run_inter
     while True:
         await asyncio.sleep(timestep_interval)
         timestep_path = images_path / str(timestep)
-        complete = False
-        if not timestep_path.exists():
-            # We are done!
-            complete = True
+        next_timestep_path = images_path / str(timestep + 1)
+        final_step = False
+        if not next_timestep_path.exists():
+            # This is the last timestep!
+            final_step = True
 
         target_run_path = output_path / 'shots' / shot / run_name / str(timestep)
         loop = asyncio.get_event_loop()
-        if not complete:
-            await loop.run_in_executor(None, shutil.copytree, timestep_path, target_run_path)
-        await update_timestep(output_path, shot, run_name, timestep, complete)
-        if complete:
+        await loop.run_in_executor(None, shutil.copytree, timestep_path, target_run_path)
+        await update_timestep(output_path, shot, run_name, timestep, final_step)
+        if final_step:
             # We need to wait so the watching client gets the message
             await asyncio.sleep(60)
             break
