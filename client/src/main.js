@@ -7,7 +7,7 @@ vuetifyConfig.icons.logout = 'mdi-logout';
 Vue.use(Vuetify, vuetifyConfig);
 Vue.use(Girder);
 const girderRest = new RestClient({ apiRoot: `${window.location}/api/v1` });
-const defaultLocation = { _modelType: 'collection', _id: '5c5b42678d777f072b2f955c' };
+const defaultLocation = { _modelType: 'folder', _id: '5ceeb68e8d777f072bf261ed' };
 
 import App from './App.vue'
 
