@@ -40,9 +40,11 @@ This is for a project. If we have multiple projects, then we need multiple dashb
 ```json
 [{
     "variable_name": "myVar",
-    "image_name": "myVarImage.png"
+    "image_name": "path/in/archive/myVarImage.png"
 }]
 ```
-**TODO: Where in the heiarchy will the images go? `/shots/<shot_number>/<run_number>/<physical_time>/images.tar.gz`?**
+
+`/shots/<shot_number>/<run_number>/<physical_time>/images.tar.gz` - The archive containing the image for the timestep.
+
 
 **TODO: What about metadata from the variables?**
