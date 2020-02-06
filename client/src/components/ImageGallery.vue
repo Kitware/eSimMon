@@ -101,14 +101,13 @@ export default {
       }
 
       const endpoint = `item/${this.itemId}/files?limit=0`;
-      const response = await this.girderRest.get(endpoint);
+      const response = await this.callEndpoint(endpoint);
 
-      this.rows = response.data.map(function(val) {
-        return {
-          img: this.girderRest.apiRoot + "/file/" + val._id + "/download?contentDisposition=inline",
-          name: val.name
-        };
-      }, this);
+      this.rows = await Promise.all(response.map(async function(val) {
+        let img = await this.callEndpoint(
+          `file/${val._id}/download?contentDisposition=inline`);
+        return {img, name: val.name};
+      }, this));
 
       this.preCacheImages();
 
@@ -118,6 +117,11 @@ export default {
         this.$parent.$parent.$emit("data-loaded", this.rows.length, this.itemId);
         this.initialLoad = false;
       }
+    },
+
+    callEndpoint: async function (endpoint) {
+      const { data } = await this.girderRest.get(endpoint);
+      return data;
     },
 
     loadGallery: function (event) {
@@ -149,8 +153,12 @@ export default {
         if (load_image) {
           // Javascript arrays are 0-indexed but our simulation timesteps are 1-indexed.
           any_images_loaded = true;
-          this.pendingImages += 1;
-          this.loadedImages.push({timestep: i, src: this.rows[i - 1].img});
+          this.pendingImages = 1;
+          this.loadedImages.push({
+            timestep: i,
+            data: this.rows[i - 1].img.data,
+            layout: this.rows[i - 1].img.layout
+          });
         }
       }
 
@@ -166,7 +174,7 @@ export default {
     },
 
     imageLoaded: function () {
-      this.pendingImages -= 1;
+      this.pendingImages = 0;
     },
   },
 };
