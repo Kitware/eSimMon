@@ -81,7 +81,8 @@ v-app.app.pr-3
             template(v-for="j in numcols")
               v-flex(v-bind:style="{ width: cellWidth, height: cellHeight }")
                 image-gallery(:currentTimeStep.sync="currentTimeStep"
-                              :maxTimeStep.sync="maxTimeStep")
+                              :maxTimeStep.sync="maxTimeStep"
+                              v-bind:class="[paused ? 'show-toolbar' : 'hide-toolbar']")
 </template>
 
 <script>
@@ -266,3 +267,20 @@ export default {
   },
 };
 </script>
+
+<style lang="scss" type="text/scss">
+    .show-toolbar {
+      .modebar-container {
+        display: flex;
+        height: auto;
+        div {
+          height: auto;
+        }
+      }
+    }
+    .hide-toolbar {
+      .modebar-container {
+        display: none;
+      }
+    }
+</style>
