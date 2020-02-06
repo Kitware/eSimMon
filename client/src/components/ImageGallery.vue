@@ -95,6 +95,10 @@ export default {
     },
   },
 
+  updated: function() {
+    this.imageLoaded();
+  },
+
   methods: {
     preventDefault: function (event) {
       event.preventDefault();
