@@ -4,17 +4,22 @@ v-card.vertical-center(height="100%"
                        v-on:dragover="preventDefault($event)")
   v-card-text.text-xs-center
     div(v-if="itemId")
-      v-img(v-for="image in loadedImages"
-            v-show="image.timestep == step"
+      Plotly.plot(v-for="image in loadedImages"
+            v-if="image.timestep == step"
             :key="image.timestep"
-            :src="image.src"
-            v-on:load="imageLoaded()"
-            contain=true)
+            :data="image.data"
+            :layout="image.layout")
     v-icon(v-if="!itemId" large) input
 </template>
 
 <script>
+import { Plotly } from 'vue-plotly';
+
 export default {
+  components: {
+    Plotly
+  },
+
   props: {
     currentTimeStep: {
       type: Number,
