@@ -123,7 +123,7 @@ export default {
       if (this.initialLoad) {
         // Not sure why this level of parent chaining is required
         // to get the app to be able to hear the event.
-        this.$parent.$parent.$emit("data-loaded", this.rows.length, this.itemId);
+        this.$parent.$parent.$parent.$parent.$emit("data-loaded", this.rows.length, this.itemId);
         this.initialLoad = false;
       }
     },
