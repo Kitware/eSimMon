@@ -89,7 +89,7 @@ export default {
           return;
         }
         if (this.pendingImages == 0) {
-          this.$parent.$parent.$emit("gallery-ready");
+          this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
         }
       }
     },
@@ -178,7 +178,7 @@ export default {
 
       // Report this gallery as ready if we didn't need to load any new images.
       if (!any_images_loaded && this.pendingImages == 0) {
-        this.$parent.$parent.$emit("gallery-ready");
+        this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
       }
     },
 
