@@ -165,6 +165,9 @@ export default {
 
       // Setup polling to watch for new data.
       this.poll(itemId);
+
+      // Default to playing once a parameter has been selected
+      this.togglePlayPause();
     },
 
     lookupRunId(itemId) {
@@ -219,6 +222,10 @@ export default {
         this.incrementTimeStep(false);
         wait_ms = 1000;
       }
+      this.setTickWait(wait_ms);
+    },
+
+    setTickWait(wait_ms) {
       var self = this;
       setTimeout(function() {
         self.tick();
@@ -228,7 +235,10 @@ export default {
     togglePlayPause() {
       this.paused = ! this.paused;
       if (!this.paused) {
-        this.tick();
+        // Give the user a moment to view the first time step
+        // before progressing
+        const wait_ms = this.currentTimeStep === 1 ? 2000 : 0;
+        this.setTickWait(wait_ms);
       }
     },
 
