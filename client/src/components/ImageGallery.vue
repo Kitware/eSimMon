@@ -8,7 +8,8 @@ v-card.vertical-center(height="100%"
             v-if="image.timestep == step"
             :key="image.timestep"
             :data="image.data"
-            :layout="image.layout")
+            :layout="image.layout",
+            :range="image.range")
     v-icon(v-if="!itemId" large) input
 </template>
 
@@ -41,6 +42,8 @@ export default {
       pendingImages: 0,
       rows: [],
       step: 0,
+      name: '',
+      range: [],
     };
   },
 
@@ -115,12 +118,13 @@ export default {
       this.rows = await Promise.all(response.map(async function(val) {
         let img = await this.callEndpoint(
           `file/${val._id}/download?contentDisposition=inline`);
-        return {img, name: val.name};
+        return {img, name: img.name};
       }, this));
 
       this.preCacheImages();
 
       if (this.initialLoad) {
+        this.name = this.rows[0].name;
         // Not sure why this level of parent chaining is required
         // to get the app to be able to hear the event.
         this.$parent.$parent.$parent.$parent.$emit("data-loaded", this.rows.length, this.itemId);
@@ -163,10 +167,12 @@ export default {
           // Javascript arrays are 0-indexed but our simulation timesteps are 1-indexed.
           any_images_loaded = true;
           this.pendingImages = 1;
+          const img = this.rows[i - 1].img;
           this.loadedImages.push({
             timestep: i,
-            data: this.rows[i - 1].img.data,
-            layout: this.rows[i - 1].img.layout
+            data: img.data,
+            layout: img.layout,
+            range: [Math.min(...img.data[0].y), Math.max(...img.data[0].y)],
           });
         }
       }

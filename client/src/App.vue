@@ -12,8 +12,17 @@ v-app.app.pr-3
         v-flex
           // Girder data table browser.
           div.girder-placeholder(v-if="!location")
+          div
+            v-tooltip(right, light,
+              v-if="range",
+              :value="range",
+              :position-x="pos[0]",
+              :position-y="pos[1]")
+              <span v-if="range">{{range}}</span>
           girder-data-browser(ref="girderBrowser",
               v-if="location",
+              v-on:mouseover.native="hover($event)",
+              v-on:mouseout.native="hover($event)",
               :location.sync="location",
               :select-enabled="false",
               :new-item-enabled="false",
@@ -81,7 +90,8 @@ v-app.app.pr-3
           v-layout
             template(v-for="j in numcols")
               v-flex(v-bind:style="{ width: cellWidth, height: cellHeight }")
-                image-gallery(:currentTimeStep.sync="currentTimeStep"
+                image-gallery(ref="imageGallery",
+                              :currentTimeStep.sync="currentTimeStep"
                               :maxTimeStep.sync="maxTimeStep"
                               v-bind:class="[paused ? 'show-toolbar' : 'hide-toolbar']")
 </template>
@@ -122,6 +132,9 @@ export default {
       numReady: 0,
       paused: true,
       runId: null,
+      range: '',
+      imageGallery: {},
+      pos: [],
     };
   },
 
@@ -142,6 +155,23 @@ export default {
       }
       if (should_pause) {
         this.paused = true;
+      }
+    },
+
+    hover(event) {
+      this.range = '';
+      const node = event.target;
+      const parent = node ? node.parentNode : null;
+      const idx = this.currentTimeStep - 1;
+      if ((parent && parent.classList.value.includes('itemRow'))
+            || node.classList.value.includes('itemRow')
+            && node.textContent != parent.textContent) {
+        const selectedItem = node.textContent;
+        const data = this.imageGallery[selectedItem];
+        if (data && data[idx].range.length){
+          this.pos = [event.clientX, event.clientY];
+          this.range = '[' + data[idx].range[0] + ', ' + data[idx].range[1] + ']';
+        }
       }
     },
 
@@ -252,6 +282,8 @@ export default {
 
     incrementReady() {
       this.numReady += 1;
+      this.imageGallery = this.$refs.imageGallery.reduce(
+        (object, item) => (object[item.name] = item.loadedImages, object), {});
     },
   },
 
