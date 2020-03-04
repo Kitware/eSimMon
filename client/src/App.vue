@@ -6,7 +6,7 @@ v-app.app.pr-3
         :oauth="false",
         :forgot-password-url="forgotPasswordUrl")
   splitpanes
-    pane(min-size="15", :size="20")
+    pane(min-size="15", :size="25")
       v-layout(row fluid)
         // Navigation panel on the left.
         v-flex
