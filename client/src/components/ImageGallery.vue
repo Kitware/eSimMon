@@ -4,17 +4,23 @@ v-card.vertical-center(height="100%"
                        v-on:dragover="preventDefault($event)")
   v-card-text.text-xs-center
     div(v-if="itemId")
-      v-img(v-for="image in loadedImages"
-            v-show="image.timestep == step"
+      Plotly.plot(v-for="image in loadedImages"
+            v-if="image.timestep == step"
             :key="image.timestep"
-            :src="image.src"
-            v-on:load="imageLoaded()"
-            contain=true)
+            :data="image.data"
+            :layout="image.layout",
+            :range="image.range")
     v-icon(v-if="!itemId" large) input
 </template>
 
 <script>
+import { Plotly } from 'vue-plotly';
+
 export default {
+  components: {
+    Plotly
+  },
+
   props: {
     currentTimeStep: {
       type: Number,
@@ -36,6 +42,8 @@ export default {
       pendingImages: 0,
       rows: [],
       step: 0,
+      name: '',
+      range: [],
     };
   },
 
@@ -84,10 +92,14 @@ export default {
           return;
         }
         if (this.pendingImages == 0) {
-          this.$parent.$parent.$emit("gallery-ready");
+          this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
         }
       }
     },
+  },
+
+  updated: function() {
+    this.imageLoaded();
   },
 
   methods: {
@@ -101,23 +113,27 @@ export default {
       }
 
       const endpoint = `item/${this.itemId}/files?limit=0`;
-      const response = await this.girderRest.get(endpoint);
+      const response = await this.callEndpoint(endpoint);
 
-      this.rows = response.data.map(function(val) {
-        return {
-          img: this.girderRest.apiRoot + "/file/" + val._id + "/download?contentDisposition=inline",
-          name: val.name
-        };
-      }, this);
+      this.rows = await Promise.all(response.map(async function(val) {
+        let img = await this.callEndpoint(
+          `file/${val._id}/download?contentDisposition=inline`);
+        return {img, name: img.name};
+      }, this));
 
       this.preCacheImages();
 
       if (this.initialLoad) {
         // Not sure why this level of parent chaining is required
         // to get the app to be able to hear the event.
-        this.$parent.$parent.$emit("data-loaded", this.rows.length, this.itemId);
+        this.$parent.$parent.$parent.$parent.$emit("data-loaded", this.rows.length, this.itemId);
         this.initialLoad = false;
       }
+    },
+
+    callEndpoint: async function (endpoint) {
+      const { data } = await this.girderRest.get(endpoint);
+      return data;
     },
 
     loadGallery: function (event) {
@@ -149,8 +165,15 @@ export default {
         if (load_image) {
           // Javascript arrays are 0-indexed but our simulation timesteps are 1-indexed.
           any_images_loaded = true;
-          this.pendingImages += 1;
-          this.loadedImages.push({timestep: i, src: this.rows[i - 1].img});
+          this.pendingImages = 1;
+          const img = this.rows[i - 1].img;
+          this.name = img.name;
+          this.loadedImages.push({
+            timestep: i,
+            data: img.data,
+            layout: img.layout,
+            range: [Math.min(...img.data[0].y), Math.max(...img.data[0].y)],
+          });
         }
       }
 
@@ -161,12 +184,12 @@ export default {
 
       // Report this gallery as ready if we didn't need to load any new images.
       if (!any_images_loaded && this.pendingImages == 0) {
-        this.$parent.$parent.$emit("gallery-ready");
+        this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
       }
     },
 
     imageLoaded: function () {
-      this.pendingImages -= 1;
+      this.pendingImages = 0;
     },
   },
 };
