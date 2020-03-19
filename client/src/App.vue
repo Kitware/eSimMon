@@ -158,29 +158,30 @@ export default {
       }
     },
 
-    hover(event) {
+    async hover(event) {
       this.range = '';
       const node = event.target;
       const parent = node ? node.parentNode : null;
       if ((parent && parent.classList.value.includes('pl-3'))
-            || node.classList.value.includes('pl-3')
-            && node.textContent != parent.textContent) {
-        const selectedItem = node.textContent;
-        const data = this.imageGallery[selectedItem];
-        if (data){
-          var range = [];
-          data.forEach(value => {
-            if (value.timestep == this.currentTimeStep) {
-              range = value.range;
-            }
-          });
-          if (range.length > 0) {
-            this.pos = [event.clientX, event.clientY];
-            this.range = '[' + range[0].toExponential(3) + ', '
-                             + range[1].toExponential(3) + ']';
-          }
-        }
+            || (node.classList.value.includes('pl-3')
+            && node.textContent != parent.textContent)) {
+        const parameterName = event.target.textContent;
+        const folderId = this.location._id;
+        var endpoint = `item?folderId=${folderId}&name=${parameterName}&limit=50&sort=lowerName&sortdir=1`;
+        const item = await this.callEndpoint(endpoint);
+        endpoint = `item/${item[0]._id}/files?limit=1&offset=${this.currentTimeStep-1}&sort=name&sortdir=1`;
+        const file = await this.callEndpoint(endpoint);
+        endpoint = `file/${file[0]._id}/download?contentDisposition=inline`;
+        var img = await this.callEndpoint(endpoint);
+        this.pos = [event.clientX, event.clientY];
+        this.range = '[' + Math.min(...img.data[0].y).toExponential(3) + ', '
+                         + Math.max(...img.data[0].y).toExponential(3) + ']';
       }
+    },
+
+    async callEndpoint(endpoint) {
+      const { data } = await this.girderRest.get(endpoint);
+      return data;
     },
 
     incrementTimeStep(should_pause) {
