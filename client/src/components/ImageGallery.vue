@@ -124,7 +124,6 @@ export default {
       this.preCacheImages();
 
       if (this.initialLoad) {
-        this.name = this.rows[0].name;
         // Not sure why this level of parent chaining is required
         // to get the app to be able to hear the event.
         this.$parent.$parent.$parent.$parent.$emit("data-loaded", this.rows.length, this.itemId);
@@ -168,6 +167,7 @@ export default {
           any_images_loaded = true;
           this.pendingImages = 1;
           const img = this.rows[i - 1].img;
+          this.name = img.name;
           this.loadedImages.push({
             timestep: i,
             data: img.data,
