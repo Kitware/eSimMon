@@ -162,8 +162,8 @@ export default {
       this.range = '';
       const node = event.target;
       const parent = node ? node.parentNode : null;
-      if ((parent && parent.classList.value.includes('itemRow'))
-            || node.classList.value.includes('itemRow')
+      if ((parent && parent.classList.value.includes('pl-3'))
+            || node.classList.value.includes('pl-3')
             && node.textContent != parent.textContent) {
         const selectedItem = node.textContent;
         const data = this.imageGallery[selectedItem];
