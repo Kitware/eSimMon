@@ -176,7 +176,8 @@ export default {
           });
           if (range.length > 0) {
             this.pos = [event.clientX, event.clientY];
-            this.range = '[' + range[0] + ', ' + range[1] + ']';
+            this.range = '[' + range[0].toExponential(3) + ', '
+                             + range[1].toExponential(3) + ']';
           }
         }
       }
