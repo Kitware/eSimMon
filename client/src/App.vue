@@ -307,6 +307,7 @@ export default {
       this.numReady += 1;
       this.imageGallery = this.$refs.imageGallery.reduce(
         (object, item) => (object[item.name] = item.loadedImages, object), {});
+      this.getRangeData();
     },
   },
 
