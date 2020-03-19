@@ -162,15 +162,22 @@ export default {
       this.range = '';
       const node = event.target;
       const parent = node ? node.parentNode : null;
-      const idx = this.currentTimeStep - 1;
       if ((parent && parent.classList.value.includes('itemRow'))
             || node.classList.value.includes('itemRow')
             && node.textContent != parent.textContent) {
         const selectedItem = node.textContent;
         const data = this.imageGallery[selectedItem];
-        if (data && data[idx].range.length){
-          this.pos = [event.clientX, event.clientY];
-          this.range = '[' + data[idx].range[0] + ', ' + data[idx].range[1] + ']';
+        if (data){
+          var range = [];
+          data.forEach(value => {
+            if (value.timestep == this.currentTimeStep) {
+              range = value.range;
+            }
+          });
+          if (range.length > 0) {
+            this.pos = [event.clientX, event.clientY];
+            this.range = '[' + range[0] + ', ' + range[1] + ']';
+          }
         }
       }
     },
