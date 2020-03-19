@@ -135,6 +135,7 @@ export default {
       range: '',
       imageGallery: {},
       pos: [],
+      parameter: ''
     };
   },
 
@@ -158,30 +159,43 @@ export default {
       }
     },
 
-    async hover(event) {
+    hoverOut() {
       this.range = '';
+    },
+
+    hoverIn(event) {
       const node = event.target;
       const parent = node ? node.parentNode : null;
       if ((parent && parent.classList.value.includes('pl-3'))
             || (node.classList.value.includes('pl-3')
             && node.textContent != parent.textContent)) {
-        const parameterName = event.target.textContent;
-        const folderId = this.location._id;
-        var endpoint = `item?folderId=${folderId}&name=${parameterName}&limit=50&sort=lowerName&sortdir=1`;
-        const item = await this.callEndpoint(endpoint);
-        endpoint = `item/${item[0]._id}/files?limit=1&offset=${this.currentTimeStep-1}&sort=name&sortdir=1`;
-        const file = await this.callEndpoint(endpoint);
-        endpoint = `file/${file[0]._id}/download?contentDisposition=inline`;
-        var img = await this.callEndpoint(endpoint);
-        this.pos = [event.clientX, event.clientY];
-        this.range = '[' + Math.min(...img.data[0].y).toExponential(3) + ', '
-                         + Math.max(...img.data[0].y).toExponential(3) + ']';
+        this.parameter = node.textContent;
+        this.getRangeData(event);
+      }
+    },
+
+    async getRangeData(event=null) {
+      const folderId = this.location._id;
+      var endpoint = `item?folderId=${folderId}&name=${this.parameter}&limit=50&sort=lowerName&sortdir=1`;
+      const item = await this.callEndpoint(endpoint);
+      endpoint = `item/${item[0]._id}/files?limit=1&offset=${this.currentTimeStep-1}&sort=name&sortdir=1`;
+      const file = await this.callEndpoint(endpoint);
+      endpoint = `file/${file[0]._id}/download?contentDisposition=inline`;
+      var img = await this.callEndpoint(endpoint);
+      if (!event || (event.target.textContent == this.parameter)) {
+        this.updateRange(img.data[0].y, event)
       }
     },
 
     async callEndpoint(endpoint) {
       const { data } = await this.girderRest.get(endpoint);
       return data;
+    },
+
+    updateRange(yVals, event) {
+      this.pos = event ? [event.clientX, event.clientY] : this.pos;
+      this.range = '[' + Math.min(...yVals).toExponential(3) + ', '
+                       + Math.max(...yVals).toExponential(3) + ']';
     },
 
     incrementTimeStep(should_pause) {
