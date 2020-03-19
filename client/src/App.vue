@@ -13,7 +13,7 @@ v-app.app.pr-3
           // Girder data table browser.
           div.girder-placeholder(v-if="!location")
           div
-            v-tooltip(right, light,
+            v-tooltip(left, light,
               v-if="range",
               :value="range",
               :position-x="pos[0]",
@@ -21,8 +21,8 @@ v-app.app.pr-3
               <span v-if="range">{{range}}</span>
           girder-data-browser(ref="girderBrowser",
               v-if="location",
-              v-on:mouseover.native="hover($event)",
-              v-on:mouseout.native="hover($event)",
+              v-on:mouseover.native="hoverIn($event)",
+              v-on:mouseout.native="hoverOut($event)",
               :location.sync="location",
               :select-enabled="false",
               :new-item-enabled="false",
@@ -83,7 +83,7 @@ v-app.app.pr-3
             v-layout(row justify-center).mt-0.mb-0
               v-icon(v-on:click="girderRest.logout()") $vuetify.icons.logout
     // Scientific data on the right.
-    pane.main-content
+    pane.main-content(v-on:mouseover.native="hoverOut")
       // image gallery grid.
       v-layout(column)
         template(v-for="i in numrows")
