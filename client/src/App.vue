@@ -90,8 +90,7 @@ v-app.app.pr-3
           v-layout
             template(v-for="j in numcols")
               v-flex(v-bind:style="{ width: cellWidth, height: cellHeight }")
-                image-gallery(ref="imageGallery",
-                              :currentTimeStep.sync="currentTimeStep"
+                image-gallery(:currentTimeStep.sync="currentTimeStep"
                               :maxTimeStep.sync="maxTimeStep"
                               v-bind:class="[paused ? 'show-toolbar' : 'hide-toolbar']")
 </template>
@@ -133,7 +132,6 @@ export default {
       paused: true,
       runId: null,
       range: '',
-      imageGallery: {},
       pos: [],
       parameter: ''
     };
@@ -305,8 +303,6 @@ export default {
 
     incrementReady() {
       this.numReady += 1;
-      this.imageGallery = this.$refs.imageGallery.reduce(
-        (object, item) => (object[item.name] = item.loadedImages, object), {});
       this.getRangeData();
     },
   },

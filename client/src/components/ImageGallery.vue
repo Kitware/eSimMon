@@ -42,8 +42,6 @@ export default {
       pendingImages: 0,
       rows: [],
       step: 0,
-      name: '',
-      range: [],
     };
   },
 
@@ -118,7 +116,7 @@ export default {
       this.rows = await Promise.all(response.map(async function(val) {
         let img = await this.callEndpoint(
           `file/${val._id}/download?contentDisposition=inline`);
-        return {img, name: img.name};
+        return {img};
       }, this));
 
       this.preCacheImages();
@@ -167,12 +165,10 @@ export default {
           any_images_loaded = true;
           this.pendingImages = 1;
           const img = this.rows[i - 1].img;
-          this.name = img.name;
           this.loadedImages.push({
             timestep: i,
             data: img.data,
-            layout: img.layout,
-            range: [Math.min(...img.data[0].y), Math.max(...img.data[0].y)],
+            layout: img.layout
           });
         }
       }
