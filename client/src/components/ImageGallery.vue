@@ -3,18 +3,12 @@ v-card.vertical-center(height="100%"
                        v-on:drop="loadGallery($event)"
                        v-on:dragover="preventDefault($event)")
   v-card-text.text-xs-center
-    div(v-if="itemId")
-      Plotly.plot(v-for="image in loadedImages"
-            v-if="image.timestep == step"
-            :key="image.timestep"
-            :data="image.data"
-            :layout="image.layout",
-            :range="image.range")
+    div(v-if="itemId" ref="plotly")
     v-icon(v-if="!itemId" large) input
 </template>
 
 <script>
-import { Plotly } from 'vue-plotly';
+import Plotly from 'plotly.js-basic-dist-min';
 
 export default {
   components: {
@@ -69,6 +63,7 @@ export default {
       handler () {
         this.step = this.currentTimeStep;
         this.preCacheImages();
+        this.react();
       }
     },
     itemId: {
@@ -84,22 +79,6 @@ export default {
         this.loadImageUrls();
       }
     },
-
-    pendingImages: {
-      immediate: true,
-      handler () {
-        if (!this.itemId) {
-          return;
-        }
-        if (this.pendingImages == 0) {
-          this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
-        }
-      }
-    },
-  },
-
-  updated: function() {
-    this.imageLoaded();
   },
 
   methods: {
@@ -174,6 +153,9 @@ export default {
             layout: img.layout,
             range: [Math.min(...img.data[0].y), Math.max(...img.data[0].y)],
           });
+          if (this.loadedImages.length == 1) {
+            this.react();
+          }
         }
       }
 
@@ -188,8 +170,13 @@ export default {
       }
     },
 
-    imageLoaded: function () {
-      this.pendingImages = 0;
+    react: function () {
+      for (var idx in this.loadedImages) {
+        if (this.loadedImages[idx].timestep == this.step) {
+          Plotly.react(this.$refs.plotly, this.loadedImages[idx].data, this.loadedImages[idx].layout);
+          this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
+        }
+      }
     },
   },
 };

@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "@girder/components": "https://github.com/girder/girder_web_components#09eb0bf22bfdbc99f7a4d8e55fb2d33bd1d5fd1a",
-    "splitpanes": "^2.2.1",
-    "vue-plotly": "^1.1.0"
+    "plotly.js-basic-dist-min": "^1.52.3",
+    "splitpanes": "^2.2.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.4.0",
@@ -27,7 +27,9 @@
     "stylus-loader": "^3.0.1",
     "vue-cli-plugin-vuetify": "^0.4.6",
     "vue-template-compiler": "2.6.10",
-    "vuetify-loader": "^1.0.5"
+    "vuetify-loader": "^1.0.5",
+    "webpack-bundle-analyzer": "^3.6.1",
+    "webpack-cli": "^3.3.11"
   },
   "eslintConfig": {
     "root": true,
