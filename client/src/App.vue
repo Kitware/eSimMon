@@ -29,7 +29,7 @@ v-app.app.pr-3
               :new-folder-enabled="false",
               :draggable="true")
           // Playback controls.
-          div.playback-controls.pl-2.pr-1
+          div.playback-controls.pl-2.pr-1(v-on:mouseout.native="hoverOut($event)")
             v-layout(row fluid).mt-0.mb-0
               v-flex(xs1)
                 div.text-xs-center
