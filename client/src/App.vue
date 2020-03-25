@@ -98,6 +98,7 @@ v-app.app.pr-3
 <script>
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
+import _ from 'lodash';
 import ImageGallery from './components/ImageGallery.vue';
 import {
   Authentication as GirderAuth,
@@ -161,16 +162,17 @@ export default {
       this.range = '';
     },
 
-    hoverIn(event) {
-      const node = event.target;
-      const parent = node ? node.parentNode : null;
-      if ((parent && parent.classList.value.includes('pl-3'))
-            || (node.classList.value.includes('pl-3')
-            && node.textContent != parent.textContent)) {
-        this.parameter = node.textContent;
-        this.getRangeData(event);
-      }
-    },
+    hoverIn: _.debounce(function(event){
+        const node = event.target;
+        const parent = node ? node.parentNode : null;
+        if ((parent && parent.classList.value.includes('pl-3'))
+              || (node.classList.value.includes('pl-3')
+              && node.textContent != parent.textContent)) {
+          this.parameter = node.textContent;
+          this.cancel = false;
+          this.getRangeData(event);
+        }
+      }, 100),
 
     async getRangeData(event=null) {
       const folderId = this.location._id;
