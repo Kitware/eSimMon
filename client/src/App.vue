@@ -242,11 +242,13 @@ export default {
     },
 
     removeColumn() {
+      this.numLoadedGalleries -= this.numrows;
       this.numcols -= 1;
       this.updateCellWidth();
     },
 
     removeRow() {
+      this.numLoadedGalleries -= this.numcols;
       this.numrows -= 1;
       this.updateCellHeight();
     },
