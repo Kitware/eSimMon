@@ -21,7 +21,7 @@
               <span v-if="range">{{range}}</span>
             </v-tooltip>
           </div>
-          <girder-data-browser ref="girderBrowser"
+          <girder-file-manager ref="girderFileManager"
                                v-if="location"
                                v-on:mouseover.native="hover($event)"
                                v-on:mouseout.native="hover($event)"
@@ -132,10 +132,8 @@
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
 import ImageGallery from './components/ImageGallery.vue';
-import {
-  Authentication as GirderAuth,
-  DataBrowser as GirderDataBrowser,
-} from '@girder/components/src/components';
+import { Authentication as GirderAuth } from '@girder/components/src/components';
+import { FileManager as GirderFileManager } from '@girder/components/src/components/Snippet';
 
 export default {
   name: 'App',
@@ -143,7 +141,7 @@ export default {
 
   components: {
     GirderAuth,
-    GirderDataBrowser,
+    GirderFileManager,
     ImageGallery,
     Splitpanes,
     Pane

@@ -64,7 +64,8 @@ export default {
     currentTimeStep: {
       immediate: true,
       handler () {
-        this.step = this.currentTimeStep;
+        if (this.currentTimeStep >= 1)
+          this.step = this.currentTimeStep;
         this.preCacheImages();
         this.react();
       }
@@ -121,7 +122,7 @@ export default {
     loadGallery: function (event) {
       event.preventDefault();
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
-      this.itemId = items[0];
+      this.itemId = items[0]._id;
     },
 
     preCacheImages: function () {
