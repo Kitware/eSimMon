@@ -1,25 +1,22 @@
-<template lang="pug">
-v-card.vertical-center(height="100%"
-                       v-on:drop="loadGallery($event)"
-                       v-on:dragover="preventDefault($event)")
-  v-card-text.text-xs-center
-    div(v-if="itemId")
-      Plotly.plot(v-for="image in loadedImages"
-            v-if="image.timestep == step"
-            :key="image.timestep"
-            :data="image.data"
-            :layout="image.layout",
-            :range="image.range")
-    v-icon(v-if="!itemId" large) input
+<template>
+<v-card vertical-center
+        v-bind:style="{height: '100%'}"
+        v-on:drop="loadGallery($event)"
+        v-on:dragover="preventDefault($event)">
+  <v-card-text class="text-xs-center">
+    <div v-if="itemId"
+         ref="plotly"
+         class="plot"/>
+    <v-icon v-if="!itemId" large  v-bind:style="{height: '100%'}"> input </v-icon>
+  </v-card-text>
+</v-card>
 </template>
 
 <script>
-import { Plotly } from 'vue-plotly';
+import Plotly from 'plotly.js-basic-dist-min';
 
 export default {
-  components: {
-    Plotly
-  },
+  name: "plotly",
 
   props: {
     currentTimeStep: {
@@ -27,6 +24,14 @@ export default {
       required: true
     },
     maxTimeStep: {
+      type: Number,
+      required: true
+    },
+    numrows: {
+      type: Number,
+      required: true
+    },
+    numcols: {
       type: Number,
       required: true
     },
@@ -67,8 +72,10 @@ export default {
     currentTimeStep: {
       immediate: true,
       handler () {
-        this.step = this.currentTimeStep;
+        if (this.currentTimeStep >= 1)
+          this.step = this.currentTimeStep;
         this.preCacheImages();
+        this.react();
       }
     },
     itemId: {
@@ -84,22 +91,18 @@ export default {
         this.loadImageUrls();
       }
     },
-
-    pendingImages: {
+    numrows: {
       immediate: true,
-      handler () {
-        if (!this.itemId) {
-          return;
-        }
-        if (this.pendingImages == 0) {
-          this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
-        }
+      handler() {
+        this.react();
       }
     },
-  },
-
-  updated: function() {
-    this.imageLoaded();
+    numcols: {
+      immediate: true,
+      handler() {
+        this.react();
+      }
+    },
   },
 
   methods: {
@@ -139,7 +142,7 @@ export default {
     loadGallery: function (event) {
       event.preventDefault();
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
-      this.itemId = items[0];
+      this.itemId = items[0]._id;
     },
 
     preCacheImages: function () {
@@ -174,6 +177,9 @@ export default {
             layout: img.layout,
             range: [Math.min(...img.data[0].y), Math.max(...img.data[0].y)],
           });
+          if (this.loadedImages.length == 1) {
+            this.react();
+          }
         }
       }
 
@@ -188,10 +194,15 @@ export default {
       }
     },
 
-    imageLoaded: function () {
-      this.pendingImages = 0;
+    react: function () {
+      for (var idx in this.loadedImages) {
+        if (this.loadedImages[idx].timestep == this.step) {
+          Plotly.react(this.$refs.plotly, this.loadedImages[idx].data, this.loadedImages[idx].layout, {responsive: true});
+          this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
+        }
+      }
     },
-  },
+    },
 };
 </script>
 
