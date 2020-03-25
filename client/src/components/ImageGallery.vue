@@ -1,19 +1,22 @@
-<template lang="pug">
-v-card.vertical-center(height="100%"
-                       v-on:drop="loadGallery($event)"
-                       v-on:dragover="preventDefault($event)")
-  v-card-text.text-xs-center
-    div(v-if="itemId" ref="plotly")
-    v-icon(v-if="!itemId" large) input
+<template>
+<v-card vertical-center
+        v-bind:style="{height: '100%'}"
+        v-on:drop="loadGallery($event)"
+        v-on:dragover="preventDefault($event)">
+  <v-card-text class="text-xs-center">
+    <div v-if="itemId"
+         ref="plotly"
+         class="plot"/>
+    <v-icon v-if="!itemId" large  v-bind:style="{height: '100%'}"> input </v-icon>
+  </v-card-text>
+</v-card>
 </template>
 
 <script>
 import Plotly from 'plotly.js-basic-dist-min';
 
 export default {
-  components: {
-    Plotly
-  },
+  name: "plotly",
 
   props: {
     currentTimeStep: {

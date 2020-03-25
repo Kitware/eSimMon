@@ -1,99 +1,131 @@
-<template lang="pug">
-v-app.app.pr-3
-  v-dialog(:value="loggedOut", persistent, full-width, max-width="600px")
-    girder-auth(
-        :register="true",
-        :oauth="false",
-        :forgot-password-url="forgotPasswordUrl")
-  splitpanes
-    pane(min-size="15", :size="25")
-      v-layout(row fluid)
-        // Navigation panel on the left.
-        v-flex
-          // Girder data table browser.
-          div.girder-placeholder(v-if="!location")
-          div
-            v-tooltip(right, light,
-              v-if="range",
-              :value="range",
-              :position-x="pos[0]",
-              :position-y="pos[1]")
+<template>
+<v-app class="app pr-3">
+  <v-dialog :value="loggedOut" persistent max-width="600px">
+    <girder-auth :register="true"
+                 :oauth="false"
+                 :forgot-password-url="forgotPasswordUrl" />
+  </v-dialog>
+  <splitpanes>
+    <pane min-size="15" :size="25">
+      <v-row>
+        <!-- Navigation panel on the left. -->
+        <v-col v-bind:style="{padding: '0 10px'}">
+          <!-- Girder data table browser. -->
+          <div class="girder-placeholder" v-if="!location" />
+          <div>
+            <v-tooltip right light
+                       v-if="range"
+                       :value="range"
+                       :position-x="pos[0]"
+                       :position-y="pos[1]">
               <span v-if="range">{{range}}</span>
-          girder-data-browser(ref="girderBrowser",
-              v-if="location",
-              v-on:mouseover.native="hover($event)",
-              v-on:mouseout.native="hover($event)",
-              :location.sync="location",
-              :select-enabled="false",
-              :new-item-enabled="false",
-              :new-folder-enabled="false",
-              :draggable="true")
-          // Playback controls.
-          div.playback-controls.pl-2.pr-1
-            v-layout(row fluid).mt-0.mb-0
-              v-flex(xs1)
-                div.text-xs-center
-                  v-icon(v-on:click="decrementTimeStep(true)"
-                        :disabled="!dataLoaded") arrow_back_ios
-              v-flex(xs8 offset-xs1)
-                v-slider(v-model="currentTimeStep"
-                        :min="1"
-                        :max="maxTimeStep"
-                        :disabled="!dataLoaded"
-                        width="100%"
-                        height="1px"
-                        thumb-label="always")
-              v-flex(xs1)
-                div.text-xs-center
-                  v-icon(v-on:click="incrementTimeStep(true)"
-                        :disabled="!dataLoaded") arrow_forward_ios
-            v-layout(row justify-space-between).mt-0.mb-0
-              v-flex(xs6).text-xs-center
-                v-icon(v-show="paused"
-                      v-on:click="togglePlayPause"
-                      :disabled="!dataLoaded") &#9654;
-                v-icon(v-show="!paused"
-                      v-on:click="togglePlayPause"
-                      :disabled="!dataLoaded") &#9208;
-              v-flex(xs6).text-xs-center
-                input(v-model="currentTimeStep"
-                      type="number"
-                      min="1"
-                      :max="maxTimeStep"
-                      size="4"
-                      :disabled="!dataLoaded")
-            v-layout(row justify-space-between).mt-0.mb-0
-              v-flex(xs2)
-                v-icon(v-on:click="removeRow()"
-                      :disabled="numrows < 2") remove_circle_outline
-              v-flex(xs2)
-                span rows
-              v-flex(xs2)
-                v-icon(v-on:click="addRow()"
-                      :disabled="numrows > 7") add_circle_outline
-            v-layout(row justify-space-between).mt-0.mb-0
-              v-flex(xs2)
-                v-icon(v-on:click="removeColumn()"
-                      :disabled="numcols < 2") remove_circle_outline
-              v-flex(xs2)
-                span cols
-              v-flex(xs2)
-                v-icon(v-on:click="addColumn()"
-                      :disabled="numcols > 7")  add_circle_outline
-            v-layout(row justify-center).mt-0.mb-0
-              v-icon(v-on:click="girderRest.logout()") $vuetify.icons.logout
-    // Scientific data on the right.
-    pane.main-content
-      // image gallery grid.
-      v-layout(column)
-        template(v-for="i in numrows")
-          v-layout
-            template(v-for="j in numcols")
-              v-flex(v-bind:style="{ width: cellWidth, height: cellHeight }")
-                image-gallery(ref="imageGallery",
+            </v-tooltip>
+          </div>
+          <girder-data-browser ref="girderBrowser"
+                               v-if="location"
+                               v-on:mouseover.native="hover($event)"
+                               v-on:mouseout.native="hover($event)"
+                               :location.sync="location"
+                               :selectable="false"
+                               :new-folder-enabled="false"
+                               :drag-enabled="true" />
+          <!-- Playback controls. -->
+          <v-container class="playback-controls pl-2 pr-1">
+            <v-row>
+              <v-col sm>
+                <div class="text-xs-center">
+                  <v-icon v-on:click="decrementTimeStep(true)"
+                          :disabled="!dataLoaded"> arrow_back_ios </v-icon>
+                </div>
+              </v-col>
+              <v-col :sm="8" :offset-sm="1">
+                <v-slider v-model="currentTimeStep"
+                          :min="1"
+                          :max="maxTimeStep"
+                          :disabled="!dataLoaded"
+                          width="100%"
+                          height="1px"
+                          thumb-label="always" />
+              </v-col>
+              <v-col :sm="1">
+                <div class="text-xs-center">
+                  <v-icon v-on:click="incrementTimeStep(true)"
+                          :disabled="!dataLoaded"> arrow_forward_ios </v-icon>
+                </div>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col :sm="6" class="text-xs-center">
+                <v-icon v-show="paused"
+                        v-on:click="togglePlayPause"
+                        :disabled="!dataLoaded"> &#9654; </v-icon>
+                <v-icon v-show="!paused"
+                        v-on:click="togglePlayPause"
+                        :disabled="!dataLoaded"> &#9208; </v-icon>
+              </v-col>
+              <v-col :sm="6" class="text-xs-center">
+                <input v-model="currentTimeStep"
+                       type="number"
+                       min="1"
+                       :max="maxTimeStep"
+                       size="4"
+                       :disabled="!dataLoaded">
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col :sm="2">
+                <v-icon v-on:click="removeRow()"
+                        :disabled="numrows < 2"> remove_circle_outline </v-icon>
+              </v-col>
+              <v-col :sm="2">
+                <span> rows </span>
+              </v-col>
+              <v-col :sm="2">
+                <v-icon v-on:click="addRow()"
+                        :disabled="numrows > 7"> add_circle_outline </v-icon>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col :sm="2">
+                <v-icon v-on:click="removeColumn()"
+                        :disabled="numcols < 2"> remove_circle_outline </v-icon>
+              </v-col>
+              <v-col :sm="2">
+                <span> cols </span>
+              </v-col>
+              <v-col :sm="2">
+                <v-icon v-on:click="addColumn()"
+                        :disabled="numcols > 7">  add_circle_outline </v-icon>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-icon v-on:click="girderRest.logout()"> $vuetify.icons.logout </v-icon>
+            </v-row>
+          </v-container>
+        </v-col>
+      </v-row>
+    </pane>
+    <!-- Scientific data on the right. -->
+    <pane class="main-content">
+      <!-- image gallery grid. -->
+      <v-container v-bind:style="{padding: '0'}">
+        <template v-for="i in numrows">
+          <v-row>
+            <template v-for="j in numcols">
+              <v-col v-bind:style="{ width: cellWidth, height: cellHeight, padding: '0' }">
+                <image-gallery ref="imageGallery"
                               :currentTimeStep.sync="currentTimeStep"
                               :maxTimeStep.sync="maxTimeStep"
-                              v-bind:class="[paused ? 'show-toolbar' : 'hide-toolbar']")
+                              v-bind:style="{padding: '0 0 0 10px'}"
+                              v-bind:class="[paused ? 'show-toolbar' : 'hide-toolbar']" />
+              </v-col>
+            </template>
+          </v-row>
+        </template>
+      </v-container>
+    </pane>
+  </splitpanes>
+</v-app>
 </template>
 
 <script>
