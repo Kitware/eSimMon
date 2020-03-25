@@ -52,6 +52,14 @@ table.v-table tbody td {
     max-width: 100%;
     flex-flow: nowrap;
     justify-content: space-around;
+    padding-left: 10px;
+    .col-sm-10 {
+      padding-top: 5%;
+      .v-slider__thumb-container {
+        right: 100%;
+        left: 0;
+      }
+    }
   }
 }
 
