@@ -108,7 +108,7 @@
     <!-- Scientific data on the right. -->
     <pane class="main-content">
       <!-- image gallery grid. -->
-      <v-container v-bind:style="{padding: '0'}">
+      <v-container v-bind:style="{padding: '0', maxWidth: '100%'}">
         <template v-for="i in numrows">
           <v-row>
             <template v-for="j in numcols">
