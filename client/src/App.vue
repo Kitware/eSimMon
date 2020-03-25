@@ -354,22 +354,5 @@ export default {
 </script>
 
 <style lang="scss" type="text/scss">
-  .show-toolbar {
-    .modebar-container {
-      display: flex;
-      height: auto;
-      div {
-        height: auto;
-      }
-    }
-  }
-  .hide-toolbar {
-    .modebar-container {
-      display: none;
-    }
-  }
-  .splitpanes--vertical > .splitpanes__splitter {
-    min-width: 3px;
-    background: linear-gradient(90deg, #ccc, #a5a4a4);
-  }
+  @import './scss/gallery.scss';
 </style>
