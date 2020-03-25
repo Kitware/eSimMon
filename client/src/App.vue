@@ -134,7 +134,8 @@ export default {
       runId: null,
       range: '',
       pos: [],
-      parameter: ''
+      parameter: '',
+      cancel: false,
     };
   },
 
@@ -160,6 +161,7 @@ export default {
 
     hoverOut() {
       this.range = '';
+      this.cancel = true;
     },
 
     hoverIn: _.debounce(function(event){
@@ -176,19 +178,37 @@ export default {
 
     async getRangeData(event=null) {
       const folderId = this.location._id;
-      var endpoint = `item?folderId=${folderId}&name=${this.parameter}&limit=50&sort=lowerName&sortdir=1`;
-      const item = await this.callEndpoint(endpoint);
-      endpoint = `item/${item[0]._id}/files?limit=1&offset=${this.currentTimeStep-1}&sort=name&sortdir=1`;
-      const file = await this.callEndpoint(endpoint);
-      endpoint = `file/${file[0]._id}/download?contentDisposition=inline`;
-      var img = await this.callEndpoint(endpoint);
-      if (!event || (event.target.textContent == this.parameter)) {
-        this.updateRange(img.data[0].y, event)
+      let data = null;
+      if (!this.cancel) {
+        data = this.callEndpoints(folderId);
+        if (!event || (event.target.textContent == this.parameter)) {
+          var img = await data;
+          if (img)
+            this.updateRange(img.data.data[0].y, event);
+        }
       }
     },
 
-    async callEndpoint(endpoint) {
-      const { data } = await this.girderRest.get(endpoint);
+    callEndpoints(folderId) {
+      var self = this;
+      var endpoint = `item?folderId=${folderId}&name=${this.parameter}&limit=50&sort=lowerName&sortdir=1`;
+      const data = this.girderRest.get(endpoint)
+                    .then(function(result) {
+                      if (result && !self.cancel) {
+                        endpoint = `item/${result.data[0]._id}/files?limit=1&offset=${self.currentTimeStep-1}&sort=name&sortdir=1`;
+                        return new Promise((resolve, reject) => {
+                          const file = self.girderRest.get(endpoint);
+                          resolve(file);
+                        });}
+                    })
+                    .then(function(result) {
+                      if (result && !self.cancel) {
+                        endpoint = `file/${result.data[0]._id}/download?contentDisposition=inline`;
+                        return new Promise((resolve, reject) => {
+                          const data = self.girderRest.get(endpoint);
+                          resolve(data);
+                        });}
+                    });
       return data;
     },
 
@@ -305,7 +325,7 @@ export default {
 
     incrementReady() {
       this.numReady += 1;
-      this.getRangeData();
+      this.getRangeData(event);
     },
   },
 
