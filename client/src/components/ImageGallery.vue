@@ -27,6 +27,14 @@ export default {
       type: Number,
       required: true
     },
+    numrows: {
+      type: Number,
+      required: true
+    },
+    numcols: {
+      type: Number,
+      required: true
+    },
   },
 
   inject: ['girderRest'],
@@ -81,6 +89,18 @@ export default {
       immediate: true,
       handler () {
         this.loadImageUrls();
+      }
+    },
+    numrows: {
+      immediate: true,
+      handler() {
+        this.react();
+      }
+    },
+    numcols: {
+      immediate: true,
+      handler() {
+        this.react();
       }
     },
   },
@@ -177,12 +197,12 @@ export default {
     react: function () {
       for (var idx in this.loadedImages) {
         if (this.loadedImages[idx].timestep == this.step) {
-          Plotly.react(this.$refs.plotly, this.loadedImages[idx].data, this.loadedImages[idx].layout);
+          Plotly.react(this.$refs.plotly, this.loadedImages[idx].data, this.loadedImages[idx].layout, {responsive: true});
           this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
         }
       }
     },
-  },
+    },
 };
 </script>
 

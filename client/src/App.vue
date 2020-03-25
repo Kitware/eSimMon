@@ -116,6 +116,8 @@
                 <image-gallery ref="imageGallery"
                               :currentTimeStep.sync="currentTimeStep"
                               :maxTimeStep.sync="maxTimeStep"
+                              :numrows.sync="numrows"
+                              :numcols.sync="numcols"
                               v-bind:style="{padding: '0 0 0 10px'}"
                               v-bind:class="[paused ? 'show-toolbar' : 'hide-toolbar']" />
               </v-col>
