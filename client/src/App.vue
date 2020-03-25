@@ -197,7 +197,7 @@ export default {
       if ((parent && parent.classList.value.includes('pl-3'))
             || node.classList.value.includes('pl-3')
             && node.textContent != parent.textContent) {
-        const selectedItem = node.textContent;
+        const selectedItem = node.textContent.trim();
         const data = this.imageGallery[selectedItem];
         if (data){
           var range = [];
