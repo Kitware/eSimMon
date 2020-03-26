@@ -39,7 +39,7 @@
                           :disabled="!dataLoaded"> arrow_back_ios </v-icon>
                 </div>
               </v-col>
-              <v-col :sm="8" :offset-sm="1">
+              <v-col :sm="10">
                 <v-slider v-model="currentTimeStep"
                           :min="1"
                           :max="maxTimeStep"
@@ -96,7 +96,7 @@
               </v-col>
               <v-col :sm="2">
                 <v-icon v-on:click="addColumn()"
-                        :disabled="numcols > 7">  add_circle_outline </v-icon>
+                        :disabled="numcols > 7"> add_circle_outline </v-icon>
               </v-col>
             </v-row>
             <v-row>
