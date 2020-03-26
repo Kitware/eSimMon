@@ -38,7 +38,7 @@
                           :disabled="!dataLoaded"> arrow_back_ios </v-icon>
                 </div>
               </v-col>
-              <v-col :sm="8" :offset-sm="1">
+              <v-col :sm="10">
                 <v-slider v-model="currentTimeStep"
                           :min="1"
                           :max="maxTimeStep"
@@ -95,7 +95,7 @@
               </v-col>
               <v-col :sm="2">
                 <v-icon v-on:click="addColumn()"
-                        :disabled="numcols > 7">  add_circle_outline </v-icon>
+                        :disabled="numcols > 7"> add_circle_outline </v-icon>
               </v-col>
             </v-row>
             <v-row>
@@ -108,7 +108,7 @@
     <!-- Scientific data on the right. -->
     <pane class="main-content">
       <!-- image gallery grid. -->
-      <v-container v-bind:style="{padding: '0'}">
+      <v-container v-bind:style="{padding: '0', maxWidth: '100%'}">
         <template v-for="i in numrows">
           <v-row>
             <template v-for="j in numcols">
