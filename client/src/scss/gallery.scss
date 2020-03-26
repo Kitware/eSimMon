@@ -13,10 +13,16 @@ div.controls button {
   align-items: center;
 }
 
-.v-card * {
-  height: 100%;
+.plot {
+  min-height: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
 }
 
+.v-card__text {
+  height: inherit;
+  padding: 0;
+}
 // Make text smaller in the data browser.
 table.v-table tbody td {
   font-size: 0.8rem;
@@ -29,28 +35,76 @@ table.v-table tbody td {
 
 // Girder browser takes up 80% of the left column
 // and shows a scrollbar when necessary.
-.girder-data-table {
-  height: 80vh;
+.girder-data-browser-snippet {
+  height: 70vh;
   overflow: auto;
 }
 .girder-placeholder {
-  height: 80vh;
+  height: 70vh;
 }
 
 // Playback controls take up 20% of the left column.
 .playback-controls {
-  height: 20vh;
+  height: 30vh;
+  width: 100%;
+  box-sizing: border-box;
+  .row {
+    max-width: 100%;
+    flex-flow: nowrap;
+    justify-content: space-around;
+  }
+}
+
+.text-xs-center {
+  text-align: center;
 }
 
 // Hide disk space indicator in girder data table.
 .girder-data-table {
-  .v-datatable {
+  .v-data-table__wrapper {
     tbody {
       tr {
-        td.secondary--text {
+        td.text-right {
           display: none;
         }
       }
     }
   }
+}
+
+.v-breadcrumbs {
+  display: flex;
+  align-items: baseline;
+}
+
+.v-data-footer {
+  justify-content: center;
+}
+
+.show-toolbar {
+  .modebar-container {
+    display: flex;
+    height: auto;
+    div {
+      height: auto;
+    }
+  }
+  .modebar {
+    top: 20px !important;
+  }
+}
+
+.hide-toolbar {
+  .modebar-container {
+    display: none;
+  }
+}
+
+.splitpanes--vertical > .splitpanes__splitter {
+  min-width: 3px;
+  background: linear-gradient(90deg, #ccc, #a5a4a4);
+}
+
+.gtitle, .ytitle, .xtitle {
+  font-size: inherit !important;
 }
