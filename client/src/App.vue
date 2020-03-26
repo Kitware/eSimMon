@@ -23,14 +23,15 @@
           </div>
           <girder-file-manager ref="girderFileManager"
                                v-if="location"
-                               v-on:mouseover.native="hover($event)"
-                               v-on:mouseout.native="hover($event)"
+                               v-on:mouseover.native="hoverIn($event)"
+                               v-on:mouseout.native="hoverOut"
                                :location.sync="location"
                                :selectable="false"
                                :new-folder-enabled="false"
                                :drag-enabled="true" />
           <!-- Playback controls. -->
-          <v-container class="playback-controls pl-2 pr-1">
+          <v-container class="playback-controls pl-2 pr-1"
+                       v-on:mouseover="hoverOut">
             <v-row>
               <v-col sm>
                 <div class="text-xs-center">
@@ -106,13 +107,15 @@
       </v-row>
     </pane>
     <!-- Scientific data on the right. -->
-    <pane class="main-content">
+    <pane class="main-content"
+          v-on:mouseover.native="hoverOut">
       <!-- image gallery grid. -->
-      <v-container v-bind:style="{padding: '0', maxWidth: '100%'}">
+      <v-container v-bind:style="{padding: '0'}">
         <template v-for="i in numrows">
-          <v-row>
+          <v-row v-bind:key="i">
             <template v-for="j in numcols">
-              <v-col v-bind:style="{ width: cellWidth, height: cellHeight, padding: '0' }">
+              <v-col v-bind:key="j"
+                     v-bind:style="{ width: cellWidth, height: cellHeight, padding: '0' }">
                 <image-gallery ref="imageGallery"
                               :currentTimeStep.sync="currentTimeStep"
                               :maxTimeStep.sync="maxTimeStep"
@@ -133,6 +136,7 @@
 <script>
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
+import _ from 'lodash';
 import ImageGallery from './components/ImageGallery.vue';
 import { Authentication as GirderAuth } from '@girder/components/src/components';
 import { FileManager as GirderFileManager } from '@girder/components/src/components/Snippet';
@@ -165,8 +169,9 @@ export default {
       paused: true,
       runId: null,
       range: '',
-      imageGallery: {},
       pos: [],
+      parameter: '',
+      cancel: false,
     };
   },
 
@@ -190,29 +195,63 @@ export default {
       }
     },
 
-    hover(event) {
+    hoverOut() {
       this.range = '';
-      const node = event.target;
-      const parent = node ? node.parentNode : null;
-      if ((parent && parent.classList.value.includes('pl-3'))
-            || node.classList.value.includes('pl-3')
-            && node.textContent != parent.textContent) {
-        const selectedItem = node.textContent.trim();
-        const data = this.imageGallery[selectedItem];
-        if (data){
-          var range = [];
-          data.forEach(value => {
-            if (value.timestep == this.currentTimeStep) {
-              range = value.range;
-            }
-          });
-          if (range.length > 0) {
-            this.pos = [event.clientX, event.clientY];
-            this.range = '[' + range[0].toExponential(3) + ', '
-                             + range[1].toExponential(3) + ']';
-          }
+      this.cancel = true;
+    },
+
+    hoverIn: _.debounce(function(event){
+        const node = event.target;
+        const parent = node ? node.parentNode : null;
+        if ((parent && parent.classList.value.includes('pl-3'))
+              || (node.classList.value.includes('pl-3')
+              && node.textContent != parent.textContent)) {
+          this.parameter = node.textContent.trim();
+          this.cancel = false;
+          this.getRangeData(event);
+        }
+      }, 100),
+
+    async getRangeData(event=null) {
+      const folderId = this.location._id;
+      let img = null;
+      if (!this.cancel) {
+        img = await this.callEndpoints(folderId);
+        if (!event || (event.target.textContent.trim() == this.parameter)) {
+          if (img)
+            this.updateRange(img.data.data[0].y, event);
         }
       }
+    },
+
+    callEndpoints(folderId) {
+      var self = this;
+      var endpoint = `item?folderId=${folderId}&name=${this.parameter}&limit=50&sort=lowerName&sortdir=1`;
+      const data = this.girderRest.get(endpoint)
+                    .then(function(result) {
+                      if (result && !self.cancel) {
+                        var offset = self.currentTimeStep ? self.currentTimeStep-1 : 1;
+                        endpoint = `item/${result.data[0]._id}/files?limit=1&offset=${offset}&sort=name&sortdir=1`;
+                        return new Promise((resolve) => {
+                          const file = self.girderRest.get(endpoint);
+                          resolve(file);
+                        });}
+                    })
+                    .then(function(result) {
+                      if (result && !self.cancel) {
+                        endpoint = `file/${result.data[0]._id}/download?contentDisposition=inline`;
+                        return new Promise((resolve) => {
+                          const data = self.girderRest.get(endpoint);
+                          resolve(data);
+                        });}
+                    });
+      return data;
+    },
+
+    updateRange(yVals, event) {
+      this.pos = event ? [event.clientX, event.clientY] : this.pos;
+      this.range = '[' + Math.min(...yVals).toExponential(3) + ', '
+                       + Math.max(...yVals).toExponential(3) + ']';
     },
 
     incrementTimeStep(should_pause) {
@@ -324,8 +363,7 @@ export default {
 
     incrementReady() {
       this.numReady += 1;
-      this.imageGallery = this.$refs.imageGallery.reduce(
-        (object, item) => (object[item.name] = item.loadedImages, object), {});
+      this.getRangeData(event);
     },
   },
 
