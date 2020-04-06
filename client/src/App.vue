@@ -27,7 +27,6 @@
                                v-on:mouseout.native="hoverOut"
                                :location.sync="location"
                                :selectable="false"
-                               :new-folder-enabled="false"
                                :drag-enabled="true" />
           <!-- Playback controls. -->
           <v-container class="playback-controls pl-2 pr-1"
@@ -110,7 +109,7 @@
     <pane class="main-content"
           v-on:mouseover.native="hoverOut">
       <!-- image gallery grid. -->
-      <v-container v-bind:style="{padding: '0'}">
+      <v-container v-bind:style="{padding: '0', margin: '0', minWidth: '100%'}">
         <template v-for="i in numrows">
           <v-row v-bind:key="i">
             <template v-for="j in numcols">
@@ -139,7 +138,7 @@ import 'splitpanes/dist/splitpanes.css';
 import _ from 'lodash';
 import ImageGallery from './components/ImageGallery.vue';
 import { Authentication as GirderAuth } from '@girder/components/src/components';
-import { FileManager as GirderFileManager } from '@girder/components/src/components/Snippet';
+import GirderFileManager from './components/GirderFileManager.vue';
 
 export default {
   name: 'App',

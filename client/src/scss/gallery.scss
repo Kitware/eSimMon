@@ -116,3 +116,14 @@ table.v-table tbody td {
 .gtitle, .ytitle, .xtitle {
   font-size: inherit !important;
 }
+
+.v-text-field__details {
+  display: none;
+}
+
+.v-input__control {
+  margin-top: 20px;
+}
+ .v-input__append-outer {
+   margin-top: 27px !important;
+ }
