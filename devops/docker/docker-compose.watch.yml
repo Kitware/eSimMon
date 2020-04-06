@@ -1,7 +1,7 @@
 version: '2'
 services:
   adash-app:
-    image: cjh1/adios-ingest:test
+    image: cjh1/adios-ingest:latest
     build:
       context: ../../
       dockerfile: devops/docker/ingest/Dockerfile
