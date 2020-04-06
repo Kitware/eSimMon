@@ -110,7 +110,7 @@
     <pane class="main-content"
           v-on:mouseover.native="hoverOut">
       <!-- image gallery grid. -->
-      <v-container v-bind:style="{padding: '0'}">
+      <v-container v-bind:style="{padding: '0', maxWidth: '100%'}">
         <template v-for="i in numrows">
           <v-row v-bind:key="i">
             <template v-for="j in numcols">
