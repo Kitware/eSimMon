@@ -524,14 +524,14 @@ async def watch(folder_id, upload_site_url, api_url, api_key,
 
 
 @click.command('watch', help='Watch upload site and ingest data into Girder')
-@click.option('-f', '--folder-id', help='the folder to ingest into', required=True)
-@click.option('-r', '--upload-site_url', help='the URL to the upload site to watch', required=True)
+@click.option('-f', '--folder-id', help='the folder to ingest into. [default: GIRDER_FOLDER_IR env. variable]', envvar='GIRDER_FOLDER_ID')
+@click.option('-r', '--upload-site_url', help='the URL to the upload site to watch. [default: UPLOAD_SITE_URL env. variable]', envvar='UPLOAD_SITE_URL',)
 @click.option('-u', '--api-url', default='http://localhost:8080/api/v1', help='RESTful API URL '
-                   '(e.g https://girder.example.com/api/v1)')
-@click.option('-k', '--api-key', envvar='GIRDER_API_KEY', default=None,
-              help='[default: GIRDER_API_KEY env. variable]', required=True)
+                   '(e.g https://girder.example.com/api/v1). [default: GIRDER_API_URL env. variable]', envvar='GIRDER_API_URL')
+@click.option('-k', '--api-key', envvar='GIRDER_API_KEY',
+              help='[default: GIRDER_API_KEY env. variable]')
 @click.option('-i', '--shot-poll-interval', default=30, type=int, help='shot poll interval (sec)')
-@click.option('-v', '--run-poll-interval', default=30, type=int, help='shot poll interval (sec)')
+@click.option('-v', '--run-poll-interval', default=30, type=int, help='run poll interval (sec)')
 def main(folder_id, upload_site_url, api_url, api_key, shot_poll_interval, run_poll_interval):
     #gc = GC(api_url=api_url, api_key=api_key)
     if upload_site_url[-1] == '/':
