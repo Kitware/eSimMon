@@ -511,7 +511,7 @@ async def watch(folder_id, upload_site_url, api_url, api_key,
 
     ignore_aiohttp_ssl_eror(asyncio.get_running_loop())
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
         gc = AsyncGirderClient(session, api_url)
         await gc.authenticate(api_key)
 
