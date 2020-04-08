@@ -1,6 +1,5 @@
 <template>
 <v-card vertical-center
-        v-bind:style="{height: '100%'}"
         v-on:drop="loadGallery($event)"
         v-on:dragover="preventDefault($event)">
   <v-card-text class="text-xs-center">
