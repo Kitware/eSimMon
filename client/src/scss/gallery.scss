@@ -1,70 +1,80 @@
-div.controls button {
-  margin: auto;
-  display: block;
-  outline: 0;
-  span {
-    font-size: 20px;
-  }
-}
-
 // Used to align the "Drop here" icon
 .vertical-center {
   display: flex;
   align-items: center;
 }
 
+// Make sure all plots fill their div
 .plot {
   min-height: 100%;
   min-width: 100%;
-  box-sizing: border-box;
 }
 
+.text-xs-center {
+  justify-content: center;
+  display: flex;
+}
+
+// Make sure main content and plot divs are
+// as large as possible
 .v-card__text {
   height: inherit;
   padding: 0;
 }
-// Make text smaller in the data browser.
-table.v-table tbody td {
-  font-size: 0.8rem;
-}
 
-// Scroll horizontal scrollbar for gallery grid.
-.main-content {
-  overflow-x: scroll;
-}
-
-// Girder browser takes up 80% of the left column
-// and shows a scrollbar when necessary.
-.girder-data-browser-snippet {
-  height: 70vh;
-  overflow: auto;
-}
-.girder-placeholder {
-  height: 70vh;
-}
-
-// Playback controls take up 20% of the left column.
-.playback-controls {
-  height: 30vh;
-  width: 100%;
-  box-sizing: border-box;
+.main-content .container{
+  padding: 0;
   .row {
-    max-width: 100%;
-    flex-flow: nowrap;
-    justify-content: space-around;
-    padding-left: 10px;
-    .col-sm-10 {
-      padding-top: 5%;
-      .v-slider__thumb-container {
-        right: 100%;
-        left: 0;
+    margin: 0;
+    .col {
+      padding: 0;
+      .v-card {
+        height: 100%;
       }
     }
   }
 }
 
-.text-xs-center {
-  text-align: center;
+// Make text smaller in the data browser.
+.v-data-table tbody td {
+  font-size: 0.8rem;
+}
+
+.splitpanes__pane .col {
+  display: flex;
+  flex-direction: column;
+  max-height: -webkit-fill-available;
+}
+
+// Girder browser takes up 80% of the left column
+// and shows a scrollbar when necessary.
+.girder-data-browser-snippet {
+  flex-grow: 1;
+  max-height: calc(100% - 175px);
+  overflow: auto;
+}
+.girder-placeholder {
+  flex-grow: 1;
+  max-height: calc(100% - 175px);
+}
+
+// Playback controls take up 20% of the left column.
+.playback-controls {
+  display: grid;
+  max-height: 200px;
+  min-height: 175px;
+  padding: 10px 5px;
+  .row {
+    justify-content: space-around;
+    margin: 0;
+    padding: 1%;
+    .col {
+      padding: 0;
+    }
+    .v-input__control {
+      padding-top: 10px;
+    }
+  }
 }
 
 // Hide disk space indicator in girder data table.
@@ -80,15 +90,19 @@ table.v-table tbody td {
   }
 }
 
+// Align breadcrumbs
 .v-breadcrumbs {
   display: flex;
   align-items: baseline;
 }
 
+// Align Rows per page footer
 .v-data-footer {
   justify-content: center;
 }
 
+// Make sure toolbar doesn't cover plot title
+// when visible
 .show-toolbar {
   .modebar-container {
     display: flex;
@@ -108,11 +122,13 @@ table.v-table tbody td {
   }
 }
 
+// Create border on data browser panel
 .splitpanes--vertical > .splitpanes__splitter {
   min-width: 3px;
   background: linear-gradient(90deg, #ccc, #a5a4a4);
 }
 
+// Resize plot labels when plots resize
 .gtitle, .ytitle, .xtitle {
   font-size: inherit !important;
 }

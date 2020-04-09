@@ -1,5 +1,5 @@
 <template>
-<v-app class="app pr-3">
+<v-app class="app">
   <v-dialog :value="loggedOut" persistent max-width="600px">
     <girder-auth :register="true"
                  :oauth="false"
@@ -7,7 +7,7 @@
   </v-dialog>
   <splitpanes>
     <pane min-size="15" :size="25">
-      <v-row>
+      <v-row v-bind:style="{height: '100vh'}">
         <!-- Navigation panel on the left. -->
         <v-col v-bind:style="{padding: '0 10px'}">
           <!-- Girder data table browser. -->
@@ -30,29 +30,24 @@
                                :new-folder-enabled="false"
                                :drag-enabled="true" />
           <!-- Playback controls. -->
-          <v-container class="playback-controls pl-2 pr-1"
+          <v-container :fluid="true" class="playback-controls"
                        v-on:mouseover="hoverOut">
             <v-row>
-              <v-col sm>
-                <div class="text-xs-center">
-                  <v-icon v-on:click="decrementTimeStep(true)"
-                          :disabled="!dataLoaded"> arrow_back_ios </v-icon>
-                </div>
+              <v-col :sm="1" class="text-xs-center">
+                <v-icon v-on:click="decrementTimeStep(true)"
+                        :disabled="!dataLoaded"> arrow_back_ios </v-icon>
               </v-col>
               <v-col :sm="10">
                 <v-slider v-model="currentTimeStep"
                           :min="1"
                           :max="maxTimeStep"
                           :disabled="!dataLoaded"
-                          width="100%"
                           height="1px"
                           thumb-label="always" />
               </v-col>
-              <v-col :sm="1">
-                <div class="text-xs-center">
-                  <v-icon v-on:click="incrementTimeStep(true)"
-                          :disabled="!dataLoaded"> arrow_forward_ios </v-icon>
-                </div>
+              <v-col :sm="1" class="text-xs-center">
+                <v-icon v-on:click="incrementTimeStep(true)"
+                        :disabled="!dataLoaded"> arrow_forward_ios </v-icon>
               </v-col>
             </v-row>
             <v-row>
@@ -107,10 +102,11 @@
       </v-row>
     </pane>
     <!-- Scientific data on the right. -->
-    <pane class="main-content"
+    <pane min-size="50" :size="85"
+          class="main-content"
           v-on:mouseover.native="hoverOut">
       <!-- image gallery grid. -->
-      <v-container v-bind:style="{padding: '0'}">
+      <v-container v-bind:style="{padding: '0', maxWidth: '100%'}">
         <template v-for="i in numrows">
           <v-row v-bind:key="i">
             <template v-for="j in numcols">
@@ -121,7 +117,7 @@
                               :maxTimeStep.sync="maxTimeStep"
                               :numrows.sync="numrows"
                               :numcols.sync="numcols"
-                              v-bind:style="{padding: '0 0 0 10px'}"
+                              v-bind:style="{padding: '0 0 0 3px'}"
                               v-bind:class="[paused ? 'show-toolbar' : 'hide-toolbar']" />
               </v-col>
             </template>
