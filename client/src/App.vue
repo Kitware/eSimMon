@@ -1,5 +1,5 @@
 <template>
-<v-app class="app pr-3">
+<v-app class="app">
   <v-dialog :value="loggedOut" persistent max-width="600px">
     <girder-auth :register="true"
                  :oauth="false"
@@ -7,7 +7,7 @@
   </v-dialog>
   <splitpanes>
     <pane min-size="15" :size="25">
-      <v-row>
+      <v-row v-bind:style="{height: '100vh'}">
         <!-- Navigation panel on the left. -->
         <v-col v-bind:style="{padding: '0 10px'}">
           <!-- Girder data table browser. -->
@@ -29,29 +29,24 @@
                                :selectable="false"
                                :drag-enabled="true" />
           <!-- Playback controls. -->
-          <v-container class="playback-controls pl-2 pr-1"
+          <v-container :fluid="true" class="playback-controls"
                        v-on:mouseover="hoverOut">
             <v-row>
-              <v-col sm>
-                <div class="text-xs-center">
-                  <v-icon v-on:click="decrementTimeStep(true)"
-                          :disabled="!dataLoaded"> arrow_back_ios </v-icon>
-                </div>
+              <v-col :sm="1" class="text-xs-center">
+                <v-icon v-on:click="decrementTimeStep(true)"
+                        :disabled="!dataLoaded"> arrow_back_ios </v-icon>
               </v-col>
               <v-col :sm="10">
                 <v-slider v-model="currentTimeStep"
                           :min="1"
                           :max="maxTimeStep"
                           :disabled="!dataLoaded"
-                          width="100%"
                           height="1px"
                           thumb-label="always" />
               </v-col>
-              <v-col :sm="1">
-                <div class="text-xs-center">
-                  <v-icon v-on:click="incrementTimeStep(true)"
-                          :disabled="!dataLoaded"> arrow_forward_ios </v-icon>
-                </div>
+              <v-col :sm="1" class="text-xs-center">
+                <v-icon v-on:click="incrementTimeStep(true)"
+                        :disabled="!dataLoaded"> arrow_forward_ios </v-icon>
               </v-col>
             </v-row>
             <v-row>
@@ -106,10 +101,11 @@
       </v-row>
     </pane>
     <!-- Scientific data on the right. -->
-    <pane class="main-content"
+    <pane min-size="50" :size="85"
+          class="main-content"
           v-on:mouseover.native="hoverOut">
       <!-- image gallery grid. -->
-      <v-container v-bind:style="{padding: '0', margin: '0', minWidth: '100%'}">
+      <v-container v-bind:style="{padding: '0', maxWidth: '100%'}">
         <template v-for="i in numrows">
           <v-row v-bind:key="i">
             <template v-for="j in numcols">
@@ -120,7 +116,7 @@
                               :maxTimeStep.sync="maxTimeStep"
                               :numrows.sync="numrows"
                               :numcols.sync="numcols"
-                              v-bind:style="{padding: '0 0 0 10px'}"
+                              v-bind:style="{padding: '0 0 0 3px'}"
                               v-bind:class="[paused ? 'show-toolbar' : 'hide-toolbar']" />
               </v-col>
             </template>
@@ -215,9 +211,12 @@ export default {
       const folderId = this.location._id;
       let img = null;
       if (!this.cancel) {
-        img = await this.callEndpoints(folderId);
-        if (!event || (event.target.textContent.trim() == this.parameter)) {
-          if (img)
+        if (event && !event.target.textContent){
+          this.cancel = true;
+          return;
+        } else if (!event || (event.target.textContent.trim() == this.parameter)) {
+          img = await this.callEndpoints(folderId);
+          if (img && img.data.data)
             this.updateRange(img.data.data[0].y, event);
         }
       }
@@ -228,7 +227,7 @@ export default {
       var endpoint = `item?folderId=${folderId}&name=${this.parameter}&limit=50&sort=lowerName&sortdir=1`;
       const data = this.girderRest.get(endpoint)
                     .then(function(result) {
-                      if (result && !self.cancel) {
+                      if (result && !self.cancel && result.data.length) {
                         var offset = self.currentTimeStep ? self.currentTimeStep-1 : 1;
                         endpoint = `item/${result.data[0]._id}/files?limit=1&offset=${offset}&sort=name&sortdir=1`;
                         return new Promise((resolve) => {
@@ -237,7 +236,7 @@ export default {
                         });}
                     })
                     .then(function(result) {
-                      if (result && !self.cancel) {
+                      if (result && !self.cancel && result.data.length) {
                         endpoint = `file/${result.data[0]._id}/download?contentDisposition=inline`;
                         return new Promise((resolve) => {
                           const data = self.girderRest.get(endpoint);

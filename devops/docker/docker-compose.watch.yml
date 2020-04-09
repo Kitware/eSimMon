@@ -1,0 +1,15 @@
+version: '2'
+services:
+  adash-app:
+    image: cjh1/adios-ingest:latest
+    build:
+      context: ../../
+      dockerfile: devops/docker/ingest/Dockerfile
+    command: 'watch -i 60 -v 60'
+
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: adash
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: watch
