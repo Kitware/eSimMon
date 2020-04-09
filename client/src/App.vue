@@ -212,9 +212,12 @@ export default {
       const folderId = this.location._id;
       let img = null;
       if (!this.cancel) {
-        img = await this.callEndpoints(folderId);
-        if (!event || (event.target.textContent.trim() == this.parameter)) {
-          if (img)
+        if (event && !event.target.textContent){
+          this.cancel = true;
+          return;
+        } else if (!event || (event.target.textContent.trim() == this.parameter)) {
+          img = await this.callEndpoints(folderId);
+          if (img && img.data.data)
             this.updateRange(img.data.data[0].y, event);
         }
       }
@@ -225,7 +228,7 @@ export default {
       var endpoint = `item?folderId=${folderId}&name=${this.parameter}&limit=50&sort=lowerName&sortdir=1`;
       const data = this.girderRest.get(endpoint)
                     .then(function(result) {
-                      if (result && !self.cancel) {
+                      if (result && !self.cancel && result.data.length) {
                         var offset = self.currentTimeStep ? self.currentTimeStep-1 : 1;
                         endpoint = `item/${result.data[0]._id}/files?limit=1&offset=${offset}&sort=name&sortdir=1`;
                         return new Promise((resolve) => {
@@ -234,7 +237,7 @@ export default {
                         });}
                     })
                     .then(function(result) {
-                      if (result && !self.cancel) {
+                      if (result && !self.cancel && result.data.length) {
                         endpoint = `file/${result.data[0]._id}/download?contentDisposition=inline`;
                         return new Promise((resolve) => {
                           const data = self.girderRest.get(endpoint);
