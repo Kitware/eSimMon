@@ -2,11 +2,15 @@
 <v-card vertical-center
         v-on:drop="loadGallery($event)"
         v-on:dragover="preventDefault($event)">
-  <v-card-text class="text-xs-center">
+  <v-card-text v-bind:class="[!json ? 'text-xs-end' : 'text-xs-center']">
     <div v-if="itemId"
          ref="plotly"
          class="plot"/>
-    <v-icon v-if="!itemId" large  v-bind:style="{height: '100%'}"> input </v-icon>
+    <img v-if="itemId && !json"
+        ref="img"
+        :src="image.src"
+        class="plot" />
+    <v-icon v-if="!itemId" large> input </v-icon>
   </v-card-text>
 </v-card>
 </template>
@@ -45,7 +49,9 @@ export default {
       loadedImages: [],
       pendingImages: 0,
       rows: [],
-      step: 0,
+      step: 1,
+      json: true,
+      image: null,
     };
   },
 
@@ -116,9 +122,17 @@ export default {
       const response = await this.callEndpoint(endpoint);
 
       this.rows = await Promise.all(response.map(async function(val) {
-        let img = await this.callEndpoint(
-          `file/${val._id}/download?contentDisposition=inline`);
-        return {img};
+        let info =  await this.callEndpoint(`file/${val._id}`);
+        if (info.exts[0] == 'json') {
+          let img = await this.callEndpoint(
+            `file/${val._id}/download?contentDisposition=inline`);
+          return {'img': img, 'ext': info.exts[0]};
+        } else {
+          return {
+            'img': this.girderRest.apiRoot + "/file/" + val._id + "/download?contentDisposition=inline",
+            'ext': info.exts[0]
+          }
+        }
       }, this));
 
       this.preCacheImages();
@@ -167,11 +181,17 @@ export default {
           any_images_loaded = true;
           this.pendingImages = 1;
           const img = this.rows[i - 1].img;
-          this.loadedImages.push({
-            timestep: i,
-            data: img.data,
-            layout: img.layout
-          });
+          const ext = this.rows[i - 1].ext;
+          if (ext == 'json') {
+            this.loadedImages.push({
+              timestep: i,
+              data: img.data,
+              layout: img.layout,
+              ext: ext,
+            });
+          } else {
+            this.loadedImages.push({timestep: i, src: img, ext: ext});
+          }
           if (this.loadedImages.length == 1) {
             this.react();
           }
@@ -192,7 +212,17 @@ export default {
     react: function () {
       for (var idx in this.loadedImages) {
         if (this.loadedImages[idx].timestep == this.step) {
-          Plotly.react(this.$refs.plotly, this.loadedImages[idx].data, this.loadedImages[idx].layout, {responsive: true});
+          if (this.loadedImages[idx].ext == 'json') {
+            Plotly.react(this.$refs.plotly, this.loadedImages[idx].data, this.loadedImages[idx].layout, {autosize: true});
+            if (!this.json) {
+              this.json = true;
+            }
+          } else {
+            if (this.json) {
+              this.json = false;
+            }
+            this.image = this.loadedImages[idx];
+          }
           this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
         }
       }

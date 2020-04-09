@@ -15,6 +15,11 @@
   display: flex;
 }
 
+.text-xs-end {
+  justify-content: flex-end;
+  display: flex;
+}
+
 // Make sure main content and plot divs are
 // as large as possible
 .v-card__text {
