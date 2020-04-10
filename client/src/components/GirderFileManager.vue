@@ -1,10 +1,9 @@
 <script>
+import GirderDataBrowser from './GirderDataBrowser.vue';
 import {
-  DataBrowser as GirderDataBrowser,
   Breadcrumb as GirderBreadcrumb,
 } from '@girder/components/src/components';
 import {
-  getLocationType,
   isRootLocation,
   createLocationValidator,
 } from '@girder/components/src/utils';
@@ -70,6 +69,13 @@ export default {
         this.filterResults();
       },
     },
+    queryValues: {
+      get () {
+        if (this.query)
+          return [this.query.value];
+        return [];
+      }
+    },
   },
   async created() {
     if (!createLocationValidator(!this.rootLocationDisabled)(this.internalLocation)) {
@@ -78,6 +84,14 @@ export default {
     await this.setCurrentPath();
     await this.getAllResults(this.location._id);
     this.filteredItems = this.allItems;
+  },
+  watch: {
+    async query() {
+      if (this.query) {
+        let { data } = await this.girderRest.get(`/folder/${this.query.value.folderId}`);
+        this.internalLocation = data;
+      }
+    },
   },
   methods: {
     isRootLocation,
@@ -143,6 +157,7 @@ export default {
       :value="value"
       :initial-items-per-page="initialItemsPerPage"
       :items-per-page-options="itemsPerPageOptions"
+      :query="queryValues"
       @input="$emit('input', $event)"
       @selection-changed="$emit('selection-changed', $event)"
       @rowclick="$emit('rowclick', $event)"
