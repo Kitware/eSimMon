@@ -47,9 +47,11 @@ export default {
   data() {
     return {
       lazyLocation: null,
+      previousLocation: null,
       query: null,
       allItems: [],
       filteredItems: [],
+      input: '',
     };
   },
   computed: {
@@ -89,6 +91,7 @@ export default {
     async query() {
       if (this.query) {
         let { data } = await this.girderRest.get(`/folder/${this.query.value.folderId}`);
+        this.previousLocation = this.lazyLocation;
         this.internalLocation = data;
       }
     },
@@ -180,11 +183,13 @@ export default {
             v-model="query"
             :items="filteredItems"
             :append-outer-icon=" 'search' "
+            :search.input.sync="input"
             placeholder="Search for Parameter"
             return-object
             clearable
             dense
-            solo/>
+            solo
+            @click:clear="clear"/>
       </template>
       <template #row-widget="props">
         <slot
