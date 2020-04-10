@@ -142,15 +142,18 @@ export default {
         }
       });
     },
-    submitSearch() {
-      return;
+    clear() {
+      if (this.query) {
+        this.internalLocation = this.previousLocation;
+        this.previousLocation = null;
+      }
     },
   },
 };
 </script>
 
 <template>
-  <v-card class="girder-data-browser-snippet">
+  <v-card v-bind:class="[query ? 'queryResults' : '','girder-data-browser-snippet']">
     <girder-data-browser
       ref="girderBrowser"
       :location.sync="internalLocation"
