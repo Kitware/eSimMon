@@ -48,10 +48,9 @@ export default {
   data() {
     return {
       lazyLocation: null,
-      model: '',
+      query: null,
       allItems: [],
       filteredItems: [],
-      loading: false,
     };
   },
   computed: {
@@ -67,24 +66,34 @@ export default {
       },
       set(newVal) {
         this.lazyLocation = newVal;
-        this.allItems = [];
         this.$emit('update:location', newVal);
         this.filterResults();
       },
     },
   },
-  created() {
+  async created() {
     if (!createLocationValidator(!this.rootLocationDisabled)(this.internalLocation)) {
       throw new Error('root location cannot be used when root-location-disabled is true');
     }
-    this.filterResults();
+    await this.setCurrentPath();
+    await this.getAllResults(this.location._id);
+    this.filteredItems = this.allItems;
   },
   methods: {
     isRootLocation,
     refresh() {
       this.$refs.girderBrowser.refresh();
     },
-    async getResults(folderId) {
+    async setCurrentPath(){
+      var location = this.lazyLocation;
+      if (!this.lazyLocation) {
+        location = this.location;
+      }
+      let { data } = await this.girderRest.get(
+        `/resource/${location._id}/path?type=${location._modelType}`);
+      this.currentPath = data;
+    },
+    async getAllResults(folderId) {
       var details = await this.girderRest.get(`folder/${folderId}/details`);
       if (details.data.nItems > 0) {
         var items = await this.girderRest
@@ -92,25 +101,29 @@ export default {
         items.data.forEach(async item => {
           var { data } = await this.girderRest
             .get(`/resource/${item._id}/path?type=item`);
-          var path = data.split(this.currentFolder + '/')[1];
-          this.allItems.push(path.substring(path.indexOf('/')+1));
+          this.allItems.push({
+            'text': data.split(this.currentPath + '/')[1],
+            'value': item,
+            'fullPath': data
+          });
         });
       }
       if (details.data.nFolders > 0) {
         var folders = await this.girderRest
           .get(`/folder?parentType=folder&parentId=${folderId}&sort=lowerName&sortdir=1`);
         for (var idx in folders.data) {
-          await this.getResults(folders.data[idx]._id);
+          await this.getAllResults(folders.data[idx]._id);
         }
       }
     },
     async filterResults() {
-      let { data } = await this.girderRest.get(`/${this.location._modelType}/${this.location._id}`);
-      this.currentFolder = data.name;
-      this.loading = true;
-      await this.getResults(this.location._id);
-      this.loading = false;
-      this.filteredItems = await this.allItems.filter(item => {return item.includes(this.model)});
+      await this.setCurrentPath();
+      this.filteredItems = this.allItems.filter(item => {
+        if (item.fullPath.includes(this.currentPath)) {
+          item.text = item.fullPath.split(this.currentPath + '/')[1];
+          return item;
+        }
+      });
     },
     submitSearch() {
       return;
@@ -148,15 +161,15 @@ export default {
       <template #headerwidget="props">
         <slot name="headerwidget" />
         <v-autocomplete
-            ref="model"
-            v-model="model"
-            :items="allItems"
+            ref="query"
+            v-model="query"
+            :items="filteredItems"
+            :append-outer-icon=" 'search' "
+            placeholder="Search for Parameter"
+            return-object
             clearable
             dense
-            solo
-            placeholder="Search for Parameter"
-            @click:append-outer="submitSearch"
-            :append-outer-icon=" 'search' " />
+            solo/>
       </template>
       <template #row-widget="props">
         <slot
