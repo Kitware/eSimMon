@@ -2,8 +2,11 @@
   filtered list of items when a search is being performed. -->
 
 <script>
-import { DataBrowser as GirderDataBrowser } from '@girder/components/src/components'
-import { getLocationType } from '@girder/components/src/utils';
+import { DataBrowser as GirderDataBrowser } from '@girder/components/src/components';
+import {
+  getLocationType,
+  getSingularLocationTypeName
+} from '@girder/components/src/utils';
 
 export default {
   mixins: [GirderDataBrowser],
