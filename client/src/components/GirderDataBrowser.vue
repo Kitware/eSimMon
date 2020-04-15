@@ -20,10 +20,26 @@ export default {
     },
   },
 
+  computed: {
+    serverItemsLength() {
+      if (this.query.length) {
+        return this.query.length;
+      } else {
+        return Object.values(this.counts).reduce(
+          (total, value) => total + value,
+          0,
+        );
+      }
+    }
+  },
+
   methods: {
     fetchPaginatedRows() {
       if (this.query.length) {
-        return this.query;
+        const { options: { page, itemsPerPage } } = this;
+        const itemOffset = itemsPerPage === -1 ? 0 : ((page - 1) * itemsPerPage);
+        const limit = itemsPerPage + itemOffset;
+        return this.query.slice(itemOffset, limit);
       }
       const { location, counts } = this;
       if (counts.nFolders || counts.nItems) {

@@ -153,7 +153,7 @@ export default {
 </script>
 
 <template>
-  <v-card v-bind:class="[query ? 'queryResults' : '','girder-data-browser-snippet']">
+  <v-card class="girder-data-browser-snippet">
     <girder-data-browser
       ref="girderBrowser"
       :location.sync="internalLocation"
