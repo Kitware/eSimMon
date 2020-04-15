@@ -23,14 +23,28 @@ export default {
       allItems: [],
       filteredItems: [],
       input: '',
+      showPartials: false,
     };
   },
 
   computed: {
     queryValues: {
       get () {
-        if (this.query)
+        if (this.query && !this.showPartials) {
           return [this.query.value];
+        }
+        else if (this.showPartials) {
+          let values = this.filteredItems
+            .filter(item => {
+              return item.value.name.includes(this.input ? this.input : '');
+            })
+            .map(item => { return {...item.value, 'name': item.text}; });
+          if (!this.input) {
+            this.input = ' ';
+            this.$refs.query.blur();
+          }
+          return values;
+        }
         return [];
       }
     },
@@ -44,11 +58,19 @@ export default {
 
   watch: {
     async query() {
-      if (this.query) {
+      if (this.query != this.input) {
+        this.showPartials = false;
+      } else if (this.input && this.query == this.input){
+        this.showPartials = true;
+      }
+      if (!this.showPartials && this.query) {
         let { data } = await this.girderRest.get(`/folder/${this.query.value.folderId}`);
         this.previousLocation = this.lazyLocation;
         this.internalLocation = data;
       }
+    },
+    showPartials() {
+      this.refresh();
     },
     internalLocation() {
       this.filterResults();
@@ -98,11 +120,18 @@ export default {
       });
     },
     clear() {
-      if (this.query) {
-        this.internalLocation = this.previousLocation;
-        this.previousLocation = null;
-      }
+      this.showPartials = false;
+      this.refresh();
     },
+    showMatches() {
+      if (this.query == this.input) {
+        this.showPartials = true;
+      }
+      if (this.$refs.query.isMenuActive) {
+        this.$refs.query.isMenuActive = false;
+        this.$refs.query.focus();
+      }
+    }
   },
 };
 </script>
@@ -136,12 +165,14 @@ export default {
       </template>
       <template #headerwidget="props">
         <slot name="headerwidget" />
-        <v-autocomplete
+        <v-combobox
             ref="query"
             v-model="query"
             :items="filteredItems"
             :append-outer-icon=" 'search' "
-            :search.input.sync="input"
+            @click:append-outer="showMatches"
+            @keyup.enter="showMatches"
+            :search-input.sync="input"
             placeholder="Search for Parameter"
             return-object
             clearable
