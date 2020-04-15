@@ -1,76 +1,32 @@
+<!-- This component extends the FileManager component in order to provide a
+search bar and to collect and filter parameter options. -->
+
 <script>
+import { FileManager as GirderFileManager } from '@girder/components/src/components/Snippet';
 import GirderDataBrowser from './GirderDataBrowser.vue';
 import {
   Breadcrumb as GirderBreadcrumb,
 } from '@girder/components/src/components';
-import {
-  isRootLocation,
-  createLocationValidator,
-} from '@girder/components/src/utils';
 export default {
   components: {
     GirderBreadcrumb,
     GirderDataBrowser,
   },
-  props: {
-    value: {
-      type: Array,
-      default: () => [],
-    },
-    location: {
-      type: Object,
-      validator: createLocationValidator(true),
-      default: null,
-    },
-    rootLocationDisabled: {
-      type: Boolean,
-      default: false,
-    },
-    selectable: {
-      type: Boolean,
-      default: false,
-    },
-    dragEnabled: {
-      type: Boolean,
-      default: false,
-    },
-    initialItemsPerPage: {
-      type: Number,
-      default: 10,
-    },
-    itemsPerPageOptions: {
-      type: Array,
-      default: () => ([10, 25, 50]),
-    },
-  },
+
+  mixins: [GirderFileManager],
+
   inject: ['girderRest'],
+
   data() {
     return {
-      lazyLocation: null,
-      previousLocation: null,
       query: null,
       allItems: [],
       filteredItems: [],
       input: '',
     };
   },
+
   computed: {
-    internalLocation: {
-      get() {
-        const { location, lazyLocation } = this;
-        if (location) {
-          return location;
-        } if (lazyLocation) {
-          return lazyLocation;
-        }
-        return { type: 'root' };
-      },
-      set(newVal) {
-        this.lazyLocation = newVal;
-        this.$emit('update:location', newVal);
-        this.filterResults();
-      },
-    },
     queryValues: {
       get () {
         if (this.query)
@@ -79,14 +35,13 @@ export default {
       }
     },
   },
+
   async created() {
-    if (!createLocationValidator(!this.rootLocationDisabled)(this.internalLocation)) {
-      throw new Error('root location cannot be used when root-location-disabled is true');
-    }
     await this.setCurrentPath();
     await this.getAllResults(this.location._id);
     this.filteredItems = this.allItems;
   },
+
   watch: {
     async query() {
       if (this.query) {
@@ -95,12 +50,12 @@ export default {
         this.internalLocation = data;
       }
     },
+    internalLocation() {
+      this.filterResults();
+    }
   },
+
   methods: {
-    isRootLocation,
-    refresh() {
-      this.$refs.girderBrowser.refresh();
-    },
     async setCurrentPath(){
       var location = this.lazyLocation;
       if (!this.lazyLocation) {
