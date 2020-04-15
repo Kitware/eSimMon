@@ -73,6 +73,11 @@ export default {
     showPartials() {
       this.refresh();
     },
+    input() {
+      if (this.input == '') {
+        this.clear();
+      }
+    },
     internalLocation() {
       if (!this.lazyLocation.hasOwnProperty('search')) {
         this.clear();
@@ -139,6 +144,8 @@ export default {
     },
     clear() {
       this.showPartials = false;
+      this.query = null;
+      this.input = '';
       this.refresh();
     },
     showMatches() {
