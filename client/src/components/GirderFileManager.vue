@@ -67,14 +67,16 @@ export default {
       }
       if (!this.showPartials && this.query) {
         let { data } = await this.girderRest.get(`/folder/${this.query.value.folderId}`);
-        this.previousLocation = this.lazyLocation;
-        this.internalLocation = data;
+        this.internalLocation = {...data, 'search': true};
       }
     },
     showPartials() {
       this.refresh();
     },
     internalLocation() {
+      if (!this.lazyLocation.hasOwnProperty('search')) {
+        this.clear();
+      }
       this.filterResults();
     }
   },
