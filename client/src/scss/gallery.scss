@@ -101,6 +101,10 @@
   align-items: baseline;
 }
 
+.hide-search.v-input {
+  display: none;
+}
+
 // Align Rows per page footer
 .v-data-footer {
   justify-content: center;

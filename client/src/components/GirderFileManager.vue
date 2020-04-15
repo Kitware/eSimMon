@@ -24,6 +24,8 @@ export default {
       filteredItems: [],
       input: '',
       showPartials: false,
+      root: null,
+      outsideOfRoot: false,
     };
   },
 
@@ -79,13 +81,24 @@ export default {
 
   methods: {
     async setCurrentPath(){
-      var location = this.lazyLocation;
-      if (!this.lazyLocation) {
-        location = this.location;
+      var location = this.lazyLocation ? this.lazyLocation : this.location;
+
+      this.currentPath = '';
+      if (location.hasOwnProperty('_id')) {
+        let { data } = await this.girderRest.get(
+          `/resource/${location._id}/path?type=${location._modelType}`);
+        this.currentPath = data;
       }
-      let { data } = await this.girderRest.get(
-        `/resource/${location._id}/path?type=${location._modelType}`);
-      this.currentPath = data;
+
+      if (!this.root) {
+        this.root = this.currentPath;
+      } else {
+        if (!this.outsideOfRoot && !this.currentPath.includes(this.root)) {
+          this.outsideOfRoot = true;
+        } else if (this.outsideOfRoot && this.currentPath.includes(this.root)) {
+          this.outsideOfRoot = false;
+        }
+      }
     },
     async getAllResults(folderId) {
       var details = await this.girderRest.get(`folder/${folderId}/details`);
@@ -112,6 +125,9 @@ export default {
     },
     async filterResults() {
       await this.setCurrentPath();
+      if (this.outsideOfRoot)
+        return;
+
       this.filteredItems = this.allItems.filter(item => {
         if (item.fullPath.includes(this.currentPath)) {
           item.text = item.fullPath.split(this.currentPath + '/')[1];
@@ -178,7 +194,8 @@ export default {
             clearable
             dense
             solo
-            @click:clear="clear"/>
+            @click:clear="clear"
+            v-bind:class="[outsideOfRoot ? 'hide-search' : '']" />
       </template>
       <template #row-widget="props">
         <slot
