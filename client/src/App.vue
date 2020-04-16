@@ -208,6 +208,9 @@ export default {
       }, 100),
 
     async getRangeData(event=null) {
+      if (this.location._modelType != 'folder')
+        return;
+
       const folderId = this.location._id;
       let img = null;
       if (!this.cancel) {
@@ -223,6 +226,9 @@ export default {
     },
 
     callEndpoints(folderId) {
+      if (!folderId)
+        return;
+
       var self = this;
       var endpoint = `item?folderId=${folderId}&name=${this.parameter}&limit=50&sort=lowerName&sortdir=1`;
       const data = this.girderRest.get(endpoint)
