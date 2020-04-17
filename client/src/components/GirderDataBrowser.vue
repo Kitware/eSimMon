@@ -34,6 +34,12 @@ export default {
   },
 
   methods: {
+    refresh() {
+      this.selected = [];
+      this.internalRefreshCounter += 1;
+      this.options.page = 1;
+
+    },
     fetchPaginatedRows() {
       if (this.query.length) {
         const { options: { page, itemsPerPage } } = this;
