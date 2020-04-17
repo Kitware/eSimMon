@@ -101,8 +101,16 @@
   align-items: baseline;
 }
 
-.hide-search.v-input {
-  display: none;
+// Prevent default rotation of clear icon
+.v-select.v-select--is-menu-active
+  .v-input__icon--append
+  .v-icon {
+  transform: rotate(0);
+}
+
+.theme--light.v-list-item .v-list-item__mask {
+  color: inherit;
+  background: inherit;
 }
 
 // Align Rows per page footer

@@ -41,12 +41,10 @@ export default {
               return item.value.name.includes(this.input ? this.input : '');
             })
             .map(item => { return {...item.value, 'name': item.text}; });
-          if (!this.input) {
-            this.input = ' ';
-            this.$refs.query.blur();
+            if (!this.input)
+              this.$refs.query.blur();
+            return values;
           }
-          return values;
-        }
         return [];
       }
     },
@@ -60,12 +58,13 @@ export default {
 
   watch: {
     async query() {
-      if (this.query != this.input) {
-        this.showPartials = false;
-      } else if (this.input && this.query == this.input){
+      if (this.input === '' || this.input && !typeof(this.query) == 'object'){
         this.showPartials = true;
+      } else if (typeof(this.query) == 'object') {
+        this.showPartials = false;
       }
-      if (!this.showPartials && this.query) {
+      this.refresh();
+      if (!this.showPartials && typeof(this.query) == 'object') {
         let { data } = await this.girderRest.get(`/folder/${this.query.value.folderId}`);
         this.internalLocation = {...data, 'search': true};
       }
@@ -194,16 +193,16 @@ export default {
             ref="query"
             v-model="query"
             :items="filteredItems"
+            :append-icon=" 'clear' "
             :append-outer-icon=" 'search' "
-            @click:append-outer="showMatches"
-            @keyup.enter="showMatches"
             :search-input.sync="input"
             placeholder="Search for Parameter"
             return-object
-            clearable
             dense
             solo
-            @click:clear="clear"
+            @click:append="clear"
+            @click:append-outer="showMatches"
+            @keyup.enter="showMatches"
             v-bind:class="[outsideOfRoot ? 'hide-search' : '']" />
       </template>
       <template #row-widget="props">
