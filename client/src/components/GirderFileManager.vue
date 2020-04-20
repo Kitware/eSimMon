@@ -152,8 +152,7 @@ export default {
         this.showPartials = true;
       }
       if (this.$refs.query.isMenuActive) {
-        this.$refs.query.isMenuActive = false;
-        this.$refs.query.focus();
+        this.$refs.query.blur();
       }
     },
   },
@@ -203,7 +202,13 @@ export default {
             @click:append="clear"
             @click:append-outer="showMatches"
             @keyup.enter="showMatches"
-            v-bind:class="[outsideOfRoot ? 'hide-search' : '']" />
+            v-bind:class="[outsideOfRoot ? 'hide-search' : '']">
+          <template v-slot:no-data>
+            <v-list-item dense v-bind:style="{fontSize: '0.8rem'}">
+              No Matches Found
+            </v-list-item>
+          </template>
+        </v-combobox>
       </template>
       <template #row-widget="props">
         <slot
