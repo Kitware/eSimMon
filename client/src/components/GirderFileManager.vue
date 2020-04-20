@@ -156,9 +156,6 @@ export default {
         this.$refs.query.focus();
       }
     },
-    customFilter(item, queryText) {
-      return item.value.name.includes(queryText ? queryText : '');
-    },
   },
 };
 </script>
@@ -199,7 +196,6 @@ export default {
             :append-icon=" 'clear' "
             :append-outer-icon=" 'search' "
             :search-input.sync="input"
-            :filter="customFilter"
             placeholder="Search for Parameter"
             return-object
             dense
