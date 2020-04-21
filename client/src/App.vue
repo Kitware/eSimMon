@@ -27,7 +27,6 @@
                                v-on:mouseout.native="hoverOut"
                                :location.sync="location"
                                :selectable="false"
-                               :new-folder-enabled="false"
                                :drag-enabled="true" />
           <!-- Playback controls. -->
           <v-container :fluid="true" class="playback-controls"
@@ -135,7 +134,7 @@ import 'splitpanes/dist/splitpanes.css';
 import _ from 'lodash';
 import ImageGallery from './components/ImageGallery.vue';
 import { Authentication as GirderAuth } from '@girder/components/src/components';
-import { FileManager as GirderFileManager } from '@girder/components/src/components/Snippet';
+import GirderFileManager from './components/GirderFileManager.vue';
 
 export default {
   name: 'App',
@@ -209,6 +208,9 @@ export default {
       }, 100),
 
     async getRangeData(event=null) {
+      if (this.location._modelType != 'folder')
+        return;
+
       const folderId = this.location._id;
       let img = null;
       if (!this.cancel) {
@@ -224,6 +226,9 @@ export default {
     },
 
     callEndpoints(folderId) {
+      if (!folderId)
+        return;
+
       var self = this;
       var endpoint = `item?folderId=${folderId}&name=${this.parameter}&limit=50&sort=lowerName&sortdir=1`;
       const data = this.girderRest.get(endpoint)
