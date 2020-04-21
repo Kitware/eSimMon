@@ -202,6 +202,7 @@ export default {
             @click:append="clear"
             @click:append-outer="showMatches"
             @keyup.enter="showMatches"
+            @keyup.esc="$refs.query.blur()"
             v-bind:class="[outsideOfRoot ? 'hide-search' : '']">
           <template v-slot:no-data>
             <v-list-item dense v-bind:style="{fontSize: '0.8rem'}">
