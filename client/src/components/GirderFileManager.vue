@@ -32,7 +32,7 @@ export default {
   computed: {
     queryValues: {
       get () {
-        if (this.query && !this.showPartials) {
+        if (this.query && this.query.hasOwnProperty('value') && !this.showPartials) {
           return [this.query.value];
         }
         else if (this.showPartials) {
