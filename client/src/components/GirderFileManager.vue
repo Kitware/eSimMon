@@ -2,6 +2,7 @@
 search bar and to collect and filter parameter options. -->
 
 <script>
+import axios from 'axios';
 import { FileManager as GirderFileManager } from '@girder/components/src/components/Snippet';
 import GirderDataBrowser from './GirderDataBrowser.vue';
 import {
@@ -51,6 +52,20 @@ export default {
   },
 
   async created() {
+    const path = 'http://localhost:5000/plots/api/movie';
+    axios({
+      url: 'http://localhost:5000/plots/api/movie',
+      method: 'GET',
+      responseType: 'blob',
+      token: this.girderRest.token
+    }).then((response) => {
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'test.mp4');
+      document.body.appendChild(link);
+      link.click();
+    })
     await this.setCurrentPath();
     await this.getAllResults(this.location._id);
     this.filteredItems = this.allItems;
