@@ -129,6 +129,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
 import _ from 'lodash';
@@ -369,6 +370,25 @@ export default {
       this.numReady += 1;
       this.getRangeData(event);
     },
+
+    fetchMovie(id) {
+      axios({
+        url: `http://localhost:5000/api/movie/${id}`,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'girderToken': this.girderRest.token
+        },
+        responseType: 'blob'
+      }).then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'test.mp4');
+        document.body.appendChild(link);
+        link.click();
+      })
+    }
   },
 
   created: function () {
