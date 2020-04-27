@@ -2,7 +2,7 @@
 <v-card vertical-center
         v-on:drop="loadGallery($event)"
         v-on:dragover="preventDefault($event)">
-  <v-card-text v-bind:class="[!json ? 'text-xs-end' : 'text-xs-center']">
+  <v-card-text v-bind:class="[!json ? 'text-xs-end' : 'text-xs-center']" @contextmenu="fetchMovie">
     <div v-if="itemId"
          ref="plotly"
          class="plot"/>
@@ -227,7 +227,11 @@ export default {
         }
       }
     },
+
+    fetchMovie() {
+      this.$parent.$parent.$parent.$parent.$emit("param-selected", this.itemId);
     },
+  },
 };
 </script>
 

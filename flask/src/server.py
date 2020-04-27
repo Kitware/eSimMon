@@ -1,5 +1,6 @@
 import ffmpeg
 import tempfile
+import os
 
 from girder_client import GirderClient
 from flask import Flask, send_file, request, Response
@@ -23,9 +24,11 @@ def create_movie(id):
         if not item:
             return Response('Unable to fetch item', status=400, mimetype='application/json')
         gc.downloadItem(id, tmpdir, item['name'])
-        path = tmpdir + '/' + item['name'] + '/*.svg'
-        ffmpeg.input(path, pattern_type='glob', framerate=1).output(output_file.name).overwrite_output().run()
-    return send_file(output_file, attachment_filename=item['name']+'.mp4')
+        path_name = os.path.join(tmpdir, item['name'], '*.svg')
+        ffmpeg.input(path_name, pattern_type='glob', framerate=1).output(output_file.name).overwrite_output().run()
+    response = make_response(send_file(output_file, attachment_filename=item['name']+'.mp4'))
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 if __name__ == '__main__':
