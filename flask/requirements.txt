@@ -1,3 +1,4 @@
 Flask
 ffmpeg-python
 Flask-Cors
+girder-client
