@@ -155,6 +155,11 @@ export default {
         this.$refs.query.blur();
       }
     },
+    async fetchMovie(e) {
+      let name = e.target.textContent.trim();
+      var item = await this.girderRest.get(`/item?folderId=${this.location._id}&name=${name}`);
+      this.$parent.$parent.$parent.$parent.$emit("param-selected", item.data[0]._id, name, e);
+    },
   },
 };
 </script>

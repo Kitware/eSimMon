@@ -371,9 +371,20 @@ export default {
       this.getRangeData(event);
     },
 
-    fetchMovie(id) {
+    contextMenu(id, name, e) {
+      this.parameter = name;
+      this.itemId = id;
+      this.showMenu = false;
+      this.pos = [e.clientX, e.clientY];
+      this.$nextTick(() => {
+        this.showMenu = true;
+      });
+    },
+
+    fetchMovie() {
+      let name = this.parameter;
       axios({
-        url: `http://localhost:5000/api/movie/${id}`,
+        url: `http://localhost:5000/api/movie/${this.itemId}`,
         method: 'GET',
         headers: { 'girderToken': this.girderRest.token },
         responseType: 'blob'
@@ -381,17 +392,17 @@ export default {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', 'test.mp4');
+        link.setAttribute('download', `${name}.mp4`);
         document.body.appendChild(link);
         link.click();
-      })
+      });
     }
   },
 
   created: function () {
     this.$on('data-loaded', this.initialDataLoaded);
     this.$on('gallery-ready', this.incrementReady);
-    this.$on('param-selected', this.fetchMovie);
+    this.$on('param-selected', this.contextMenu);
   },
 
   computed: {
