@@ -150,7 +150,7 @@ import GirderFileManager from './components/GirderFileManager.vue';
 
 export default {
   name: 'App',
-  inject: ['girderRest', 'defaultLocation'],
+  inject: ['girderRest', 'defaultLocation', 'flaskRest'],
 
   components: {
     GirderAuth,
@@ -399,7 +399,7 @@ export default {
     fetchMovie() {
       let name = this.parameter;
       axios({
-        url: `http://localhost:5000/api/movie/${this.itemId}`,
+        url: `${this.flaskRest}/movie/${this.itemId}`,
         method: 'GET',
         headers: { 'girderToken': this.girderRest.token },
         responseType: 'blob'
