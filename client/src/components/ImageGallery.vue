@@ -2,7 +2,8 @@
 <v-card vertical-center
         v-on:drop="loadGallery($event)"
         v-on:dragover="preventDefault($event)">
-  <v-card-text v-bind:class="[!json ? 'text-xs-end' : 'text-xs-center']" @contextmenu="fetchMovie">
+  <v-card-text v-bind:class="[!json ? 'text-xs-end' : 'text-xs-center']"
+               @contextmenu.prevent="fetchMovie">
     <div v-if="itemId"
          ref="plotly"
          class="plot"/>

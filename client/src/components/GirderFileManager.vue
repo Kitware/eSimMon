@@ -165,7 +165,8 @@ export default {
 </script>
 
 <template>
-  <v-card class="girder-data-browser-snippet">
+  <v-card class="girder-data-browser-snippet"
+          @contextmenu.prevent="fetchMovie">
     <girder-data-browser
       ref="girderBrowser"
       :location.sync="internalLocation"
