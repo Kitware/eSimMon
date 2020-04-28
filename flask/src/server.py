@@ -28,7 +28,13 @@ def create_movie(id):
             .output(output_file.name)
             .overwrite_output()
             .run())
-    return send_file(output_file, attachment_filename=item_name+'.mp4')
+
+    # Make sure temp file is deleted after it is downloaded
+    def stream_and_remove_file():
+        yield from output_file
+        output_file.close()
+
+    return Response(stream_and_remove_file(), mimetype='mp4')
 
 
 if __name__ == '__main__':
