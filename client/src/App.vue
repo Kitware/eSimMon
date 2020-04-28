@@ -5,6 +5,17 @@
                  :oauth="false"
                  :forgot-password-url="forgotPasswordUrl" />
   </v-dialog>
+  <v-menu v-model="showMenu"
+          :position-x="pos[0]"
+          :position-y="pos[1]"
+          absolute
+          offset-y>
+    <v-list>
+      <v-list-item dense @click="fetchMovie">
+        <v-list-item-title>Download Movie for {{ parameter }}</v-list-item-title>
+      </v-list-item>
+    </v-list>
+  </v-menu>
   <splitpanes>
     <pane min-size="15" :size="25">
       <v-row v-bind:style="{height: '100vh'}">
@@ -168,6 +179,7 @@ export default {
       pos: [],
       parameter: '',
       cancel: false,
+      showMenu: false,
     };
   },
 
@@ -197,6 +209,9 @@ export default {
     },
 
     hoverIn: _.debounce(function(event){
+        if (this.showMenu)
+          return;
+
         const node = event.target;
         const parent = node ? node.parentNode : null;
         if ((parent && parent.classList.value.includes('pl-3'))
