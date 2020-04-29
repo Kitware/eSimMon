@@ -8,7 +8,7 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 
-cors_route = os.environ.get('CORS_API', '*')
+cors_domain = os.environ.get('CORS_DOMAIN', '*')
 girder_url = os.environ.get('GIRDER_API_URL', 'https://data.kitware.com/api/v1/')
 
 CORS(app, resources={r'/*': {'origins': cors_route}})
