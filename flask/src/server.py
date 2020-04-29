@@ -11,7 +11,7 @@ app = Flask(__name__)
 cors_domain = os.environ.get('CORS_DOMAIN', '*')
 girder_url = os.environ.get('GIRDER_API_URL', 'https://data.kitware.com/api/v1/')
 
-CORS(app, resources={r'/*': {'origins': cors_route}})
+CORS(app, resources={r'/*': {'origins': cors_domain}})
 
 @app.route('/api/movie/<id>', methods=['GET'])
 def create_movie(id):
