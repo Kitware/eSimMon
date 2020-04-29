@@ -8,7 +8,10 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 
-CORS(app, expose_headers=["x-suggested-filename"])
+cors_route = os.environ.get('CORS_API', '*')
+girder_url = os.environ.get('GIRDER_API_URL', 'https://data.kitware.com/api/v1/')
+
+CORS(app, resources={r'/*': {'origins': cors_route}})
 
 @app.route('/api/movie/<id>', methods=['GET'])
 def create_movie(id):
@@ -16,7 +19,7 @@ def create_movie(id):
     if not token or not id:
         return Response('Invalid token or parameter ID.', status=400)
 
-    gc = GirderClient(apiUrl='https://data.kitware.com/api/v1/')
+    gc = GirderClient(apiUrl=girder_url)
     gc.setToken(token)
     with tempfile.TemporaryDirectory() as tmpdir:
         gc.downloadItem(id, tmpdir)
