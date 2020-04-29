@@ -8,7 +8,7 @@ COPY flask/requirements.txt /app/
 RUN pip3 install gunicorn
 RUN pip3 install -r /app/requirements.txt
 RUN apt-get update && \
-    apt-get install ffmpeg -y && \
+    apt-get install --no-install-recommends ffmpeg -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
