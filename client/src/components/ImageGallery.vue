@@ -2,7 +2,8 @@
 <v-card vertical-center
         v-on:drop="loadGallery($event)"
         v-on:dragover="preventDefault($event)">
-  <v-card-text v-bind:class="[!json ? 'text-xs-end' : 'text-xs-center']">
+  <v-card-text v-bind:class="[!json ? 'text-xs-end' : 'text-xs-center']"
+               @contextmenu.prevent="fetchMovie">
     <div v-if="itemId"
          ref="plotly"
          class="plot"/>
@@ -227,7 +228,12 @@ export default {
         }
       }
     },
+
+    async fetchMovie(e) {
+      const response = await this.callEndpoint(`item/${this.itemId}`);
+      this.$parent.$parent.$parent.$parent.$emit("param-selected", this.itemId, response.name, e);
     },
+  },
 };
 </script>
 

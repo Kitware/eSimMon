@@ -5,6 +5,17 @@
                  :oauth="false"
                  :forgot-password-url="forgotPasswordUrl" />
   </v-dialog>
+  <v-menu v-model="showMenu"
+          :position-x="pos[0]"
+          :position-y="pos[1]"
+          absolute
+          offset-y>
+    <v-list>
+      <v-list-item dense @click="fetchMovie">
+        <v-list-item-title>Download Movie for {{ parameter }}</v-list-item-title>
+      </v-list-item>
+    </v-list>
+  </v-menu>
   <splitpanes>
     <pane min-size="15" :size="25">
       <v-row v-bind:style="{height: '100vh'}">
@@ -129,6 +140,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
 import _ from 'lodash';
@@ -138,7 +150,7 @@ import GirderFileManager from './components/GirderFileManager.vue';
 
 export default {
   name: 'App',
-  inject: ['girderRest', 'defaultLocation'],
+  inject: ['girderRest', 'defaultLocation', 'flaskRest'],
 
   components: {
     GirderAuth,
@@ -167,6 +179,7 @@ export default {
       pos: [],
       parameter: '',
       cancel: false,
+      showMenu: false,
     };
   },
 
@@ -196,6 +209,9 @@ export default {
     },
 
     hoverIn: _.debounce(function(event){
+        if (this.showMenu)
+          return;
+
         const node = event.target;
         const parent = node ? node.parentNode : null;
         if ((parent && parent.classList.value.includes('pl-3'))
@@ -369,11 +385,39 @@ export default {
       this.numReady += 1;
       this.getRangeData(event);
     },
+
+    contextMenu(id, name, e) {
+      this.parameter = name;
+      this.itemId = id;
+      this.showMenu = false;
+      this.pos = [e.clientX, e.clientY];
+      this.$nextTick(() => {
+        this.showMenu = true;
+      });
+    },
+
+    fetchMovie() {
+      let name = this.parameter;
+      axios({
+        url: `${this.flaskRest}/movie/${this.itemId}`,
+        method: 'GET',
+        headers: { 'girderToken': this.girderRest.token },
+        responseType: 'blob'
+      }).then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${name}.mp4`);
+        document.body.appendChild(link);
+        link.click();
+      });
+    }
   },
 
   created: function () {
     this.$on('data-loaded', this.initialDataLoaded);
     this.$on('gallery-ready', this.incrementReady);
+    this.$on('param-selected', this.contextMenu);
   },
 
   computed: {
