@@ -2,7 +2,9 @@
 search bar and to collect and filter parameter options. -->
 
 <script>
-import { FileManager as GirderFileManager } from '@girder/components/src/components/Snippet';
+import {
+  FileManager as GirderFileManager
+} from '@girder/components/src/components/Snippet';
 import GirderDataBrowser from './GirderDataBrowser.vue';
 import {
   Breadcrumb as GirderBreadcrumb,
@@ -31,7 +33,7 @@ export default {
   computed: {
     queryValues: {
       get () {
-        if (this.query && this.query.hasOwnProperty('value') && !this.showPartials) {
+        if (this.query && _.has(this.query, 'value') && !this.showPartials) {
           return [this.query.value];
         }
         else if (this.showPartials && this.filteredItems) {
@@ -53,14 +55,15 @@ export default {
 
   watch: {
     async query() {
-      if (this.input === '' || this.input && !typeof(this.query) == 'object'){
+      if (this.$refs.query.isFocused && !(_.isObject(this.query))){
         this.showPartials = true;
-      } else if (typeof(this.query) == 'object') {
+      } else if (_.isObject(this.query)) {
         this.showPartials = false;
       }
       this.refresh();
-      if (!this.showPartials && typeof(this.query) == 'object') {
-        let { data } = await this.girderRest.get(`/folder/${this.query.value.folderId}`);
+      if (!this.showPartials && _.isObject(this.query)) {
+        let { data } = await this.girderRest.get(
+          `/folder/${this.query.value.folderId}`);
         this.internalLocation = {...data, 'search': true};
       }
     },
@@ -68,7 +71,7 @@ export default {
       this.refresh();
     },
     input() {
-      if (this.input == '') {
+      if (_.isEmpty(this.input)) {
         this.clear();
       }
     },
@@ -86,7 +89,7 @@ export default {
       var location = this.lazyLocation ? this.lazyLocation : this.location;
 
       this.currentPath = '';
-      if (location.hasOwnProperty('_id')) {
+      if (_.has(location, '_id')) {
         let { data } = await this.girderRest.get(
           `/resource/${location._id}/path?type=${location._modelType}`);
         this.currentPath = data;
@@ -109,7 +112,8 @@ export default {
       this.refresh();
     },
     showMatches() {
-      if (this.query == this.input) {
+      if (_.isEqual(this.query, this.input) ||
+            (_.isNull(this.query) && _.isEmpty(this.input))) {
         this.showPartials = true;
       }
       if (this.$refs.query.isMenuActive) {
@@ -118,8 +122,10 @@ export default {
     },
     async fetchMovie(e) {
       let name = e.target.textContent.trim();
-      var item = await this.girderRest.get(`/item?folderId=${this.location._id}&name=${name}`);
-      this.$parent.$parent.$parent.$parent.$emit("param-selected", item.data[0]._id, name, e);
+      var item = await this.girderRest.get(
+        `/item?folderId=${this.location._id}&name=${name}`);
+      this.$parent.$parent.$parent.$parent.$emit(
+        "param-selected", item.data[0]._id, name, e);
     },
     async getFilteredResults() {
       let input = this.input ? this.input : '';
