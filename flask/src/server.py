@@ -3,7 +3,7 @@ import tempfile
 import os
 
 from girder_client import GirderClient
-from flask import Flask, request, Response, send_file
+from flask import Flask, request, Response, send_file, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -12,6 +12,10 @@ cors_domain = os.environ.get('CORS_DOMAIN', '*')
 girder_url = os.environ.get('GIRDER_API_URL', 'https://data.kitware.com/api/v1/')
 
 CORS(app, resources={r'/*': {'origins': cors_domain}})
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'OK'})
 
 @app.route('/api/movie/<id>', methods=['GET'])
 def create_movie(id):
