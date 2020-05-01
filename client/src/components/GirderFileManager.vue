@@ -20,7 +20,6 @@ export default {
   data() {
     return {
       query: null,
-      allItems: [],
       filteredItems: [],
       input: '',
       showPartials: false,
@@ -35,16 +34,14 @@ export default {
         if (this.query && this.query.hasOwnProperty('value') && !this.showPartials) {
           return [this.query.value];
         }
-        else if (this.showPartials) {
-          let values = this.filteredItems
-            .filter(item => {
-              return item.value.name.includes(this.input ? this.input : '');
-            })
-            .map(item => { return {...item.value, 'name': item.text}; });
-            if (!this.input)
-              this.$refs.query.blur();
-            return values;
-          }
+        else if (this.showPartials && this.filteredItems) {
+          let values = this.filteredItems.map(item => {
+            return {...item.value, 'name': item.text};
+          });
+          if (!this.input)
+            this.$refs.query.blur();
+          return values;
+        }
         return [];
       }
     },
@@ -52,8 +49,6 @@ export default {
 
   async created() {
     await this.setCurrentPath();
-    await this.getAllResults(this.location._id);
-    this.filteredItems = this.allItems;
   },
 
   watch: {
@@ -81,7 +76,8 @@ export default {
       if (!this.lazyLocation.hasOwnProperty('search')) {
         this.clear();
       }
-      this.filterResults();
+      this.setCurrentPath();
+      this.getFilteredResults();
     }
   },
 
@@ -106,41 +102,6 @@ export default {
         }
       }
     },
-    async getAllResults(folderId) {
-      var details = await this.girderRest.get(`folder/${folderId}/details`);
-      if (details.data.nItems > 0) {
-        var items = await this.girderRest
-          .get(`/item?folderId=${folderId}&sort=lowerName&sortdir=1`);
-        items.data.forEach(async item => {
-          var { data } = await this.girderRest
-            .get(`/resource/${item._id}/path?type=item`);
-          this.allItems.push({
-            'text': data.split(this.currentPath + '/')[1],
-            'value': item,
-            'fullPath': data
-          });
-        });
-      }
-      if (details.data.nFolders > 0) {
-        var folders = await this.girderRest
-          .get(`/folder?parentType=folder&parentId=${folderId}&sort=lowerName&sortdir=1`);
-        for (var idx in folders.data) {
-          await this.getAllResults(folders.data[idx]._id);
-        }
-      }
-    },
-    async filterResults() {
-      await this.setCurrentPath();
-      if (this.outsideOfRoot)
-        return;
-
-      this.filteredItems = this.allItems.filter(item => {
-        if (item.fullPath.includes(this.currentPath)) {
-          item.text = item.fullPath.split(this.currentPath + '/')[1];
-          return item;
-        }
-      });
-    },
     clear() {
       this.showPartials = false;
       this.query = null;
@@ -159,6 +120,12 @@ export default {
       let name = e.target.textContent.trim();
       var item = await this.girderRest.get(`/item?folderId=${this.location._id}&name=${name}`);
       this.$parent.$parent.$parent.$parent.$emit("param-selected", item.data[0]._id, name, e);
+    },
+    async getFilteredResults() {
+      let input = this.input ? this.input : '';
+      let { data } = await this.girderRest.get(
+        `resource/${this.location._id}/search?type=folder&q=${input}`);
+      this.filteredItems = data.results;
     },
   },
 };
@@ -205,6 +172,7 @@ export default {
             return-object
             dense
             solo
+            @update:search-input="getFilteredResults"
             @click:append="clear"
             @click:append-outer="showMatches"
             @keyup.enter="showMatches"
