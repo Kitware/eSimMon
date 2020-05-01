@@ -1,7 +1,7 @@
 version: '2'
 services:
-  adash-app:
-    image: cjh1/adios-ingest:latest
+  watch:
+    image: kitware/esimmon-cli:latest
     build:
       context: ../../
       dockerfile: devops/docker/ingest/Dockerfile
