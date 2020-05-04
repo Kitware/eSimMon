@@ -128,12 +128,12 @@ export default {
       this.$parent.$parent.$parent.$parent.$emit(
         "param-selected", item.data[0]._id, name, e);
     },
-    async getFilteredResults() {
+    getFilteredResults:  _.debounce(async function(event) {
       let input = this.input ? this.input : '';
       let { data } = await this.girderRest.get(
         `resource/${this.location._id}/search?type=folder&q=${input}`);
       this.filteredItems = data.results;
-    },
+    }, 500),
   },
 };
 </script>
