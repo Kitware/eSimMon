@@ -27,7 +27,7 @@ def _filter_items(folders, user, query, matches, parent):
   .param('type', 'The type of the resource (must be collection or folder).')
   .param('q', 'The search query.', dataType='string', required=False)
 )
-def find_parameters(id, type, q):
+def find_items(id, type, q):
     user = getCurrentUser()
     if type == 'collection':
         resource = Collection().load(id, user=user)
