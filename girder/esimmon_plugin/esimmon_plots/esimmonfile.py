@@ -1,4 +1,3 @@
-import
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import getCurrentUser
@@ -10,7 +9,6 @@ from girder.models.folder import Folder
 
 def _filter_items(folders, user, query, matches, parent):
     for folder in folders:
-        if not
         items = list(Folder().childItems(folder, parentType='folder', user=user))
         for item in items:
             full_path = getResourcePath('item', item, user)

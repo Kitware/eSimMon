@@ -2,6 +2,7 @@
 search bar and to collect and filter parameter options. -->
 
 <script>
+import _ from 'lodash';
 import {
   FileManager as GirderFileManager
 } from '@girder/components/src/components/Snippet';
