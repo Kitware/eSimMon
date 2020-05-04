@@ -1,0 +1,22 @@
+version: "3.0"
+services:
+  mongodb:
+    image: mongo:4.2
+    ports:
+      - 27017
+    volumes:
+      - girder-db:/data/db
+
+  girder:
+    image: kitware/esimmon-girder
+    ports:
+      - 8080:8080
+    volumes:
+      - girder-assetstore:/data/assetstore
+    links:
+      - "mongodb:mongodb"
+    command: --host 0.0.0.0 --database mongodb://mongodb:27017/girder
+
+volumes:
+  girder-db:
+  girder-assetstore:
