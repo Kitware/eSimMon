@@ -1,6 +1,10 @@
 import Vue from 'vue'
 import Girder, { RestClient, vuetify } from '@girder/components/src';
 import {isNil} from 'lodash';
+import axios from 'axios';
+import axiosRetry from 'axios-retry';
+import { ConcurrencyManager } from 'axios-concurrency';
+
 
 Vue.use(Girder);
 
@@ -20,8 +24,10 @@ let folderId = '5e878dd32660cbefba885f22';
 if (!isNil(process.env.VUE_APP_FOLDER_ID)) {
   folderId = process.env.VUE_APP_FOLDER_ID;
 }
-
-const girderRest = new RestClient({ apiRoot, authenticateWithCredentials });
+const client = axios.create();
+ConcurrencyManager(client, 10);
+axiosRetry(client, { retries: 5 });
+const girderRest = new RestClient({ apiRoot, authenticateWithCredentials, axios: client });
 const defaultLocation = { _modelType: 'folder', _id: folderId };
 
 import App from './App.vue'
