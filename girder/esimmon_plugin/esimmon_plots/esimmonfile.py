@@ -7,6 +7,10 @@ from girder.utility.path import getResourcePath
 from girder.models.collection import Collection
 from girder.models.folder import Folder
 
+from girder.exceptions import RestException
+from girder.constants import AccessType
+
+
 def _filter_items(folders, user, query, matches, parent):
     for folder in folders:
         items = list(Folder().childItems(folder, parentType='folder', user=user))
@@ -35,7 +39,7 @@ def find_items(id, type, q):
             raise RestException('Invalid resource id.')
         folders = list(Folder().childFolders(resource, parentType=type, user=user))
     elif type == 'folder':
-        resource = Folder().load(id, user=user)
+        resource = Folder().load(id, user=user, level=AccessType.READ)
         if resource is None:
             raise RestException('Invalid resource id.')
         folders = [resource]
