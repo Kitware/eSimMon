@@ -230,6 +230,8 @@ export default {
     },
 
     async fetchMovie(e) {
+      if (this.json)
+        return;
       const response = await this.callEndpoint(`item/${this.itemId}`);
       this.$parent.$parent.$parent.$parent.$emit("param-selected", this.itemId, response.name, e);
     },
