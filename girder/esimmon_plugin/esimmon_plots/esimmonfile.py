@@ -7,6 +7,9 @@ from girder.utility.path import getResourcePath
 from girder.models.collection import Collection
 from girder.models.folder import Folder
 
+from girder.exceptions import RestException
+
+
 def _filter_items(folders, user, query, matches, parent):
     for folder in folders:
         items = list(Folder().childItems(folder, parentType='folder', user=user))
