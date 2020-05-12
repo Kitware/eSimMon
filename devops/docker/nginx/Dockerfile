@@ -1,4 +1,4 @@
-FROM node:8.11 as build
+FROM node:12.16.3 as build
 COPY ./client /client
 RUN cd /client && yarn && yarn build
 

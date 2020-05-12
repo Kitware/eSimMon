@@ -1,7 +1,7 @@
-version: '2'
+version: '3.0'
 services:
-  adash-app:
-    image: kitware/adios-dashboard
+  client:
+    image: kitware/esimmon-client
     build:
       context: ../../
       dockerfile: devops/docker/nginx/Dockerfile
