@@ -6,3 +6,5 @@ services:
       context: ../../
       dockerfile: devops/docker/ingest/Dockerfile
     command: "watch -i 60 -v 60"
+    env_file:
+      - watch.env
