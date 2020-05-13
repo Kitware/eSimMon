@@ -2,6 +2,8 @@ version: '3.0'
 services:
   client:
     image: kitware/esimmon-client
+    depends_on:
+      - girder
     build:
       context: ../../
       dockerfile: devops/docker/nginx/Dockerfile
