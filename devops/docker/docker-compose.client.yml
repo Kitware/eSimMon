@@ -9,3 +9,5 @@ services:
       dockerfile: devops/docker/nginx/Dockerfile
     ports:
       - 80:80
+    env_file:
+      - client.env
