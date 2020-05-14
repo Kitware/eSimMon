@@ -1,0 +1,106 @@
+- name: Setting up Girder
+  hosts: localhost
+  vars:
+    required_ansible_version: 2.5.1
+  tasks:
+    - fail: msg="Playbook requires ansible >= {{required_ansible_version}}"
+      when: ansible_version.string is version_compare(required_ansible_version, '<')
+
+    - name: Set some facts
+      set_fact:
+        girder_host: "{{girder_host|default('localhost')}}"
+        girder_port: "{{girder_port|default(8080)}}"
+        girder_scheme: "http"
+
+    - name: Create Girder eSimMon admin user
+      girder:
+        host: "{{girder_host}}"
+        port: "{{girder_port}}"
+        scheme: "{{girder_scheme}}"
+        user:
+          firstName: "esimmonadmin"
+          lastName: "esimmonadmin"
+          login: "esimmonadmin"
+          password: "letmein"
+          email: "esimmonadmin@kitware.com"
+          admin: yes
+      state: present
+
+    - name: Create filesystem assetstore
+      girder:
+        host: "{{girder_host}}"
+        port: "{{girder_port}}"
+        scheme: "{{girder_scheme}}"
+        username: "esimmonadmin"
+        password: "letmein"
+        assetstore:
+          name: "Filesystem Assetstore"
+          type: "filesystem"
+          root: "/assetstore"
+          current: true
+        state: present
+      when: s3_bucket is not defined
+
+    - name: Create eSimMon collection
+      girder:
+        host: "{{girder_host}}"
+        port: "{{girder_port}}"
+        scheme: "{{girder_scheme}}"
+        username: "esimmonadmin"
+        password: "letmein"
+        collection:
+          name: "eSimMon"
+          description: "eSimMon collection"
+          public: "{{ public_data | default('yes') }}"
+        state: present
+      register: esimmon_collection
+
+    - name: Create data folder
+      girder:
+        host: "{{girder_host}}"
+        port: "{{girder_port}}"
+        scheme: "{{girder_scheme}}"
+        username: "esimmonadmin"
+        password: "letmein"
+        folder:
+          parentType: "collection"
+          parentId: "{{esimmon_collection['gc_return']['_id'] }}"
+          name: "data"
+          description: "eSimMon data folder"
+          public: "{{ public_data | default('yes') }}"
+        state: present
+      register: data_folder
+
+    - name: Create Girder eSimMon user
+      girder:
+        host: "{{girder_host}}"
+        port: "{{girder_port}}"
+        scheme: "{{girder_scheme}}"
+        user:
+          firstName: "esimmon"
+          lastName: "esimmon"
+          login: "esimmon"
+          password: "{{ esimmon_password }}"
+          email: "esimmon@kitware.com"
+          admin: no
+      state: present
+
+    - name: Create apiKey
+      girder:
+        port: 8080
+        username: "esimmon"
+        password: "{{ esimmon_password }}"
+        post:
+          path: "api_key"
+          data:
+            name: test_key
+            scope: null
+            tokenDuration: 356
+      register: token
+
+    - name: Save apiKey and folder ID
+      blockinfile:
+        path: ../docker/watch.env
+        block: |
+            GIRDER_API_KEY={{ token['gc_return']['key'] }}
+            GIRDER_FOLDER_ID={{ data_folder['gc_return']['_id'] }}
