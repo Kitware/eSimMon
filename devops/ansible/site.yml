@@ -41,6 +41,20 @@
         state: present
       when: s3_bucket is not defined
 
+    - name: Create Girder eSimMon user
+      girder:
+        host: "{{girder_host}}"
+        port: "{{girder_port}}"
+        scheme: "{{girder_scheme}}"
+        user:
+          firstName: "esimmon"
+          lastName: "esimmon"
+          login: "esimmon"
+          password: "{{ esimmon_password }}"
+          email: "esimmon@kitware.com"
+          admin: no
+      state: present
+
     - name: Create eSimMon collection
       girder:
         host: "{{girder_host}}"
@@ -68,22 +82,12 @@
           name: "data"
           description: "eSimMon data folder"
           public: "{{ public_data | default('yes') }}"
+          access:
+            users:
+              - login: esimmon
+                type: admin
         state: present
       register: data_folder
-
-    - name: Create Girder eSimMon user
-      girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
-        user:
-          firstName: "esimmon"
-          lastName: "esimmon"
-          login: "esimmon"
-          password: "{{ esimmon_password }}"
-          email: "esimmon@kitware.com"
-          admin: no
-      state: present
 
     - name: Create apiKey
       girder:
