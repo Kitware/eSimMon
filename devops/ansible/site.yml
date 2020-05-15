@@ -102,9 +102,30 @@
             tokenDuration: 356
       register: token
 
-    - name: Save apiKey and folder ID
-      blockinfile:
-        path: ../docker/watch.env
-        block: |
-            GIRDER_API_KEY={{ token['gc_return']['key'] }}
-            GIRDER_FOLDER_ID={{ data_folder['gc_return']['_id'] }}
+    - name: Check if api key has already been set
+      lineinfile:
+        dest: ../docker/watch.env
+        regexp: "GIRDER_FOLDER_ID"
+        line: "GIRDER_FOLDER_ID"
+      check_mode: yes
+      register: api_presence
+
+    - name: Save apiKey if not set
+      lineinfile:
+        dest: ../docker/watch.env
+        line: "GIRDER_API_KEY={{ token['gc_return']['key'] }}"
+      when: api_presence.changed
+
+    - name: Check if folder ID has already been set
+      lineinfile:
+        dest: ../docker/watch.env
+        regexp: "GIRDER_FOLDER_ID"
+        line: "GIRDER_FOLDER_ID"
+      check_mode: yes
+      register: folder_presence
+
+    - name: Save folder ID if not set
+      lineinfile:
+        dest: ../docker/watch.env
+        line: "GIRDER_FOLDER_ID={{ data_folder['gc_return']['_id'] }}"
+      when: folder_presence.changed
