@@ -21,7 +21,7 @@
           firstName: "esimmonadmin"
           lastName: "esimmonadmin"
           login: "esimmonadmin"
-          password: "letmein"
+          password: "{{ admin_password }}"
           email: "esimmonadmin@kitware.com"
           admin: yes
       state: present
@@ -32,7 +32,7 @@
         port: "{{girder_port}}"
         scheme: "{{girder_scheme}}"
         username: "esimmonadmin"
-        password: "letmein"
+        password: "{{ admin_password }}"
         assetstore:
           name: "Filesystem Assetstore"
           type: "filesystem"
@@ -61,7 +61,7 @@
         port: "{{girder_port}}"
         scheme: "{{girder_scheme}}"
         username: "esimmonadmin"
-        password: "letmein"
+        password: "{{ admin_password }}"
         collection:
           name: "eSimMon"
           description: "eSimMon collection"
@@ -75,7 +75,7 @@
         port: "{{girder_port}}"
         scheme: "{{girder_scheme}}"
         username: "esimmonadmin"
-        password: "letmein"
+        password: "{{ admin_password }}"
         folder:
           parentType: "collection"
           parentId: "{{esimmon_collection['gc_return']['_id'] }}"
