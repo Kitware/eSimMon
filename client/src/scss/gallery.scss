@@ -134,6 +134,10 @@
   }
 }
 
+.hide-search {
+  display: none;
+}
+
 // Create border on data browser panel
 .splitpanes--vertical > .splitpanes__splitter {
   min-width: 3px;

@@ -132,6 +132,9 @@ export default {
         "param-selected", item.data[0]._id, name, e);
     },
     getFilteredResults:  _.debounce(async function(event) {
+      if (this.outsideOfRoot)
+        return;
+
       let input = this.input ? this.input : '';
       let { data } = await this.girderRest.get(
         `resource/${this.location._id}/search?type=folder&q=${input}`);
