@@ -7,7 +7,7 @@ services:
     build:
       context: ../../
       dockerfile: devops/docker/nginx/Dockerfile
+      args:
+        VUE_APP_FOLDER_ID: $VUE_APP_FOLDER_ID
     ports:
       - 80:80
-    env_file:
-      - client.env
