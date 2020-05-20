@@ -30,7 +30,7 @@ Vue.config.productionTip = false
 
 girderRest.fetchUser().then(() => {
   new Vue({
-    provide: { girderRest, defaultLocation, flaskRest},
+    provide: { girderRest, defaultLocation, flaskRest },
     vuetify,
     render: h => h(App),
   }).$mount('#app')

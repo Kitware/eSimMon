@@ -100,7 +100,7 @@
           data:
             name: test_key
             scope: null
-            tokenDuration: 356
+            tokenDuration: 365
       register: token
 
     - name: Check if api key has already been set
