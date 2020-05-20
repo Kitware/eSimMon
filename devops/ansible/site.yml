@@ -1,5 +1,6 @@
 - name: Setting up Girder
   hosts: localhost
+  connection: local
   vars:
     required_ansible_version: 2.5.1
   tasks:
@@ -24,7 +25,7 @@
           password: "{{ admin_password }}"
           email: "esimmonadmin@kitware.com"
           admin: yes
-      state: present
+        state: present
 
     - name: Create filesystem assetstore
       girder:
@@ -53,7 +54,7 @@
           password: "{{ esimmon_password }}"
           email: "esimmon@kitware.com"
           admin: no
-      state: present
+        state: present
 
     - name: Create eSimMon collection
       girder:
