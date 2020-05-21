@@ -9,7 +9,7 @@
 
     - name: Set some facts
       set_fact:
-        girder_host: "{{girder_host|default('localhost')}}"
+        girder_host: "{{girder_host|default('girder')}}"
         girder_port: "{{girder_port|default(8080)}}"
         girder_scheme: "http"
 
@@ -92,7 +92,9 @@
 
     - name: Create apiKey
       girder:
-        port: 8080
+        host: "{{girder_host}}"
+        port: "{{girder_port}}"
+        scheme: "{{girder_scheme}}"
         username: "esimmon"
         password: "{{ esimmon_password }}"
         post:
@@ -105,7 +107,7 @@
 
     - name: Check if api key has already been set
       lineinfile:
-        dest: ../docker/watch.env
+        dest: /watch.env
         regexp: "GIRDER_FOLDER_ID"
         line: "GIRDER_FOLDER_ID"
       check_mode: yes
@@ -113,13 +115,13 @@
 
     - name: Save apiKey if not set
       lineinfile:
-        dest: ../docker/watch.env
+        dest: /watch.env
         line: "GIRDER_API_KEY={{ token['gc_return']['key'] }}"
       when: api_presence.changed
 
     - name: Check if folder ID has already been set
       lineinfile:
-        dest: ../docker/watch.env
+        dest: /watch.env
         regexp: "GIRDER_FOLDER_ID"
         line: "GIRDER_FOLDER_ID"
       check_mode: yes
@@ -127,6 +129,6 @@
 
     - name: Save folder ID if not set
       lineinfile:
-        dest: ../docker/watch.env
+        dest: /watch.env
         line: "GIRDER_FOLDER_ID={{ data_folder['gc_return']['_id'] }}"
       when: folder_presence.changed
