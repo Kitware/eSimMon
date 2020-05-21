@@ -1,0 +1,12 @@
+version: "3.0"
+services:
+  ansible:
+    image: kitware/esimmon-ansible
+    depends_on:
+      - 'girder'
+    build:
+      context: ../../
+      dockerfile: devops/docker/ansible/Dockerfile
+    environment:
+      ESIMMON_PASSWORD: ${ESIMMON_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
