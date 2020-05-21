@@ -9,10 +9,6 @@ RUN apt-get update && apt-get -y install \
 RUN pip install ansible && \
   pip install girder_client
 
-WORKDIR /ansible
-COPY ./devops/docker/ansible/entrypoint.sh /entrypoint.sh
-COPY ./devops/docker/wait-for-it.sh /wait-for-it.sh
-COPY ./devops/docker/watch.env /watch.env
-COPY ./devops/ansible/* /ansible/
+WORKDIR /devops/ansible
 
-ENTRYPOINT ["/wait-for-it.sh", "girder:8080", "-t", "30", "--", "/entrypoint.sh"]
+ENTRYPOINT ["../docker/wait-for-it.sh", "girder:8080", "-t", "30", "--", "../docker/ansible/entrypoint.sh"]

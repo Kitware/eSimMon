@@ -10,3 +10,5 @@ services:
     environment:
       ESIMMON_PASSWORD: ${ESIMMON_PASSWORD}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+      - ../:/devops

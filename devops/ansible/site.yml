@@ -107,7 +107,7 @@
 
     - name: Check if api key has already been set
       lineinfile:
-        dest: /watch.env
+        dest: ../docker/watch.env
         regexp: "GIRDER_FOLDER_ID"
         line: "GIRDER_FOLDER_ID"
       check_mode: yes
@@ -115,13 +115,13 @@
 
     - name: Save apiKey if not set
       lineinfile:
-        dest: /watch.env
+        dest: ../docker/watch.env
         line: "GIRDER_API_KEY={{ token['gc_return']['key'] }}"
       when: api_presence.changed
 
     - name: Check if folder ID has already been set
       lineinfile:
-        dest: /watch.env
+        dest: ../docker/watch.env
         regexp: "GIRDER_FOLDER_ID"
         line: "GIRDER_FOLDER_ID"
       check_mode: yes
@@ -129,6 +129,6 @@
 
     - name: Save folder ID if not set
       lineinfile:
-        dest: /watch.env
+        dest: ../docker/watch.env
         line: "GIRDER_FOLDER_ID={{ data_folder['gc_return']['_id'] }}"
       when: folder_presence.changed
