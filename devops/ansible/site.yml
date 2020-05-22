@@ -40,7 +40,6 @@
           root: "/assetstore"
           current: true
         state: present
-      when: s3_bucket is not defined
 
     - name: Create Girder eSimMon user
       girder:
