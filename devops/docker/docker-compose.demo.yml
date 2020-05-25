@@ -1,0 +1,11 @@
+version: "3.0"
+services:
+  demo:
+    image: kitware/esimmon-demo
+    depends_on:
+      - girder
+    build:
+      context: ../../
+      dockerfile: devops/docker/demo/Dockerfile
+    ports:
+      - 9091:80
