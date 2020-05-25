@@ -10,4 +10,4 @@ services:
       args:
         VUE_APP_FOLDER_ID: $VUE_APP_FOLDER_ID
     ports:
-      - 9092:80
+      - 9090:80
