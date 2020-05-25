@@ -1,8 +1,5 @@
 FROM python:3.5-slim
 
-ENV ADMIN_PASSWORD=$ADMIN_PASSWORD
-ENV ESIMMON_PASSWORD=$ESIMMON_PASSWORD
-
 RUN apt-get update && apt-get -y install \
   git \
   sshpass
