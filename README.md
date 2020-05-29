@@ -1,3 +1,12 @@
+Requirements
+------------
+
+This following packages needs to be installed inorder to bring up the eSimMon stack:
+
+- [docker](https://docs.docker.com/engine/install/)
+- [docker-compose](https://docs.docker.com/compose/install/)
+
+
 Outline of Services
 -------------------
 Bringing up the stack will create a series of Docker containers that allow the use of the eSimMon Dashboard, and each container supports a role in that process.
