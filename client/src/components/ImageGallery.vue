@@ -18,7 +18,7 @@
 
 <script>
 import Plotly from 'plotly.js-basic-dist-min';
-import { isNil } from 'lodash';
+import { isNil, isEqual, isEmpty } from 'lodash';
 
 export default {
   name: "plotly",
@@ -129,11 +129,11 @@ export default {
         if (name[1] == 'json') {
           let img = await this.callEndpoint(
             `file/${val._id}/download?contentDisposition=inline`);
-          return {'img': img, 'step': name[0], 'ext': name[1]};
+          return {'img': img, 'step': parseInt(name[0], 10), 'ext': name[1]};
         } else {
           return {
             'img': this.girderRest.apiRoot + "/file/" + val._id + "/download?contentDisposition=inline",
-            'step': name[0],
+            'step': parseInt(name[0], 10),
             'ext': name[1]
           }
         }
@@ -165,9 +165,18 @@ export default {
       if (this.rows === null || this.rows.constructor !== Array || this.rows.length < 1) {
         return;
       }
+      // Find index of current time step
+      let idx = this.rows.findIndex(file => file.step === this.step);
+      if (idx < 0) {
+        let prevStep = this.step - 1;
+        while (prevStep > 0 && idx < 0) {
+          idx = this.rows.findIndex(file => file.step === prevStep);
+          prevStep -= 1;
+        }
+      }
       // Load the current image and the next two.
       var any_images_loaded = false;
-      for (var i = this.step; i < this.step + 3; i++) {
+      for (var i = idx + 1; i < idx + 3; i++) {
         if (i > this.maxTimeStep || i > this.rows.length) {
           break;
         }
@@ -186,7 +195,7 @@ export default {
           this.pendingImages = 1;
           const img = this.rows[i - 1].img;
           const ext = this.rows[i - 1].ext;
-          const step = parseInt(this.rows[i - 1].step, 10);
+          const step = this.rows[i - 1].step;
           if (ext == 'json') {
             this.loadedImages.push({
               timestep: step,
@@ -216,16 +225,18 @@ export default {
 
     react: function () {
       let nextImage = this.loadedImages.find(img => img.timestep == this.step);
+      if (isNil(nextImage) && this.loadedImages.length == 1)
+        nextImage = this.loadedImages[0];
       if (!isNil(nextImage)) {
         if (isEqual(nextImage.ext, 'json')) {
           Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {autosize: true});
           this.json = true;
         } else {
           this.json = false;
+          this.image = nextImage;
         }
-        this.image = nextImage;
-        this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
       }
+      this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
     },
 
     async fetchMovie(e) {
