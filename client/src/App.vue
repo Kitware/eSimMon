@@ -317,6 +317,7 @@ export default {
         return this.lookupRunId(itemId);
       }
 
+      let timeout = this.currentTimestep ? 10000 : 0;
       this._poller = setTimeout(async () => {
         try {
           const { data } = await this.girderRest.get(`/folder/${this.runId}`);
@@ -329,7 +330,7 @@ export default {
         } finally {
           this.poll(itemId);
         }
-      }, 10000);
+      }, timeout);
     },
 
     removeColumn() {
