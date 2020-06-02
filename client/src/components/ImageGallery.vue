@@ -18,6 +18,7 @@
 
 <script>
 import Plotly from 'plotly.js-basic-dist-min';
+import { isNil } from 'lodash';
 
 export default {
   name: "plotly",
@@ -214,21 +215,16 @@ export default {
     },
 
     react: function () {
-      for (var idx in this.loadedImages) {
-        if (this.loadedImages[idx].timestep == this.step) {
-          if (this.loadedImages[idx].ext == 'json') {
-            Plotly.react(this.$refs.plotly, this.loadedImages[idx].data, this.loadedImages[idx].layout, {autosize: true});
-            if (!this.json) {
-              this.json = true;
-            }
-          } else {
-            if (this.json) {
-              this.json = false;
-            }
-            this.image = this.loadedImages[idx];
-          }
-          this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
+      let nextImage = this.loadedImages.find(img => img.timestep == this.step);
+      if (!isNil(nextImage)) {
+        if (isEqual(nextImage.ext, 'json')) {
+          Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {autosize: true});
+          this.json = true;
+        } else {
+          this.json = false;
         }
+        this.image = nextImage;
+        this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
       }
     },
 
