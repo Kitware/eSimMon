@@ -124,14 +124,16 @@ export default {
 
       this.rows = await Promise.all(response.map(async function(val) {
         let info =  await this.callEndpoint(`file/${val._id}`);
-        if (info.exts[0] == 'json') {
+        let name = info.name.split('.');
+        if (name[1] == 'json') {
           let img = await this.callEndpoint(
             `file/${val._id}/download?contentDisposition=inline`);
-          return {'img': img, 'ext': info.exts[0]};
+          return {'img': img, 'step': name[0], 'ext': name[1]};
         } else {
           return {
             'img': this.girderRest.apiRoot + "/file/" + val._id + "/download?contentDisposition=inline",
-            'ext': info.exts[0]
+            'step': name[0],
+            'ext': name[1]
           }
         }
       }, this));
@@ -183,15 +185,16 @@ export default {
           this.pendingImages = 1;
           const img = this.rows[i - 1].img;
           const ext = this.rows[i - 1].ext;
+          const step = parseInt(this.rows[i - 1].step, 10);
           if (ext == 'json') {
             this.loadedImages.push({
-              timestep: i,
+              timestep: step,
               data: img.data,
               layout: img.layout,
               ext: ext,
             });
           } else {
-            this.loadedImages.push({timestep: i, src: img, ext: ext});
+            this.loadedImages.push({timestep: step, src: img, ext: ext});
           }
           if (this.loadedImages.length == 1) {
             this.react();
