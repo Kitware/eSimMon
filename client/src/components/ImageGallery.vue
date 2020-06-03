@@ -18,6 +18,7 @@
 
 <script>
 import Plotly from 'plotly.js-basic-dist-min';
+import { isNil, isEqual, isEmpty } from 'lodash';
 
 export default {
   name: "plotly",
@@ -124,14 +125,16 @@ export default {
 
       this.rows = await Promise.all(response.map(async function(val) {
         let info =  await this.callEndpoint(`file/${val._id}`);
-        if (info.exts[0] == 'json') {
+        let name = info.name.split('.');
+        if (name[1] == 'json') {
           let img = await this.callEndpoint(
             `file/${val._id}/download?contentDisposition=inline`);
-          return {'img': img, 'ext': info.exts[0]};
+          return {'img': img, 'step': parseInt(name[0], 10), 'ext': name[1]};
         } else {
           return {
             'img': this.girderRest.apiRoot + "/file/" + val._id + "/download?contentDisposition=inline",
-            'ext': info.exts[0]
+            'step': parseInt(name[0], 10),
+            'ext': name[1]
           }
         }
       }, this));
@@ -162,9 +165,18 @@ export default {
       if (this.rows === null || this.rows.constructor !== Array || this.rows.length < 1) {
         return;
       }
+      // Find index of current time step
+      let idx = this.rows.findIndex(file => file.step === this.step);
+      if (idx < 0) {
+        let prevStep = this.step - 1;
+        while (prevStep > 0 && idx < 0) {
+          idx = this.rows.findIndex(file => file.step === prevStep);
+          prevStep -= 1;
+        }
+      }
       // Load the current image and the next two.
       var any_images_loaded = false;
-      for (var i = this.step; i < this.step + 3; i++) {
+      for (var i = idx + 1; i < idx + 3; i++) {
         if (i > this.maxTimeStep || i > this.rows.length) {
           break;
         }
@@ -183,15 +195,16 @@ export default {
           this.pendingImages = 1;
           const img = this.rows[i - 1].img;
           const ext = this.rows[i - 1].ext;
+          const step = this.rows[i - 1].step;
           if (ext == 'json') {
             this.loadedImages.push({
-              timestep: i,
+              timestep: step,
               data: img.data,
               layout: img.layout,
               ext: ext,
             });
           } else {
-            this.loadedImages.push({timestep: i, src: img, ext: ext});
+            this.loadedImages.push({timestep: step, src: img, ext: ext});
           }
           if (this.loadedImages.length == 1) {
             this.react();
@@ -211,22 +224,19 @@ export default {
     },
 
     react: function () {
-      for (var idx in this.loadedImages) {
-        if (this.loadedImages[idx].timestep == this.step) {
-          if (this.loadedImages[idx].ext == 'json') {
-            Plotly.react(this.$refs.plotly, this.loadedImages[idx].data, this.loadedImages[idx].layout, {autosize: true});
-            if (!this.json) {
-              this.json = true;
-            }
-          } else {
-            if (this.json) {
-              this.json = false;
-            }
-            this.image = this.loadedImages[idx];
-          }
-          this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
+      let nextImage = this.loadedImages.find(img => img.timestep == this.step);
+      if (isNil(nextImage) && this.loadedImages.length == 1)
+        nextImage = this.loadedImages[0];
+      if (!isNil(nextImage)) {
+        if (isEqual(nextImage.ext, 'json')) {
+          Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {autosize: true});
+          this.json = true;
+        } else {
+          this.json = false;
+          this.image = nextImage;
         }
       }
+      this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
     },
 
     async fetchMovie(e) {
