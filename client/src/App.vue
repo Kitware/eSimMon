@@ -415,24 +415,22 @@ export default {
   },
 
   created: async function () {
-    let data = await this.girderRest.get(`/folder/${this.defaultLocation._id}`)
-      .catch(() => {return {}});
-    if (_.isEmpty(data)) {
-      let { data } = await this.girderRest.get(
-        `/resource/lookup?path=%2Fcollection%2FeSimMon%2Fdata`);
-      this.defaultLocation['_id'] = data['_id'];
-    }
     this.$on('data-loaded', this.initialDataLoaded);
     this.$on('gallery-ready', this.incrementReady);
     this.$on('param-selected', this.contextMenu);
   },
 
-  computed: {
+  asyncComputed: {
     location: {
-      get() {
+      async get() {
         if (this.browserLocation) {
           return this.browserLocation;
         } else if (this.girderRest.user) {
+          if (_.isEmpty(this.defaultLocation['id'])) {
+            let { data } = await this.girderRest.get(
+              `/resource/lookup?path=%2Fcollection%2FeSimMon%2Fdata`);
+            this.defaultLocation['_id'] = data['_id'];
+          }
           return this.defaultLocation;
         }
         return null;
