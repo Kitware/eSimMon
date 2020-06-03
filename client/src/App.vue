@@ -317,7 +317,7 @@ export default {
         return this.lookupRunId(itemId);
       }
 
-      let timeout = this.currentTimestep ? 10000 : 0;
+      let timeout = this.currentTimeStep > 1 ? 10000 : 0;
       this._poller = setTimeout(async () => {
         try {
           const { data } = await this.girderRest.get(`/folder/${this.runId}`);
