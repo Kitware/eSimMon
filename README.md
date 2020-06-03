@@ -12,7 +12,7 @@ Outline of Services
 Bringing up the stack will create a series of Docker containers that allow the use of the eSimMon Dashboard, and each container supports a role in that process.
 
 - ```docker-compose.girder.yml``` - Data management platform that uses MongoDB to store and retrieve data.
-- ```docker-compose.ansible.yml``` - Ansible playbook to setup the Girder instance. The playbook will create two users (one with admin rights), an assetstore for storage, a collection for the data, a folder within that collection that will be the default location to upload the data to (this can be changed with the ```Girder_FOLDER_ID``` discussed in the section below), and the API key that the ```watch``` container will need.
+- ```docker-compose.ansible.yml``` - Ansible playbook to setup the Girder instance. The playbook will create two users (one with admin rights), an assetstore for storage, a collection for the data, a folder within that collection that will be the default location to upload the data to (this can be changed with the ```GIRDER_FOLDER_ID``` discussed in the section below), and the API key that the ```watch``` container will need.
 - ```docker-compose.client.yml``` - Builds the client application and uses NGINX to make the app available on ```localhost:9090```.
 - ```docker-compose.watch.yml``` - Runs a Python script to watch the simulation assets site (where the data is being hosted) and upload that data to Girder as it comes in.
 - ```docker-compose.movie.yml``` - A Flask service that uses FFmpeg to create movies of the selected parameter's data, then downloads them to the local machine.
@@ -31,7 +31,9 @@ To create the Girder instance, you will need to have set the ```ADMIN_PASSWORD``
     cd <repo>/devops/docker
     docker-compose -p esimmon -f docker-compose.girder.yml -f docker-compose.ansible.yml up
 
-If successfull it will return ```esimmon_ansible_1 exited with code 0```, after which you can use ```ctrl-c``` to bring down the stack. This should only need to be run once for the initial setup.
+If successfull it will return ```esimmon_ansible_1 exited with code 0```, after which you can use ```ctrl-c``` to bring down the stack. This should only need to be run once for the initial setup. If the Girder database is removed and the setup needs to be re-run, the ```GIRDER_FOLDER_ID``` and ```GIRDER_API_KEY``` keys will need to be reset if they are not being manually set by the user. This can be done by running the following:
+
+```git checkout -- <repo>/devops/docker/watch.env```
 
 
 Bringing up the monitoring code
