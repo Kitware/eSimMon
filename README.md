@@ -31,7 +31,9 @@ To create the Girder instance, you will need to have set the ```ADMIN_PASSWORD``
     cd <repo>/devops/docker
     docker-compose -p esimmon -f docker-compose.girder.yml -f docker-compose.ansible.yml up
 
-If successfull it will return ```esimmon_ansible_1 exited with code 0```, after which you can use ```ctrl-c``` to bring down the stack. This should only need to be run once for the initial setup.
+If successfull it will return ```esimmon_ansible_1 exited with code 0```, after which you can use ```ctrl-c``` to bring down the stack. This should only need to be run once for the initial setup. If the Girder database is removed and the setup needs to be re-run, the ```GIRDER_FOLDER_ID``` and ```GIRDER_API_KEY``` keys will need to be reset if they are not being manually set by the user. This can be done by running the following:
+
+```git checkout -- <repo>/devops/docker/watch.env```
 
 
 Bringing up the monitoring code
