@@ -3,8 +3,8 @@ Requirements
 
 This following packages needs to be installed inorder to bring up the eSimMon stack:
 
-- [docker](https://docs.docker.com/engine/install/)
-- [docker-compose](https://docs.docker.com/compose/install/)
+- [docker](https://docs.docker.com/) - install instructions can be found [here](https://docs.docker.com/engine/install/)
+- [docker-compose](https://docs.docker.com/compose/) - install instructions can be found [here](https://docs.docker.com/compose/install/)
 
 
 Outline of Services
