@@ -38,7 +38,11 @@ If successfull it will return ```esimmon_ansible_1 exited with code 0```, after 
 
 Bringing up the monitoring code
 ------------------------------
-When the ```docker-compose.watch.yml``` file is included in the ```docker-compose``` command and the ```UPLOAD_SITE_URL``` has been set in the ```watch.env``` file, any existing run data will be ingested and any runs in progress will continue to populate the database as steps are completed.
+When the ```docker-compose.watch.yml``` file is included in the ```docker-compose``` command and the ```UPLOAD_SITE_URL``` has been set in the ```watch.env``` file, any existing run data will be ingested and any runs in progress will continue to populate the database as steps are completed. When the initial data has been ingested the watch script will continue to run, but you will know all existing data has been completely uploaded when you see the following:
+
+```watch_1    | [date] [time] - adash - INFO - Fetching /shots/index.json```
+
+This message will appear once every minute as the script continues to watch for new timesteps that may have been added. If there is an error message or you do not see the ```Fetching /shots/index.json``` message after the console output has slowed down or stopped, you can get help by creating an [issue](https://github.com/Kitware/eSimMon/issues/new) with the console output.
 
 
 Bringing up the stack
@@ -53,7 +57,13 @@ To bring up the stack each time run the following command:
     -f docker-compose.watch.yml \
     -f docker-compose.demo.yml up
 
-The ```docker-compose.demo.yml``` file is optional and only needs to be included if you would like to use the sample data. The dashboard will then be exposed on ```localhost:9090```.
+The ```docker-compose.demo.yml``` file is optional and only needs to be included if you would like to use the sample data. The dashboard will then be exposed on ```localhost:9090```. When you access the dashboard you will see the login prompt, which is where you will enter the ```esimmon``` username and ```ESIMMON_PASSWORD``` set in the ```.env``` file.
+
+![Login Prompt](devops/images/esimmon_login.png)
+
+Once you have logged in, the dashboard should look like the following:
+
+![eSimMon Dashboard](devops/images/esimmon_dashboard.png)
 
 
 Bringing down the stack
