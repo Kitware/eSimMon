@@ -38,7 +38,11 @@ If successfull it will return ```esimmon_ansible_1 exited with code 0```, after 
 
 Bringing up the monitoring code
 ------------------------------
-When the ```docker-compose.watch.yml``` file is included in the ```docker-compose``` command and the ```UPLOAD_SITE_URL``` has been set in the ```watch.env``` file, any existing run data will be ingested and any runs in progress will continue to populate the database as steps are completed.
+When the ```docker-compose.watch.yml``` file is included in the ```docker-compose``` command and the ```UPLOAD_SITE_URL``` has been set in the ```watch.env``` file, any existing run data will be ingested and any runs in progress will continue to populate the database as steps are completed. When the initial data has been ingested the watch script will continue to run, but you will know all existing data has been completely uploaded when you see the following:
+
+```watch_1    | [date] [time] - adash - INFO - Fetching /shots/index.json```
+
+This message will appear once every minute as the script continues to watch for new timesteps that may have been added.
 
 
 Bringing up the stack
