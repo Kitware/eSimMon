@@ -57,7 +57,13 @@ To bring up the stack each time run the following command:
     -f docker-compose.watch.yml \
     -f docker-compose.demo.yml up
 
-The ```docker-compose.demo.yml``` file is optional and only needs to be included if you would like to use the sample data. The dashboard will then be exposed on ```localhost:9090```.
+The ```docker-compose.demo.yml``` file is optional and only needs to be included if you would like to use the sample data. The dashboard will then be exposed on ```localhost:9090```. When you access the dashboard you will see the login prompt, which is where you will enter the ```esimmon``` username and ```ESIMMON_PASSWORD``` set in the ```.env``` file.
+
+![Login Prompt](devops/images/esimmon_login.png)
+
+Once you have logged in, the dashboard should look like the following:
+
+![eSimMon Dashboard](devops/images/esimmon_dashboard.png)
 
 
 Bringing down the stack
