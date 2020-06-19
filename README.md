@@ -42,7 +42,7 @@ When the ```docker-compose.watch.yml``` file is included in the ```docker-compos
 
 ```watch_1    | [date] [time] - adash - INFO - Fetching /shots/index.json```
 
-This message will appear once every minute as the script continues to watch for new timesteps that may have been added.
+This message will appear once every minute as the script continues to watch for new timesteps that may have been added. If there is an error message or you do not see the ```Fetching /shots/index.json``` message after the console output has slowed down or stopped, you can get help by creating an [issue](https://github.com/Kitware/eSimMon/issues/new) with the console output.
 
 
 Bringing up the stack
