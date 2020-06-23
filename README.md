@@ -36,9 +36,24 @@ If successfull it will return ```esimmon_ansible_1 exited with code 0```, after 
 ```git checkout -- <repo>/devops/docker/watch.env```
 
 
-Bringing up the monitoring code
-------------------------------
+Bringing up the watch service with the stack
+----------------------------------------------
 When the ```docker-compose.watch.yml``` file is included in the ```docker-compose``` command and the ```UPLOAD_SITE_URL``` has been set in the ```watch.env``` file, any existing run data will be ingested and any runs in progress will continue to populate the database as steps are completed.
+
+
+Running the watch service separately
+------------------------------------
+In order to run the watch service outside of the stack, the following environment variables will need to be set inside the ```watch.env``` file:
+
+- ```UPLOAD_SITE_URL``` - Should be the url of the site that the data is being exposed on. This is what the script will monitor for new and existing timesteps.
+- ```GIRDER_FOLDER_ID``` - The id of the folder that the data should be uploaded to in the Girder database. This id will need to be updated each time the upload location needs to be changed.
+- ```GIRDER_API_KEY``` - The API key for the Girder instance that the data is being uploaded to. As explained above, this key will automatically be set when the Girder instance is created, but in order to use a different instance.
+- ```GIRDER_API_URL``` - The url for Girder instance that the data will be uploaded to.
+
+The watch container can then be brought up with docker-compose:
+
+    cd <repo>/devops/docker
+    docker-compose -p esimmon -f docker-compose.watch.yml up
 
 
 Bringing up the stack
