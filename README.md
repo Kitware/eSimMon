@@ -21,7 +21,7 @@ Bringing up the stack will create a series of Docker containers that allow the u
 
 Setting up the environment variables
 ------------------------------------
-To setup the Girder instance two users are created: ```esimmonadmin``` and ```esimmon```. The passwords for these users must be set in the ```.env``` file located in ```eSimMon/devops/docker``` under the ```ADMIN_PASSWORD``` and ```ESIMMON_PASSWORD``` keys. Optionally, if a Girder instance has already been built the ```GIRDER_API_KEY``` and ```GIRDER_FOLDER_ID``` can be set in the ```watch.env``` file located in the same directory. If the keys are not set, they will be created automatically when the Girder instance is created. Changing the ```GIRDER_FOLDER_ID``` will change the location that files are uploaded to with the ingest script. The ```watch.env``` file also contains the ```UPLOAD_SITE_URL```, which should be set to the simulation assets url.
+To setup the Girder instance two users are created: ```esimmonadmin``` and ```esimmon```. The passwords for these users must be set in the ```.env``` file located in ```eSimMon/devops/docker``` under the ```ADMIN_PASSWORD``` and ```ESIMMON_PASSWORD``` keys. Optionally, if a Girder instance has already been built the ```GIRDER_API_KEY``` and ```GIRDER_FOLDER_ID``` can be set in the ```watch.env``` file located in the same directory. If the keys are not set, they will be created automatically when the Girder instance is created. Changing the ```GIRDER_FOLDER_ID``` will change the location that files are uploaded to with the ingest script. The ```watch.env``` file also contains the ```UPLOAD_SITE_URL```, which should be set to the simulation assets URL.
 
 
 Create and setup the Girder instance
@@ -36,13 +36,36 @@ If successfull it will return ```esimmon_ansible_1 exited with code 0```, after 
 ```git checkout -- <repo>/devops/docker/watch.env```
 
 
-Bringing up the monitoring code
+Bringing up the monitoring service with the stack
 ------------------------------
 When the ```docker-compose.watch.yml``` file is included in the ```docker-compose``` command and the ```UPLOAD_SITE_URL``` has been set in the ```watch.env``` file, any existing run data will be ingested and any runs in progress will continue to populate the database as steps are completed. When the initial data has been ingested the watch script will continue to run, but you will know all existing data has been completely uploaded when you see the following:
 
 ```watch_1    | [date] [time] - adash - INFO - Fetching /shots/index.json```
 
 This message will appear once every minute as the script continues to watch for new timesteps that may have been added. If there is an error message or you do not see the ```Fetching /shots/index.json``` message after the console output has slowed down or stopped, you can get help by creating an [issue](https://github.com/Kitware/eSimMon/issues/new) with the console output.
+
+
+Running the monitoring service separately
+------------------------------------
+In order to run the watch service outside of the stack, the following environment variables will need to be set inside the ```watch.env``` file:
+
+- ```UPLOAD_SITE_URL``` - Should be the URL of the site that the data is being exposed on. This is what the script will monitor for new and existing timesteps.
+- ```GIRDER_FOLDER_ID``` - The ID of the folder that the data should be uploaded to in the Girder database. This ID will need to be updated each time the upload location needs to be changed.
+- ```GIRDER_API_KEY``` - The API key for the Girder instance that the data is being uploaded to. As explained above, this key will automatically be set when the Girder instance is created, but in order to use a different instance.
+- ```GIRDER_API_URL``` - The URL for Girder instance that the data will be uploaded to.
+
+The container can then be brought up with docker-compose:
+
+    cd <repo>/devops/docker
+    docker-compose -p esimmon -f docker-compose.watch.yml up
+
+If the container starts up successfully you should see the following message at the very beginning, showing that the upload site set in the ```UPLOAD_SITE_URL``` is being watched for updates:
+
+```watch_1  | [date] [time] - adash - INFO - Watching: [UPLOAD_SITE_URL]```
+
+Once any pre-exisiting data is uploaded you will see messages indicating that the monitoring service is still running. The following message will appear every minute or so:
+
+```watch_1  | [date] [time] - adash - INFO - Fetching /shots/index.json```
 
 
 Bringing up the stack

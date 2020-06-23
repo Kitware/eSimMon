@@ -2,8 +2,6 @@ version: "3.0"
 services:
   watch:
     image: kitware/esimmon-cli:latest
-    depends_on:
-      - girder
     build:
       context: ../../
       dockerfile: devops/docker/ingest/Dockerfile
