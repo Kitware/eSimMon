@@ -59,6 +59,14 @@ The container can then be brought up with docker-compose:
     cd <repo>/devops/docker
     docker-compose -p esimmon -f docker-compose.watch.yml up
 
+If the container starts up successfully you should see the following message at the very beginning, showing that the upload site set in the ```UPLOAD_SITE_URL``` is being watched for updates:
+
+```watch_1  | [date] [time] - adash - INFO - Watching: [UPLOAD_SITE_URL]```
+
+Once any pre-exisiting data is uploaded you will see messages indicating that the monitoring service is still running. The following message will appear every minute or so:
+
+```watch_1  | [date] [time] - adash - INFO - Fetching /shots/index.json```
+
 
 Bringing up the stack
 ---------------------
