@@ -55,22 +55,24 @@
 // and shows a scrollbar when necessary.
 .girder-data-browser-snippet {
   flex-grow: 1;
-  max-height: calc(100% - 175px);
+  min-height: 80%;
   overflow: auto;
 }
 .girder-placeholder {
   flex-grow: 1;
-  max-height: calc(100% - 175px);
+  min-height: 80%;
 }
 
 // Playback controls take up 20% of the left column.
 .playback-controls {
-  display: grid;
-  max-height: 200px;
-  min-height: 175px;
-  padding: 10px 5px;
+  display: flex;
+  flex-flow: column;
+  max-height: 20%;
+  overflow: auto;
+  padding: 5px;
   .row {
     justify-content: space-around;
+    align-items: baseline;
     margin: 0;
     padding: 1%;
     .col {
