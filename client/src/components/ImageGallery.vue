@@ -18,7 +18,7 @@
 
 <script>
 import Plotly from 'plotly.js-basic-dist-min';
-import { isNil, isEqual, isEmpty } from 'lodash';
+import { isNil, isEqual } from 'lodash';
 
 export default {
   name: "plotly",

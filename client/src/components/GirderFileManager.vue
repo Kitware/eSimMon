@@ -131,7 +131,7 @@ export default {
       this.$parent.$parent.$parent.$parent.$emit(
         "param-selected", item.data[0]._id, name, e);
     },
-    getFilteredResults:  _.debounce(async function(event) {
+    getFilteredResults:  _.debounce(async function() {
       if (this.outsideOfRoot)
         return;
 
