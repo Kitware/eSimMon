@@ -8,4 +8,3 @@ services:
     command: "watch -i 60 -v 60"
     env_file:
       - watch.env
-    entrypoint: ["/wait-for-it.sh", "girder:8080", "-t", "30", "--", "/usr/local/bin/adash"]
