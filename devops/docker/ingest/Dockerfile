@@ -4,5 +4,6 @@ COPY ./ingest /ingest
 
 RUN pip install /ingest
 
-CMD ["../docker/wait-for-it.sh", "girder:8080", "-t", "30"]
+COPY ./devops/docker/wait-for-it.sh /wait-for-it.sh
+
 ENTRYPOINT ["/usr/local/bin/adash"]
