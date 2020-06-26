@@ -37,7 +37,7 @@
         assetstore:
           name: "Filesystem Assetstore"
           type: "filesystem"
-          root: "/assetstore"
+          root: "/data/assetstore"
           current: true
         state: present
 
