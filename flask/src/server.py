@@ -31,7 +31,7 @@ def create_movie(id):
         path_name = os.path.join(tmpdir, item_name, '*.svg')
         output_file = tempfile.NamedTemporaryFile(suffix='.mp4')
         (ffmpeg
-            .input(path_name, pattern_type='glob', framerate=1)
+            .input(path_name, pattern_type='glob', framerate=10)
             .output(output_file.name)
             .overwrite_output()
             .run())
