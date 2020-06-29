@@ -224,7 +224,7 @@ export default {
       }, 100),
 
     async getRangeData(event=null) {
-      if (this.location._modelType != 'folder')
+      if (_.isNull(this.location) || this.location._modelType != 'folder')
         return;
 
       const folderId = this.location._id;
