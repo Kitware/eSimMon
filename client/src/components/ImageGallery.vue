@@ -173,6 +173,11 @@ export default {
           idx = this.rows.findIndex(file => file.step === prevStep);
           prevStep -= 1;
         }
+        let nextStep = this.step + 1;
+        while (nextStep <= this.maxTimeStep && idx < 0) {
+          idx = this.rows.findIndex(file => file.step === nextStep);
+          nextStep += 1;
+        }
       }
       // Load the current image and the next two.
       var any_images_loaded = false;
