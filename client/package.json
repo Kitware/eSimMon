@@ -10,7 +10,7 @@
   "dependencies": {
     "@girder/components": "^2.2.0",
     "axios": "^0.19.2",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "plotly.js-basic-dist-min": "^1.52.3",
     "splitpanes": "^2.2.1"
   },
