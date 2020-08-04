@@ -427,7 +427,7 @@ export default {
         if (this.browserLocation) {
           return this.browserLocation;
         } else if (this.girderRest.user) {
-          if (_.isEmpty(this.defaultLocation['id'])) {
+          if (_.isNil(this.defaultLocation['_id'])) {
             let { data } = await this.girderRest.get(
               `/resource/lookup?path=%2Fcollection%2FeSimMon%2Fdata`);
             this.defaultLocation['_id'] = data['_id'];
