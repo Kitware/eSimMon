@@ -16,7 +16,7 @@ if (!isNil(process.env.VUE_APP_FLASK_API_URL)) {
   flaskRest = process.env.VUE_APP_FLASK_API_URL;
 }
 
-let folderId = '5e878dd32660cbefba885f22';
+let folderId = null;
 if (!isNil(process.env.VUE_APP_FOLDER_ID)) {
   folderId = process.env.VUE_APP_FOLDER_ID;
 }
