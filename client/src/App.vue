@@ -411,6 +411,10 @@ export default {
         link.setAttribute('download', `${name}.mp4`);
         document.body.appendChild(link);
         link.click();
+        this.download_requested = false;
+      }).catch((e) => {
+        // eslint-disable-next-line no-console
+        console.log('Error: ', e);
       });
     }
   },
