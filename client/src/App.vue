@@ -1,7 +1,7 @@
 <template>
 <v-app class="app">
   <v-dialog :value="loggedOut" persistent max-width="600px">
-    <girder-auth :register="true"
+    <girder-authentication :register="true"
                  :oauth="false"
                  :forgot-password-url="forgotPasswordUrl" />
   </v-dialog>
@@ -165,7 +165,7 @@ import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
 import _ from 'lodash';
 import ImageGallery from './components/ImageGallery.vue';
-import { Authentication as GirderAuth } from '@girder/components/src/components';
+import { GirderAuthentication as GirderAuthentication } from '@girder/components/src';
 import GirderFileManager from './components/GirderFileManager.vue';
 
 export default {
@@ -173,7 +173,7 @@ export default {
   inject: ['girderRest', 'defaultLocation', 'flaskRest'],
 
   components: {
-    GirderAuth,
+    GirderAuthentication,
     GirderFileManager,
     ImageGallery,
     Splitpanes,
@@ -343,7 +343,7 @@ export default {
       this._poller = setTimeout(async () => {
         try {
           const { data } = await this.girderRest.get(`/folder/${this.runId}`);
-          if (data.hasOwnProperty('meta') && data.meta.hasOwnProperty('currentTimestep')) {
+          if ('meta' in data && 'currentTimestep' in data.meta) {
             var new_timestep = data.meta.currentTimestep;
             if (new_timestep > this.maxTimeStep) {
               this.maxTimeStep = new_timestep;

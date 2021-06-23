@@ -2,7 +2,7 @@
   filtered list of items when a search is being performed. -->
 
 <script>
-import { DataBrowser as GirderDataBrowser } from '@girder/components/src/components';
+import { GirderDataBrowser } from '@girder/components/src';
 import {
   getLocationType,
   getSingularLocationTypeName
