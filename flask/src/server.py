@@ -1,6 +1,7 @@
 import ffmpeg
 import tempfile
 import os
+import glob
 
 from girder_client import GirderClient
 from flask import Flask, request, Response, send_file, jsonify
@@ -29,12 +30,18 @@ def create_movie(id):
         gc.downloadItem(id, tmpdir)
         item_name = os.listdir(tmpdir)[0]
         path_name = os.path.join(tmpdir, item_name, '*.svg')
+        if len(glob.glob(path_name)) == 0:
+            path_name = os.path.join(tmpdir, item_name, '*.png')
         output_file = tempfile.NamedTemporaryFile(suffix='.mp4')
-        (ffmpeg
-            .input(path_name, pattern_type='glob', framerate=10)
-            .output(output_file.name)
-            .overwrite_output()
-            .run())
+
+        try:
+            (ffmpeg
+                .input(path_name, pattern_type='glob', framerate=10)
+                .output(output_file.name)
+                .overwrite_output()
+                .run())
+        except ffmpeg.Error as e:
+            raise e
 
         return send_file(output_file, mimetype='mp4')
 

@@ -136,6 +136,26 @@
       </v-container>
     </pane>
   </splitpanes>
+  <div>
+    <v-snackbar
+      v-model="movieRequested"
+      :color="green"
+      :timeout="5000"
+      bottom
+      right
+    >
+      Movie Download Requested
+    </v-snackbar>
+    <v-snackbar
+      v-model="generationFailed"
+      :color="red"
+      :timeout="5000"
+      bottom
+      right
+    >
+      Movie Generation Failed
+    </v-snackbar>
+  </div>
 </v-app>
 </template>
 
@@ -180,6 +200,8 @@ export default {
       parameter: '',
       cancel: false,
       showMenu: false,
+      movieRequested: false,
+      generationFailed: false,
     };
   },
 
@@ -399,6 +421,7 @@ export default {
 
     fetchMovie() {
       let name = this.parameter;
+      this.movieRequested = true;
       axios({
         url: `${this.flaskRest}/movie/${this.itemId}`,
         method: 'GET',
@@ -411,8 +434,10 @@ export default {
         link.setAttribute('download', `${name}.mp4`);
         document.body.appendChild(link);
         link.click();
+      }).catch(() => {
+        this.generationFailed = true;
       });
-    }
+    },
   },
 
   created: async function () {
@@ -444,6 +469,20 @@ export default {
 
     loggedOut() {
       return this.girderRest.user === null;
+    },
+  },
+
+  watch: {
+    movieRequested(val) {
+      if (!val) {
+        setTimeout(() => { this.movieRequested = false; }, 5000);
+      }
+    },
+
+    generationFailed(val) {
+      if (!val) {
+        setTimeout(() => { this.generationFailed = false; }, 5000);
+      }
     },
   },
 };
