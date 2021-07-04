@@ -3,13 +3,8 @@ search bar and to collect and filter parameter options. -->
 
 <script>
 import _ from 'lodash';
-import {
-  FileManager as GirderFileManager
-} from '@girder/components/src/components/Snippet';
+import { GirderBreadcrumb, GirderFileManager } from '@girder/components/src';
 import GirderDataBrowser from './GirderDataBrowser.vue';
-import {
-  Breadcrumb as GirderBreadcrumb,
-} from '@girder/components/src/components';
 export default {
   components: {
     GirderBreadcrumb,
@@ -77,7 +72,7 @@ export default {
       }
     },
     internalLocation() {
-      if (!this.lazyLocation.hasOwnProperty('search')) {
+      if (!('serach' in this.lazyLocation)) {
         this.clear();
       }
       this.setCurrentPath();
@@ -172,7 +167,7 @@ export default {
           @crumbclick="props.changeLocation($event)"
         />
       </template>
-      <template #headerwidget="props">
+      <template #headerwidget>
         <slot name="headerwidget" />
         <v-combobox
             ref="query"
