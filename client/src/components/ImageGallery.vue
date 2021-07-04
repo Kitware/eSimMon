@@ -4,12 +4,12 @@
         v-on:dragover="preventDefault($event)">
   <v-card-text v-bind:class="[!json ? 'text-xs-end' : 'text-xs-center']"
                @contextmenu.prevent="fetchMovie">
-    <div v-if="itemId"
+    <div v-show="!!itemId && json"
          ref="plotly"
          class="plot"/>
-    <img v-if="itemId && !json"
+    <img v-show="!!itemId && !json"
         ref="img"
-        :src="image.src"
+        :src="!!image ? image.src : ''"
         class="plot" />
     <v-icon v-if="!itemId" large> input </v-icon>
   </v-card-text>
