@@ -8,5 +8,6 @@ COPY girder /plugin/
 # Otherwise we run into issues with the load balancer on AWS
 RUN pip3 install -U CherryPy==18.6.0 cheroot==8.4.2
 
+RUN pip3 install girder-autojoin
 # Install eSimMon plugin
 RUN pip3 install -e /plugin/esimmon_plugin
