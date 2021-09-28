@@ -63,9 +63,6 @@ export default {
         this.internalLocation = {...data, 'search': true};
       }
     },
-    showPartials() {
-      this.refresh();
-    },
     input() {
       if (_.isEmpty(this.input)) {
         this.clear();
@@ -111,6 +108,7 @@ export default {
       if (_.isEqual(this.query, this.input) ||
             (_.isNull(this.query) && _.isEmpty(this.input))) {
         this.showPartials = true;
+        this.refresh();
       }
       if (this.$refs.query.isMenuActive) {
         this.$refs.query.blur();
@@ -126,7 +124,7 @@ export default {
       this.$parent.$parent.$parent.$parent.$emit(
         "param-selected", item.data[0]._id, name, e);
     },
-    getFilteredResults:  _.debounce(async function() {
+    getFilteredResults:  _.throttle(async function() {
       if (this.outsideOfRoot)
         return;
 
