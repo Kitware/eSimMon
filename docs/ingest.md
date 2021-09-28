@@ -23,8 +23,6 @@ pip install -e <eSimMon-dashboard-repo>/ingest
 adash watch -f 5eb01cc71eba106544dc5270 -r <url-to-data> -k <girder-api-key> -u https://api.esimmon.kitware.com/api/v1 -v 5
 ```
 
-NOTE: Should list option/how-to for uploading to private folder? If so deployed should be updated to show how to get to personal folders in dashboard
-
 - **`url-to-data`**: This will point to where the data is. See the instructions in the EFFIS [Read the Docs](https://wdmapp.readthedocs.io/en/latest/effis/dashboard.html) for enabling the dashboard. From the documentation example given the following http key:
 
         dashboard:
