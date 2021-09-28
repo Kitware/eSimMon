@@ -33,7 +33,7 @@ adash watch -f 5eb01cc71eba106544dc5270 -r <url-to-data> -k <girder-api-key> -u 
         https://projects.olcf.ornl.gov/phy122/esuchyta/wdmapp-dashboard
 
 
-- **`girder-api-key`**: This will varyu from user to user.
+- **`girder-api-key`**: This will vary from user to user.
     1. Visit [https://api.esimmon.kitware.com/](https://api.esimmon.kitware.com/) and log in.
 
         ![Login Prompt](img/login.png)
