@@ -72,7 +72,7 @@ export default {
       }
     },
     internalLocation() {
-      if (!('serach' in this.lazyLocation)) {
+      if (!('search' in this.lazyLocation)) {
         this.clear();
       }
       this.setCurrentPath();
