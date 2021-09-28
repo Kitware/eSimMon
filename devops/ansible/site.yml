@@ -19,9 +19,9 @@
         port: "{{girder_port}}"
         scheme: "{{girder_scheme}}"
         user:
-          firstName: "esimmonadmin"
-          lastName: "esimmonadmin"
-          login: "esimmonadmin"
+          firstName: "esimmon"
+          lastName: "esimmon"
+          login: "esimmon"
           password: "{{ admin_password }}"
           email: "esimmonadmin@kitware.com"
           admin: yes
@@ -32,7 +32,7 @@
         host: "{{girder_host}}"
         port: "{{girder_port}}"
         scheme: "{{girder_scheme}}"
-        username: "esimmonadmin"
+        username: "esimmon"
         password: "{{ admin_password }}"
         assetstore:
           name: "Filesystem Assetstore"
@@ -60,7 +60,7 @@
         host: "{{girder_host}}"
         port: "{{girder_port}}"
         scheme: "{{girder_scheme}}"
-        username: "esimmonadmin"
+        username: "esimmon"
         password: "{{ admin_password }}"
         collection:
           name: "eSimMon"
@@ -74,7 +74,7 @@
         host: "{{girder_host}}"
         port: "{{girder_port}}"
         scheme: "{{girder_scheme}}"
-        username: "esimmonadmin"
+        username: "esimmon"
         password: "{{ admin_password }}"
         folder:
           parentType: "collection"
@@ -101,7 +101,7 @@
         port: "{{girder_port}}"
         scheme: "{{girder_scheme}}"
         username: "esimmon"
-        password: "{{ esimmon_password }}"
+        password: "{{ admin_password }}"
         post:
           path: "api_key"
           data:
