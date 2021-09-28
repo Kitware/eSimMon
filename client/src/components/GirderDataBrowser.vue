@@ -40,6 +40,15 @@ export default {
       this.options.page = 1;
 
     },
+    rowClick(row) {
+      this.$emit('rowclick', row, this.location);
+
+      // If the row is not an item, call changeLocation
+      const locationType = getLocationType(row);
+      if (locationType && locationType !== 'item') {
+        this.changeLocation(row);
+      }
+    },
     fetchPaginatedRows() {
       if (this.query.length) {
         const { options: { page, itemsPerPage } } = this;
