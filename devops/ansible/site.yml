@@ -41,18 +41,30 @@
           current: true
         state: present
 
-    - name: Create Girder eSimMon user
+    - name: Create Girder eSimMon group
       girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
-        user:
-          firstName: "esimmon"
-          lastName: "esimmon"
-          login: "esimmon"
-          password: "{{ esimmon_password }}"
-          email: "esimmon@kitware.com"
-          admin: no
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
+        username: "esimmon"
+        password: "{{ admin_password }}"
+        group:
+          name: "esimmon"
+          description: ""
+          public: no
+        state: present
+      register: esimmon_group
+
+    - name: Set registration rules
+      girder:
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
+        username: "esimmon"
+        password: "{{ admin_password }}"
+        setting:
+          key: "{{ item.key }}"
+          value: "{{ item.value }}"
         state: present
 
     - name: Create eSimMon collection
@@ -64,8 +76,12 @@
         password: "{{ admin_password }}"
         collection:
           name: "eSimMon"
-          description: "eSimMon collection"
-          public: "{{ public_data | default('yes') }}"
+          description: ""
+          public: no
+          access:
+            groups:
+              - name: esimmon
+                type: moderator
         state: present
       register: esimmon_collection
 
@@ -78,14 +94,9 @@
         password: "{{ admin_password }}"
         folder:
           parentType: "collection"
-          parentId: "{{esimmon_collection['gc_return']['_id'] }}"
-          name: "data"
-          description: "eSimMon data folder"
-          public: "{{ public_data | default('yes') }}"
-          access:
-            users:
-              - login: esimmon
-                type: admin
+          parentId: "{{esimmon_collection.gc_return._id }}"
+          name: "eSimMon-dashboard"
+          public: no
         state: present
       register: data_folder
 
@@ -115,7 +126,7 @@
       lineinfile:
         dest: ../docker/watch.env
         regexp: '^GIRDER_API_KEY='
-        line: "GIRDER_API_KEY={{ token['gc_return']['key'] }}"
+        line: "GIRDER_API_KEY={{ token.gc_return.key }}"
       when: not api_presence.matched
 
     - name: Check if folder ID has already been set
