@@ -1,0 +1,1 @@
+The dashboard currently supports user account creation and is able to ingest EFFIS data.

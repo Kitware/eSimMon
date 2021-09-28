@@ -1,0 +1,12 @@
+site_name: eSimMon Dashboard Documentation
+theme:
+  name: material
+  logo: img/chart-multiline.png
+  favicon: img/chart-multiline.png
+markdown_extensions:
+  - pymdownx.snippets
+nav:
+  - 'index.md'
+  - 'local.md'
+  - 'deployed.md'
+  - 'ingest.md'
