@@ -17,7 +17,7 @@ A single item can be selected from the menu or you can press enter or click the 
 
 ## Item Selection
 ### Displaying data
-By default only 10 items are displayed at a time but this can be changed at the bottom of the navigation drawer.
+By default only 10 items are displayed at a time but this can be changed at the bottom of the navigation menu.
 
 ![Change Pagination](img/pagination.png)
 
@@ -30,7 +30,7 @@ If the plot being displayed is a dynamic Plotly plot its data range for the curr
 ![Data Range](img/data_range.png)
 
 ### Playing steps
-When an item is dropped into a cell the available plots will begin playing, displaying the next time step every second. This can be paused, resumed, or stepped through manually at the bottom of the navigation drawer. When left playing the plots will continue to update as new data is ingested.
+When an item is dropped into a cell the available plots will begin playing, displaying the next time step every second. This can be paused, resumed, or stepped through manually at the bottom of the navigation menu. When left playing the plots will continue to update as new data is ingested.
 
 ![Play Data](img/steps.png)
 
@@ -53,6 +53,6 @@ When an interactive plot is displayed in the dashboard the user is able to hover
 ![Plotly Plots](img/plotly.png)
 
 ### Movies
-For static images a movie of all of the available time steps can be downloaded by right-clicking on either the plot itself or the item name in the naviagation drawer.
+For static images a movie of all of the available time steps can be downloaded by right-clicking on either the plot itself or the item name in the naviagation menu.
 
 ![Movie Download](img/movie.png)
