@@ -4,20 +4,20 @@
   vars:
     required_ansible_version: 2.5.1
   tasks:
-    - fail: msg="Playbook requires ansible >= {{required_ansible_version}}"
-      when: ansible_version.string is version_compare(required_ansible_version, '<')
+    - fail: msg="Playbook requires ansible >= {{ required_ansible_version }}"
+      when: ansible_version.string is version_compare(required_ansible_version, "<")
 
     - name: Set some facts
       set_fact:
-        girder_host: "{{girder_host|default('localhost')}}"
-        girder_port: "{{girder_port|default(8080)}}"
+        girder_host: "{{ girder_host|default('localhost') }}"
+        girder_port: "{{ girder_port|default(8080) }}"
         girder_scheme: "http"
 
     - name: Create Girder eSimMon admin user
       girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
         user:
           firstName: "esimmon"
           lastName: "esimmon"
@@ -29,9 +29,9 @@
 
     - name: Create filesystem assetstore
       girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
         username: "esimmon"
         password: "{{ admin_password }}"
         assetstore:
@@ -122,7 +122,7 @@
         }
         - {
           "key": "core.email_from_address",
-          "value": "{{ email_from }}
+          "value": "{{ email_from }}"
         }
         - {
           "key": "core.email_host",
@@ -131,9 +131,9 @@
 
     - name: Create eSimMon collection
       girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
         username: "esimmon"
         password: "{{ admin_password }}"
         collection:
@@ -149,14 +149,14 @@
 
     - name: Create data folder
       girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
         username: "esimmon"
         password: "{{ admin_password }}"
         folder:
           parentType: "collection"
-          parentId: "{{esimmon_collection.gc_return._id }}"
+          parentId: "{{ esimmon_collection.gc_return._id }}"
           name: "eSimMon-dashboard"
           public: no
         state: present
@@ -170,9 +170,9 @@
 
     - name: Create apiKey
       girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
         username: "esimmon"
         password: "{{ admin_password }}"
         post:
@@ -187,7 +187,7 @@
     - name: Save apiKey if not set
       lineinfile:
         dest: ../docker/watch.env
-        regexp: '^GIRDER_API_KEY='
+        regexp: "^GIRDER_API_KEY="
         line: "GIRDER_API_KEY={{ token.gc_return.key }}"
       when: not api_presence.matched
 
@@ -200,7 +200,7 @@
     - name: Save folder ID if not set
       lineinfile:
         dest: ../docker/watch.env
-        regexp: '^GIRDER_FOLDER_ID='
+        regexp: "^GIRDER_FOLDER_ID="
         line: "GIRDER_FOLDER_ID={{ data_folder.gc_return._id }}"
       when: not folder_presence.matched
 
@@ -213,6 +213,6 @@
     - name: Save folder ID if not set
       lineinfile:
         dest: ../docker/.env
-        regexp: '^VUE_APP_FOLDER_ID='
+        regexp: "^VUE_APP_FOLDER_ID="
         line: "VUE_APP_FOLDER_ID={{ data_folder.gc_return._id }}"
       when: not client_folder_presence.matched
