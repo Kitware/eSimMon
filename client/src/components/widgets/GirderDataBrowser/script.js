@@ -1,7 +1,6 @@
-  <!-- This component extends the DataBrowser component in order to display a
-  filtered list of items when a search is being performed. -->
+/* This component extends the DataBrowser component in order to display a
+filtered list of items when a search is being performed. */
 
-<script>
 import { GirderDataBrowser } from '@girder/components/src';
 import {
   getLocationType,
@@ -38,7 +37,6 @@ export default {
       this.selected = [];
       this.internalRefreshCounter += 1;
       this.options.page = 1;
-
     },
     rowClick(row) {
       this.$emit('rowclick', row, this.location);
@@ -73,4 +71,3 @@ export default {
     }
   }
 };
-</script>

@@ -1,22 +1,3 @@
-<template>
-<v-card vertical-center
-        v-on:drop="loadGallery($event)"
-        v-on:dragover="preventDefault($event)">
-  <v-card-text v-bind:class="[!json ? 'text-xs-end' : 'text-xs-center']"
-               @contextmenu.prevent="fetchMovie">
-    <div v-show="!!itemId && json"
-         ref="plotly"
-         class="plot"/>
-    <img v-show="!!itemId && !json"
-        ref="img"
-        :src="!!image ? image.src : ''"
-        class="plot" />
-    <v-icon v-if="!itemId" large> input </v-icon>
-  </v-card-text>
-</v-card>
-</template>
-
-<script>
 import Plotly from 'plotly.js-basic-dist-min';
 import { isNil, isEqual } from 'lodash';
 
@@ -252,8 +233,3 @@ export default {
     },
   },
 };
-</script>
-
-<style lang="scss" type="text/scss">
-    @import '../scss/gallery.scss';
-</style>

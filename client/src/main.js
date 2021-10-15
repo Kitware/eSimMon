@@ -24,7 +24,7 @@ if (!isNil(process.env.VUE_APP_FOLDER_ID)) {
 const girderRest = new RestClient({ apiRoot, authenticateWithCredentials });
 const defaultLocation = { _modelType: 'folder', _id: folderId };
 
-import App from './App.vue'
+import App from './components/core/App'
 
 Vue.config.productionTip = false
 
