@@ -5,6 +5,7 @@ import _ from 'lodash';
 import ImageGallery from '../../widgets/ImageGallery';
 import { GirderAuthentication as GirderAuthentication } from '@girder/components/src';
 import GirderFileManager from '../../widgets/GirderFileManager';
+import SaveDialog from '../../widgets/SaveDialog'
 
 export default {
   name: 'App',
@@ -15,7 +16,8 @@ export default {
     GirderFileManager,
     ImageGallery,
     Splitpanes,
-    Pane
+    Pane,
+    SaveDialog,
   },
 
   data() {
@@ -40,6 +42,8 @@ export default {
       showMenu: false,
       movieRequested: false,
       generationFailed: false,
+      showSaveDialog: false,
+      viewNames: [],
     };
   },
 
@@ -276,12 +280,28 @@ export default {
         this.generationFailed = true;
       });
     },
+
+    async saveView() {
+      await this.girderRest.get('/view')
+        .then(({ data }) => {
+          this.viewNames = [];
+          data.forEach((view) => {
+            this.viewNames.push(view.name);
+          });
+          this.showSaveDialog = true;
+        })
+        .catch((error) => {
+          console.log('Could not fetch views: ', error);
+        });
+    }
   },
 
   created: async function () {
     this.$on('data-loaded', this.initialDataLoaded);
     this.$on('gallery-ready', this.incrementReady);
     this.$on('param-selected', this.contextMenu);
+    this.$on('gallery-mounted', this.loadPredefinedLayout);
+    this.$on('rows-set', this.prefLoaded);
   },
 
   asyncComputed: {

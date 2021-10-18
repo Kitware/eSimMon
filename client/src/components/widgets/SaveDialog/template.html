@@ -1,0 +1,31 @@
+<v-dialog v-model="saveDialog" max-width="600px">
+  <v-card>
+    <v-card-title>
+      <span class="text-h5">Save Current View</span>
+    </v-card-title>
+    <v-card-text>
+      <v-form>
+        <v-container>
+          <v-row>
+            <v-col cols="12">
+              <v-text-field
+                v-model="newViewName"
+                label="Name"
+                :rules="[rules.required, rules.unique]"
+              />
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-form>
+    </v-card-text>
+    <v-card-actions>
+      <v-spacer />
+      <v-btn text @click.stop="saveDialog=false">
+        Close
+      </v-btn>
+      <v-btn text :disabled="invalidInput" @click.stop="save()">
+        Save
+      </v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>

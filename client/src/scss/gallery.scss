@@ -152,6 +152,8 @@
   font-size: inherit !important;
 }
 
-.v-text-field__details {
-  display: none;
+.girder-data-browser-snippet {
+  .v-text-field__details {
+    display: none;
+  }
 }

@@ -89,6 +89,11 @@ export default {
         this.react();
       }
     },
+    rows(val) {
+      if (val.length){
+        this.$parent.$parent.$parent.$parent.$emit("rows-set");
+      }
+    },
   },
 
   methods: {
