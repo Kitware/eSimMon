@@ -157,3 +157,15 @@
     display: none;
   }
 }
+
+.viewTable {
+  max-height: 300px;
+}
+
+.v-data-table__wrapper {
+  overflow-y: auto;
+}
+
+.selectedRow {
+  background-color: #ababab;
+}

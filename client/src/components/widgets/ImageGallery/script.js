@@ -237,4 +237,8 @@ export default {
       this.$parent.$parent.$parent.$parent.$emit("param-selected", this.itemId, response.name, e);
     },
   },
+
+  mounted () {
+    this.$root.$children[0].$emit("gallery-mounted");
+  },
 };

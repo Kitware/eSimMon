@@ -5,7 +5,8 @@ import _ from 'lodash';
 import ImageGallery from '../../widgets/ImageGallery';
 import { GirderAuthentication as GirderAuthentication } from '@girder/components/src';
 import GirderFileManager from '../../widgets/GirderFileManager';
-import SaveDialog from '../../widgets/SaveDialog'
+import SaveDialog from '../../widgets/SaveDialog';
+import LoadDialog from '../../widgets/LoadDialog';
 
 export default {
   name: 'App',
@@ -18,6 +19,7 @@ export default {
     Splitpanes,
     Pane,
     SaveDialog,
+    LoadDialog,
   },
 
   data() {
@@ -43,7 +45,10 @@ export default {
       movieRequested: false,
       generationFailed: false,
       showSaveDialog: false,
+      showLoadDialog: false,
       viewNames: [],
+      views: [],
+      view: {},
     };
   },
 
@@ -281,18 +286,58 @@ export default {
       });
     },
 
-    async saveView() {
+    async getViews() {
       await this.girderRest.get('/view')
         .then(({ data }) => {
+          this.views = data;
           this.viewNames = [];
           data.forEach((view) => {
             this.viewNames.push(view.name);
           });
-          this.showSaveDialog = true;
         })
         .catch((error) => {
           console.log('Could not fetch views: ', error);
         });
+    },
+
+    async saveView() {
+      await this.getViews();
+      this.showSaveDialog = true;
+    },
+
+    async loadView() {
+      await this.getViews();
+      this.showLoadDialog = true;
+    },
+
+    setColumns(val) {
+      this.numcols = val;
+      this.updateCellWidth();
+    },
+
+    setRows(val) {
+      this.numrows = val;
+      this.updateCellHeight();
+    },
+
+    viewSelected(view) {
+      this.view = view;
+      const cols = parseInt(view.columns, 10)
+      const rows = parseInt(view.rows, 10)
+
+      if (this.numcols !== cols) {
+        this.setColumns(cols);
+      }
+      if (this.numrows !== rows) {
+        this.setRows(rows);
+      }
+    },
+
+    imageGalleryCreated() {
+      this.$refs.imageGallery.forEach((cell) => {
+        const { row, col } = cell.$attrs;
+        cell.itemId = this.view.items[`${row}::${col}`]
+      });
     }
   },
 
@@ -300,8 +345,9 @@ export default {
     this.$on('data-loaded', this.initialDataLoaded);
     this.$on('gallery-ready', this.incrementReady);
     this.$on('param-selected', this.contextMenu);
-    this.$on('gallery-mounted', this.loadPredefinedLayout);
+    this.$on('gallery-mounted', this.imageGalleryCreated);
     this.$on('rows-set', this.prefLoaded);
+    this.$on('view-selected', this.viewSelected);
   },
 
   asyncComputed: {

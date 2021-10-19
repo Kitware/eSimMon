@@ -21,7 +21,7 @@ class View(Resource):
         .param('text', 'Pass this to perform a full text search for views', required=False)
         .pagingParams(defaultSort='name')
     )
-    def find(self, text=None, offset=0, limit=0, sort=0):
+    def find(self, text=None, offset=0, limit=0, sort=None):
         return list(self._model.search(
             text=text,
             user=self.getCurrentUser(),

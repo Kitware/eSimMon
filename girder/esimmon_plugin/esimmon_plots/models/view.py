@@ -8,6 +8,8 @@ class View(AccessControlledModel):
 
     def initialize(self):
         self.name = 'views'
+        self.ensureIndices(['creatorId', 'created', 'items', 'name'])
+        self.ensureTextIndex({'name': 1, 'items': 1}, language='none')
 
     def validate(self, doc):
         doc['name'] = doc.get('name', '').lower().strip()
@@ -54,7 +56,6 @@ class View(AccessControlledModel):
         return view
 
     def search(self, text, user, limit, offset, sort):
-
         if text is not None:
             cursor = self.textSearch(text, sort=sort)
         else:

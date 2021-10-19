@@ -108,7 +108,6 @@
                   <template v-slot:activator="{on, attrs}">
                     <v-button icon v-on:click="loadView()">
                       <v-icon
-                        :disabled="true"
                         v-on="on"
                         v-bind="attrs"
                       >
@@ -152,9 +151,14 @@
         :viewNames="viewNames"
         :layout="$refs.imageGallery"
         :rows="numrows"
-        :cols="numcols"
+        :columns="numcols"
         @close="showSaveDialog=false"
-      >
+      />
+      <load-dialog
+        :visible="showLoadDialog"
+        :views="views"
+        @close="showLoadDialog=false"
+      />
     </pane>
     <!-- Scientific data on the right. -->
     <pane min-size="50" :size="85"
