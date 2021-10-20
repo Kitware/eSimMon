@@ -102,63 +102,14 @@
                         :disabled="numcols > 7"> add_circle_outline </v-icon>
               </v-col>
             </v-row>
-            <v-row>
-              <v-col :sm="4" v-bind:style="{alignItems: 'center'}">
-                <v-tooltip top>
-                  <template v-slot:activator="{on, attrs}">
-                    <v-button icon v-on:click="loadView()">
-                      <v-icon
-                        v-on="on"
-                        v-bind="attrs"
-                      >
-                        upload
-                      </v-icon>
-                    </v-button>
-                  </template>
-                  <span>Load View</span>
-                </v-tooltip>
-              </v-col>
-              <v-col :sm="4" v-bind:style="{alignItems: 'center'}">
-                <v-tooltip top>
-                  <template v-slot:activator="{on, attrs}">
-                    <v-button icon @click.stop="saveView()">
-                      <v-icon v-on="on" v-bind="attrs">
-                        download
-                      </v-icon>
-                    </v-button>
-                  </template>
-                  <span>Save View</span>
-                </v-tooltip>
-              </v-col>
-              <v-col :sm="4" v-bind:style="{alignItems: 'center'}">
-                <v-tooltip top>
-                  <template v-slot:activator="{on, attrs}">
-                    <v-button icon v-on:click="girderRest.logout()">
-                      <v-icon v-on="on" v-bind="attrs">
-                        $vuetify.icons.logout
-                      </v-icon>
-                    </v-button>
-                  </template>
-                  <span>Logout</span>
-                </v-tooltip>
-              </v-col>
-            </v-row>
+            <view-controls
+              :imageGallery.sync="$refs.imageGallery"
+              :numrows.sync="numrows"
+              :numcols.sync="numcols"
+            >
           </v-container>
         </v-col>
       </v-row>
-      <save-dialog
-        :visible="showSaveDialog"
-        :viewNames="viewNames"
-        :layout="$refs.imageGallery"
-        :rows="numrows"
-        :columns="numcols"
-        @close="showSaveDialog=false"
-      />
-      <load-dialog
-        :visible="showLoadDialog"
-        :views="views"
-        @close="showLoadDialog=false"
-      />
     </pane>
     <!-- Scientific data on the right. -->
     <pane min-size="50" :size="85"

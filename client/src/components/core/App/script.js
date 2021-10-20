@@ -5,8 +5,7 @@ import _ from 'lodash';
 import ImageGallery from '../../widgets/ImageGallery';
 import { GirderAuthentication as GirderAuthentication } from '@girder/components/src';
 import GirderFileManager from '../../widgets/GirderFileManager';
-import SaveDialog from '../../widgets/SaveDialog';
-import LoadDialog from '../../widgets/LoadDialog';
+import ViewControls from '../ViewControls';
 
 export default {
   name: 'App',
@@ -18,8 +17,7 @@ export default {
     ImageGallery,
     Splitpanes,
     Pane,
-    SaveDialog,
-    LoadDialog,
+    ViewControls,
   },
 
   data() {
@@ -44,10 +42,6 @@ export default {
       showMenu: false,
       movieRequested: false,
       generationFailed: false,
-      showSaveDialog: false,
-      showLoadDialog: false,
-      viewNames: [],
-      views: [],
       view: {},
     };
   },
@@ -284,30 +278,6 @@ export default {
       }).catch(() => {
         this.generationFailed = true;
       });
-    },
-
-    async getViews() {
-      await this.girderRest.get('/view')
-        .then(({ data }) => {
-          this.views = data;
-          this.viewNames = [];
-          data.forEach((view) => {
-            this.viewNames.push(view.name);
-          });
-        })
-        .catch((error) => {
-          console.log('Could not fetch views: ', error);
-        });
-    },
-
-    async saveView() {
-      await this.getViews();
-      this.showSaveDialog = true;
-    },
-
-    async loadView() {
-      await this.getViews();
-      this.showLoadDialog = true;
     },
 
     setColumns(val) {
