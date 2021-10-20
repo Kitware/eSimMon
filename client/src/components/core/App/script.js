@@ -42,7 +42,7 @@ export default {
       showMenu: false,
       movieRequested: false,
       generationFailed: false,
-      view: {},
+      view: null,
     };
   },
 
@@ -304,10 +304,13 @@ export default {
     },
 
     imageGalleryCreated() {
-      this.$refs.imageGallery.forEach((cell) => {
-        const { row, col } = cell.$attrs;
-        cell.itemId = this.view.items[`${row}::${col}`]
-      });
+      if (this.view) {
+        this.$refs.imageGallery.forEach((cell) => {
+          const { row, col } = cell.$attrs;
+          cell.itemId = this.view.items[`${row}::${col}`]
+        });
+        this.view = null;
+      }
     }
   },
 
@@ -316,7 +319,6 @@ export default {
     this.$on('gallery-ready', this.incrementReady);
     this.$on('param-selected', this.contextMenu);
     this.$on('gallery-mounted', this.imageGalleryCreated);
-    this.$on('rows-set', this.prefLoaded);
     this.$on('view-selected', this.viewSelected);
   },
 
