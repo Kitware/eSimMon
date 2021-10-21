@@ -2,6 +2,8 @@
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import Resource
+from girder.constants import AccessType
+from girder.exceptions import RestException
 from .models.view import View as ViewModel
 
 
@@ -11,6 +13,7 @@ class View(Resource):
         self.resourceName = 'view'
         self._model = ViewModel()
 
+        self.route('DELETE', (':id',), self.deleteView)
         self.route('GET', (), self.find)
         self.route('POST', (), self.create_view)
 
@@ -57,3 +60,19 @@ class View(Resource):
         )
 
         return view
+
+    @access.user
+    @autoDescribeRoute(
+      Description('Delete a view by ID.')
+      .modelParam('id', model=ViewModel, level=AccessType.READ)
+      .errorResponse('ID was invalid.')
+    )
+    def deleteView(self, view):
+      user = self.getCurrentUser()
+
+      if user['_id'] != view['creatorId']:
+          raise RestException(
+              'You do not have permission to delete this view.', 403)
+
+      self._model.remove(view)
+      return {'message': f'Deleted view {view["name"]}.'}

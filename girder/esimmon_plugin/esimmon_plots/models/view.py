@@ -7,7 +7,7 @@ from girder.models.model_base import AccessControlledModel
 class View(AccessControlledModel):
 
     def initialize(self):
-        self.name = 'views'
+        self.name = 'view'
         self.ensureIndices(['creatorId', 'created', 'items', 'name'])
         self.ensureTextIndex({'name': 1, 'items': 1}, language='none')
 
@@ -70,3 +70,6 @@ class View(AccessControlledModel):
         )
 
         return filtered_results
+
+    def remove(self, view):
+      super().remove(view)

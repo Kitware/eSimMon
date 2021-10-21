@@ -32,6 +32,10 @@ export default {
     },
   },
 
+  created: async function () {
+    this.$on('views-modified', this.getViews);
+  },
+
   methods: {
     async getViews() {
       await this.girderRest.get('/view')
@@ -46,12 +50,10 @@ export default {
           console.log('Could not fetch views: ', error);
         });
     },
-    
     async saveView() {
       await this.getViews();
       this.showSaveDialog = true;
     },
-    
     async loadView() {
       await this.getViews();
       this.showLoadDialog = true;

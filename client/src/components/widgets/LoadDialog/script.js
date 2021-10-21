@@ -1,6 +1,9 @@
 export default {
+  inject: ['girderRest'],
+
   data () {
     return {
+      dialogDelete: false,
       disableLoad: true,
       search: '',
       selection: null,
@@ -22,7 +25,8 @@ export default {
     headers() {
       return [
         {text: 'View Name', value: 'name'},
-        {text: 'Date Created', value: 'created'}
+        {text: 'Date Created', value: 'created'},
+        {text: 'Actions', value: 'actions', sortable: false}
       ]
     },
     loadDialog: {
@@ -44,6 +48,15 @@ export default {
         this.loadDialog = false;
       }
     },
+    async deleteView() {
+      this.dialogDelete = false;
+      await this.girderRest.delete(`/view/${this.selection._id}`)
+        .then(() => {
+          this.$parent.$emit('views-modified');
+          this.selection = null;
+        })
+        .catch((error) => { console.log('error: ', error) });
+    },
     load() {
       this.$root.$children[0].$emit('view-selected', this.selection);
       this.clearSelection();
@@ -57,6 +70,9 @@ export default {
       } else  {
         return '';
       }
+    },
+    viewCreatedByUser(item) {
+      return this.girderRest.user._id === item.creatorId;
     },
   },
 }
