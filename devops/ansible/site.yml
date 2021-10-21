@@ -4,24 +4,24 @@
   vars:
     required_ansible_version: 2.5.1
   tasks:
-    - fail: msg="Playbook requires ansible >= {{required_ansible_version}}"
-      when: ansible_version.string is version_compare(required_ansible_version, '<')
+    - fail: msg="Playbook requires ansible >= {{ required_ansible_version }}"
+      when: ansible_version.string is version_compare(required_ansible_version, "<")
 
     - name: Set some facts
       set_fact:
-        girder_host: "{{girder_host|default('localhost')}}"
-        girder_port: "{{girder_port|default(8080)}}"
+        girder_host: "{{ girder_host|default('localhost') }}"
+        girder_port: "{{ girder_port|default(8080) }}"
         girder_scheme: "http"
 
     - name: Create Girder eSimMon admin user
       girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
         user:
-          firstName: "esimmonadmin"
-          lastName: "esimmonadmin"
-          login: "esimmonadmin"
+          firstName: "esimmon"
+          lastName: "esimmon"
+          login: "esimmon"
           password: "{{ admin_password }}"
           email: "esimmonadmin@kitware.com"
           admin: yes
@@ -29,10 +29,10 @@
 
     - name: Create filesystem assetstore
       girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
-        username: "esimmonadmin"
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
+        username: "esimmon"
         password: "{{ admin_password }}"
         assetstore:
           name: "Filesystem Assetstore"
@@ -41,51 +41,124 @@
           current: true
         state: present
 
-    - name: Create Girder eSimMon user
+    - name: Create Girder eSimMon group
       girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
-        user:
-          firstName: "esimmon"
-          lastName: "esimmon"
-          login: "esimmon"
-          password: "{{ esimmon_password }}"
-          email: "esimmon@kitware.com"
-          admin: no
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
+        username: "esimmon"
+        password: "{{ admin_password }}"
+        group:
+          name: "esimmon"
+          description: ""
+          public: no
         state: present
+      register: esimmon_group
+
+    - name: Set registration rules
+      girder:
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
+        username: "esimmon"
+        password: "{{ admin_password }}"
+        setting:
+          key: "{{ item.key }}"
+          value: "{{ item.value }}"
+        state: present
+      with_items:
+        - {
+          "key": "autojoin",
+          "value": [{
+            "groupId": "{{ esimmon_group.gc_return._id }}",
+            "level": 0,
+            "pattern": "@kitware.com"
+          },{
+            "groupId": "{{ esimmon_group.gc_return._id }}",
+            "level": 0,
+            "pattern": "@ornl.gov"
+          },{
+            "groupId": "{{ esimmon_group.gc_return._id }}",
+            "level": 0,
+            "pattern": "@princeton.edu"
+          }]
+        }
+        - {
+          "key": "core.email_verification",
+          "value": "required"
+        }
+        - {
+          "key": "core.registration_policy",
+          "value": "approve"
+        }
+
+    - name: Setup SMTP Server
+      girder:
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
+        username: "esimmon"
+        password: "{{ admin_password }}"
+        setting:
+          key: "{{ item.key }}"
+          value: "{{ item.value }}"
+        state: present
+      with_items:
+        - {
+          "key": "core.smtp_host",
+          "value": "{{ smtp_host }}"
+        }
+        - {
+          "key": "core.smtp.username",
+          "value": "{{ smtp_username }}"
+        }
+        - {
+          "key": "core.smtp.password",
+          "value": "{{ smtp_password }}"
+        }
+        - {
+          "key": "core.smtp.encryption",
+          "value": starttls
+        }
+        - {
+          "key": "core.email_from_address",
+          "value": "{{ email_from }}"
+        }
+        - {
+          "key": "core.email_host",
+          "value": "{{ email_host }}"
+        }
 
     - name: Create eSimMon collection
       girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
-        username: "esimmonadmin"
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
+        username: "esimmon"
         password: "{{ admin_password }}"
         collection:
           name: "eSimMon"
-          description: "eSimMon collection"
-          public: "{{ public_data | default('yes') }}"
+          description: ""
+          public: no
+          access:
+            groups:
+              - name: esimmon
+                type: moderator
         state: present
       register: esimmon_collection
 
     - name: Create data folder
       girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
-        username: "esimmonadmin"
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
+        username: "esimmon"
         password: "{{ admin_password }}"
         folder:
           parentType: "collection"
-          parentId: "{{esimmon_collection['gc_return']['_id'] }}"
-          name: "data"
-          description: "eSimMon data folder"
-          public: "{{ public_data | default('yes') }}"
-          access:
-            users:
-              - login: esimmon
-                type: admin
+          parentId: "{{ esimmon_collection.gc_return._id }}"
+          name: "eSimMon-dashboard"
+          public: no
         state: present
       register: data_folder
 
@@ -97,11 +170,11 @@
 
     - name: Create apiKey
       girder:
-        host: "{{girder_host}}"
-        port: "{{girder_port}}"
-        scheme: "{{girder_scheme}}"
+        host: "{{ girder_host }}"
+        port: "{{ girder_port }}"
+        scheme: "{{ girder_scheme }}"
         username: "esimmon"
-        password: "{{ esimmon_password }}"
+        password: "{{ admin_password }}"
         post:
           path: "api_key"
           data:
@@ -114,8 +187,8 @@
     - name: Save apiKey if not set
       lineinfile:
         dest: ../docker/watch.env
-        regexp: '^GIRDER_API_KEY='
-        line: "GIRDER_API_KEY={{ token['gc_return']['key'] }}"
+        regexp: "^GIRDER_API_KEY="
+        line: "GIRDER_API_KEY={{ token.gc_return.key }}"
       when: not api_presence.matched
 
     - name: Check if folder ID has already been set
@@ -127,6 +200,19 @@
     - name: Save folder ID if not set
       lineinfile:
         dest: ../docker/watch.env
-        regexp: '^GIRDER_FOLDER_ID='
-        line: "GIRDER_FOLDER_ID={{ data_folder['gc_return']['_id'] }}"
+        regexp: "^GIRDER_FOLDER_ID="
+        line: "GIRDER_FOLDER_ID={{ data_folder.gc_return._id }}"
       when: not folder_presence.matched
+
+    - name: Check if folder ID has already been set for client
+      find:
+        paths: ../docker/
+        contains: "^VUE_APP_FOLDER_ID="
+      register: client_folder_presence
+
+    - name: Save folder ID if not set
+      lineinfile:
+        dest: ../docker/.env
+        regexp: "^VUE_APP_FOLDER_ID="
+        line: "VUE_APP_FOLDER_ID={{ data_folder.gc_return._id }}"
+      when: not client_folder_presence.matched

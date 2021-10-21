@@ -8,7 +8,11 @@ services:
       context: ../../
       dockerfile: devops/docker/ansible/Dockerfile
     environment:
-      ESIMMON_PASSWORD: ${ESIMMON_PASSWORD}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_HOST: ${EMAIL_HOST}
     volumes:
       - ../:/devops
