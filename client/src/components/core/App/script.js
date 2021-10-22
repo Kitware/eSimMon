@@ -311,7 +311,21 @@ export default {
         });
         this.view = null;
       }
-    }
+    },
+
+    resetView() {
+      this.paused = true;
+      this.currentTimeStep = 0;
+      this.maxTimeStep = 0;
+      this.setColumns(1);
+      this.setRows(1);
+      this.numLoadedGalleries = 0;
+      this.numReady = 0;
+      this.dataLoaded = false;
+      this.runId = null;
+      this.location = null;
+      this.$refs.imageGallery[0].clearGallery();
+    },
   },
 
   created: async function () {
@@ -360,5 +374,11 @@ export default {
         setTimeout(() => { this.generationFailed = false; }, 5000);
       }
     },
+
+    loggedOut(noCurrentUser) {
+      if (noCurrentUser && this.numLoadedGalleries > 0) {
+        this.resetView();
+      }
+    }
   },
 };

@@ -231,6 +231,14 @@ export default {
       const response = await this.callEndpoint(`item/${this.itemId}`);
       this.$parent.$parent.$parent.$parent.$emit("param-selected", this.itemId, response.name, e);
     },
+
+    clearGallery() {
+      this.itemId = null;
+      this.pendingImages = 0;
+      this.json = true;
+      this.image = null;
+      this.initialLoad = true;
+    },
   },
 
   mounted () {
