@@ -26,7 +26,8 @@
                 :items="views"
                 :item-class="rowClass"
                 :search="search"
-                @click:row="rowSelected($event)"
+                @click:row="rowSelected"
+                @dblclick:row="loadSelectedRow"
                 class="viewTable"
               >
                 <template v-slot:item.created="{item}">

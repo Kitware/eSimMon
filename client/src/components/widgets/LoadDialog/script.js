@@ -3,6 +3,7 @@ export default {
 
   data () {
     return {
+      clicks: 0,
       dialogDelete: false,
       disableLoad: true,
       search: '',
@@ -62,7 +63,20 @@ export default {
       this.clearSelection();
     },
     rowSelected(selection) {
+      this.clicks++;
       this.selection = selection;
+      if (this.clicks === 1) {
+        setTimeout(() => {
+          this.clicks = 0;
+        }, 200);
+      } else {
+        this.clicks = 0;
+        this.load();
+      }
+    },
+    loadSelectedRow(event, selection) {
+      this.selection = selection.item;
+      this.load();
     },
     rowClass(item) {
       if (this.selection && this.selection._id === item._id) {
