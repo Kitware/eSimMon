@@ -1,10 +1,11 @@
-<!-- This component extends the FileManager component in order to provide a
-search bar and to collect and filter parameter options. -->
+/*
+This component extends the FileManager component in order to provide a
+search bar and to collect and filter parameter options.
+*/
 
-<script>
 import _ from 'lodash';
 import { GirderBreadcrumb, GirderFileManager } from '@girder/components/src';
-import GirderDataBrowser from './GirderDataBrowser.vue';
+import GirderDataBrowser from '../GirderDataBrowser';
 export default {
   components: {
     GirderBreadcrumb,
@@ -139,68 +140,3 @@ export default {
     }, 500),
   },
 };
-</script>
-
-<template>
-  <v-card class="girder-data-browser-snippet"
-          @contextmenu.prevent="fetchMovie">
-    <girder-data-browser
-      ref="girderBrowser"
-      :location.sync="internalLocation"
-      :selectable="selectable"
-      :draggable="dragEnabled"
-      :root-location-disabled="rootLocationDisabled"
-      :value="value"
-      :initial-items-per-page="initialItemsPerPage"
-      :items-per-page-options="itemsPerPageOptions"
-      :query="queryValues"
-      @input="$emit('input', $event)"
-      @selection-changed="$emit('selection-changed', $event)"
-      @rowclick="$emit('rowclick', $event)"
-      @drag="$emit('drag', $event)"
-      @dragstart="$emit('dragstart', $event)"
-      @dragend="$emit('dragend', $event)"
-      @drop="$emit('drop', $event)"
-    >
-      <template #breadcrumb="props">
-        <girder-breadcrumb
-          :location="props.location"
-          :root-location-disabled="props.rootLocationDisabled"
-          @crumbclick="props.changeLocation($event)"
-        />
-      </template>
-      <template #headerwidget>
-        <slot name="headerwidget" />
-        <v-combobox
-            ref="query"
-            v-model="query"
-            :items="filteredItems"
-            :append-icon=" 'clear' "
-            :append-outer-icon=" 'search' "
-            :search-input.sync="input"
-            placeholder="Search for Parameter"
-            return-object
-            dense
-            solo
-            @update:search-input="getFilteredResults"
-            @click:append="clear"
-            @click:append-outer="showMatches"
-            @keyup.enter="showMatches"
-            @keyup.esc="$refs.query.blur()"
-            v-bind:class="[outsideOfRoot ? 'hide-search' : '']">
-          <template v-slot:no-data>
-            <v-list-item dense v-bind:style="{fontSize: '0.8rem'}">
-              No Matches Found
-            </v-list-item>
-          </template>
-        </v-combobox>
-      </template>
-      <template #row-widget="props">
-        <slot
-          v-bind="props"
-          name="row-widget"
-        />
-      </template>
-    </girder-data-browser>
-  </v-card>
-</template>

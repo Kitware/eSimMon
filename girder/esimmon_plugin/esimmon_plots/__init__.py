@@ -1,6 +1,7 @@
 from girder.plugin import GirderPlugin
 
-from .esimmonfile import find_items
+from .folder_search import find_items
+from .view import View
 
 
 class ESimMonPlugin(GirderPlugin):
@@ -8,3 +9,4 @@ class ESimMonPlugin(GirderPlugin):
 
   def load(self, info):
     info['apiRoot'].resource.route('GET', (':id', 'search'), find_items)
+    info['apiRoot'].view = View()

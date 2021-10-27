@@ -1,10 +1,11 @@
-FROM python:3.5-slim
+FROM python:3.8-slim
 
 RUN apt-get update && apt-get -y install \
   git \
   sshpass
 RUN pip install ansible && \
   pip install girder_client
+RUN pip install six
 
 WORKDIR /devops/ansible
 

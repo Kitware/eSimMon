@@ -69,6 +69,7 @@
   display: flex;
   flex-flow: column;
   max-height: 20%;
+  min-height: 200px;
   overflow: auto;
   padding: 5px;
   .row {
@@ -152,6 +153,20 @@
   font-size: inherit !important;
 }
 
-.v-text-field__details {
-  display: none;
+.girder-data-browser-snippet {
+  .v-text-field__details {
+    display: none;
+  }
+}
+
+.viewTable {
+  max-height: 300px;
+}
+
+.v-data-table__wrapper {
+  overflow-y: auto;
+}
+
+.selectedRow {
+  background-color: #ababab;
 }
