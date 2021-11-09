@@ -11,10 +11,22 @@
           offset-y>
     <v-list>
       <v-list-item dense @click="fetchMovie">
-        <v-list-item-title>Download Movie for {{ parameter }}</v-list-item-title>
+        <v-list-item-title>
+          Download Movie for {{ parameter }}
+        </v-list-item-title>
+      </v-list-item>
+      <v-list-item dense @click="showRangeDialog=true">
+        <v-list-item-title v-if="paramIsJson">
+          Set global range for {{ parameter }}
+        </v-list-item-title>
       </v-list-item>
     </v-list>
   </v-menu>
+  <range-dialog
+    :visible="showRangeDialog"
+    :param="parameter"
+    @close="showRangeDialog=false"
+  />
   <splitpanes>
     <pane min-size="15" :size="25">
       <v-row v-bind:style="{height: '100vh'}">
@@ -127,6 +139,7 @@
                               :maxTimeStep.sync="maxTimeStep"
                               :numrows.sync="numrows"
                               :numcols.sync="numcols"
+                              v-bind:globalRanges="globalRanges"
                               v-bind:style="{padding: '0 0 0 3px'}"
                               v-bind:class="[paused ? 'show-toolbar' : 'hide-toolbar']"
                               v-bind:row="i"
