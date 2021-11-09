@@ -23,6 +23,6 @@ To load a predefined view select the first icon at the bottom of the navigation 
 
 ![Load Icon](img/load_icon.png)
 
-You will be provided with a table of views that you are able to load. At the top you are able to search for a specific view if you know the name, or you can sort the table by the `View Name` or `Date Created` columns. If a view is one that you have created there will also be a trash can icon in the `Actions` column to allow you to remove that view if you would like. Once a view has been selected the `Load` option will be enabled and that view can be applied.
+You will be provided with a table of views that you are able to load. At the top you are able to search by view or creator name, or you can sort the table by the one or more of the columns. If a view is one that you have created there will also be a trash can icon in the `Actions` column to allow you to remove that view if you would like. Once a view has been selected the `Load` option will be enabled and that view can be applied.
 
 ![Load Dialog](img/load_dialog.png)
