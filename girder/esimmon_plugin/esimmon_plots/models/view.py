@@ -9,7 +9,8 @@ class View(AccessControlledModel):
     def initialize(self):
         self.name = 'view'
         self.ensureIndices(['creatorId', 'created', 'items', 'name'])
-        self.ensureTextIndex({'name': 1, 'items': 1}, language='none')
+        self.ensureTextIndex(
+            {'name': 1, 'creatorFirst': 1, 'creatorLast': 1}, language='none')
 
     def validate(self, doc):
         doc['name'] = doc.get('name', '').lower().strip()
@@ -49,6 +50,8 @@ class View(AccessControlledModel):
             'items': items,
             'created': datetime.datetime.utcnow(),
             'creatorId': user['_id'],
+            'creatorFirst': user['firstName'],
+            'creatorLast': user['lastName']
         }
         self.setPublic(view, public=public, save=False)
         view = self.save(view)

@@ -1,4 +1,4 @@
-<v-dialog v-model="loadDialog" max-width="600px">
+<v-dialog v-model="loadDialog" max-width="700px">
   <v-card>
     <v-card-title>
       Load New View
@@ -29,6 +29,7 @@
                 @click:row="rowSelected"
                 @dblclick:row="loadSelectedRow"
                 class="viewTable"
+                multi-sort
               >
                 <template v-slot:item.created="{item}">
                   <span>{{new Date(item.created).toLocaleDateString()}}</span>

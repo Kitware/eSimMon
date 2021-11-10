@@ -26,6 +26,8 @@ export default {
     headers() {
       return [
         {text: 'View Name', value: 'name'},
+        {text: 'Creator First', value: 'creatorFirst'},
+        {text: 'Creator Last', value: 'creatorLast'},
         {text: 'Date Created', value: 'created'},
         {text: 'Actions', value: 'actions', sortable: false}
       ]
