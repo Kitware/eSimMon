@@ -336,6 +336,11 @@ export default {
 
     setGlobalRange(range) {
       this.globalRanges[`${this.itemId}`] = range;
+      this.$refs.imageGallery.forEach((cell) => {
+        if (cell.itemId === this.itemId) {
+          cell.react();
+        }
+      });
     },
   },
 
