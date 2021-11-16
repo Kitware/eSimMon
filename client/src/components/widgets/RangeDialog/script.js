@@ -21,6 +21,9 @@ export default {
     computed: {
       settingsDialog: {
         get () {
+          if (this.visible) {
+            this.checkValidity();
+          }
           return this.visible;
         },
         set (value) {
