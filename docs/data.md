@@ -25,7 +25,7 @@ To display multiple plots at once use the `+` and `-` arrows to add or remove ro
 
 ![Adjust Number of Rows and Columns](img/rows_cols.png)
 
-If the plot being displayed is a dynamic Plotly plot its data range for the current step can be viewed by hovering over the item name.
+If the plot being displayed is a interactive Plotly plot its data range for the current step can be viewed by hovering over the item name.
 
 ![Data Range](img/data_range.png)
 
@@ -35,7 +35,7 @@ When an item is dropped into a cell the available plots will begin playing, disp
 ![Play Data](img/steps.png)
 
 ## Interacting with Plots
-### Plotly
+### Interactive Plots
 In addition to adding the `dashboard` top-scope section users will need to add a `plot-1D` section under `run` in their configuration file if they wish to generate interactive Plotly plots.
 
 
@@ -53,6 +53,11 @@ When an interactive plot is displayed in the dashboard the user is able to hover
 ![Plotly Plots](img/plotly.png)
 
 ### Movies
-For static images a movie of all of the available time steps can be downloaded by right-clicking on either the plot itself or the item name in the naviagation menu.
+A movie of all of the available time steps can be downloaded by right-clicking on the plot itself.
 
 ![Movie Download](img/movie.png)
+
+### Global Data Range
+For interactive plots right-clicking on the plot will also display a second option: `Set global range for {current parameter}`. Selecting this option will allow the user to set the y-axis range for all timesteps for the selected parameter. Selecting `Clear` and then saving the range will reset the axis to the default behavior of resizing based on the current timestep range.
+
+![Range Dialog](img/range_dialog.png)
