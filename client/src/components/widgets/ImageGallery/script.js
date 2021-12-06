@@ -21,6 +21,10 @@ export default {
       type: Number,
       required: true
     },
+    globalRanges: {
+      type: Object,
+      required: true
+    },
   },
 
   inject: ['girderRest'],
@@ -215,6 +219,14 @@ export default {
         nextImage = this.loadedImages[0];
       if (!isNil(nextImage)) {
         if (isEqual(nextImage.ext, 'json')) {
+          nextImage.layout.yaxis.autorange = true;
+          if (this.itemId in this.globalRanges) {
+            const range = this.globalRanges[`${this.itemId}`];
+            if (range) {
+              nextImage.layout.yaxis.autorange = false;
+              nextImage.layout.yaxis.range = range;
+            }
+          }
           Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {autosize: true});
           this.json = true;
         } else {
@@ -226,10 +238,14 @@ export default {
     },
 
     async fetchMovie(e) {
-      if (this.json)
-        return;
       const response = await this.callEndpoint(`item/${this.itemId}`);
-      this.$parent.$parent.$parent.$parent.$emit("param-selected", this.itemId, response.name, e);
+      const data = {
+        id: this.itemId,
+        name: response.name,
+        event: e,
+        isJson: this.json,
+      }
+      this.$parent.$parent.$parent.$parent.$emit("param-selected", data);
     },
 
     clearGallery() {

@@ -6,6 +6,7 @@ import ImageGallery from '../../widgets/ImageGallery';
 import { GirderAuthentication as GirderAuthentication } from '@girder/components/src';
 import GirderFileManager from '../../widgets/GirderFileManager';
 import ViewControls from '../ViewControls';
+import RangeDialog from '../../widgets/RangeDialog';
 
 export default {
   name: 'App',
@@ -18,6 +19,7 @@ export default {
     Splitpanes,
     Pane,
     ViewControls,
+    RangeDialog,
   },
 
   data() {
@@ -43,6 +45,9 @@ export default {
       movieRequested: false,
       generationFailed: false,
       view: null,
+      globalRanges: {},
+      paramIsJson: false,
+      showRangeDialog: false,
     };
   },
 
@@ -250,11 +255,13 @@ export default {
       this.getRangeData(event);
     },
 
-    contextMenu(id, name, e) {
+    contextMenu(data) {
+      const { id, name, event, isJson } = data;
       this.parameter = name;
       this.itemId = id;
       this.showMenu = false;
-      this.pos = [e.clientX, e.clientY];
+      this.pos = [event.clientX, event.clientY];
+      this.paramIsJson = isJson;
       this.$nextTick(() => {
         this.showMenu = true;
       });
@@ -326,6 +333,15 @@ export default {
       this.location = null;
       this.$refs.imageGallery[0].clearGallery();
     },
+
+    setGlobalRange(range) {
+      this.globalRanges[`${this.itemId}`] = range;
+      this.$refs.imageGallery.forEach((cell) => {
+        if (cell.itemId === this.itemId) {
+          cell.react();
+        }
+      });
+    },
   },
 
   created: async function () {
@@ -334,6 +350,7 @@ export default {
     this.$on('param-selected', this.contextMenu);
     this.$on('gallery-mounted', this.imageGalleryCreated);
     this.$on('view-selected', this.viewSelected);
+    this.$on('range-updated', this.setGlobalRange);
   },
 
   asyncComputed: {
