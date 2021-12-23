@@ -31,16 +31,16 @@ class View(AccessControlledModel):
         if not doc['items']:
             raise ValidationException('Items must not be empty.', 'items')
 
-        self._validate_name(doc['name'], doc['creatorId'])
+        # Ensure unique names
+        q = {'name': doc['name']}
+        if '_id' in doc:
+            q['_id'] = {'$ne': doc['_id']}
+        existing = self.findOne(q)
+        if existing is not None:
+            raise ValidationException('View with that name already exists.',
+                                      'name')
 
         return doc
-
-    def _validate_name(self, name, creatorId):
-        public_view = self.findOne({'name': name, 'public': True})
-        private_view = self.findOne({'name': name, 'creatorId': creatorId})
-
-        if public_view is not None or private_view is not None:
-            raise ValidationException('View with this name already exists.', 'name')
 
     def create_view(self, name, rows, columns, items, public, user):
         view = {
@@ -53,6 +53,7 @@ class View(AccessControlledModel):
             'creatorFirst': user['firstName'],
             'creatorLast': user['lastName']
         }
+        self.setUserAccess(view, user=user, level=AccessType.ADMIN, save=False)
         self.setPublic(view, public=public, save=False)
         view = self.save(view)
 

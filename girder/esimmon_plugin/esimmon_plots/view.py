@@ -3,7 +3,6 @@ from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import Resource
 from girder.constants import AccessType
-from girder.exceptions import RestException
 from .models.view import View as ViewModel
 
 
@@ -16,6 +15,7 @@ class View(Resource):
         self.route('DELETE', (':id',), self.deleteView)
         self.route('GET', (), self.find)
         self.route('POST', (), self.create_view)
+        self.route('PUT', (':id',), self.update_view)
 
     @access.user
     @autoDescribeRoute(
@@ -68,11 +68,32 @@ class View(Resource):
       .errorResponse('ID was invalid.')
     )
     def deleteView(self, view):
-      user = self.getCurrentUser()
-
-      if user['_id'] != view['creatorId']:
-          raise RestException(
-              'You do not have permission to delete this view.', 403)
-
       self._model.remove(view)
       return {'message': f'Deleted view {view["name"]}.'}
+
+    @access.user
+    @autoDescribeRoute(
+      Description("Update a view's information.")
+      .modelParam('id', model=ViewModel, level=AccessType.WRITE)
+      .param('name', 'The name of the view.', required=False)
+      .param('rows', 'The number of rows in the view.', required=False)
+      .param('columns', 'The number of columns in the view.', required=False)
+      .jsonParam('items', 'The object describing the items shown and their position in the grid.',
+                 required=False)
+      .param('public', 'Whether this view should be available to everyone.',
+             required=False, dataType='boolean')
+      .errorResponse()
+    )
+    def update_view(self, view, name=None, rows=None, columns=None, items=None, public=None):
+      if name is not None:
+        view['name'] = name
+      if rows is not None:
+        view['rows'] = rows
+      if columns is not None:
+        view['columns'] = columns
+      if items is not None:
+        view['items'] = items
+      if public is not None:
+        self._model.setPublic(view, public, save=False)
+
+      return self._model.save(view)
