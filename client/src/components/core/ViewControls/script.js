@@ -30,6 +30,10 @@ export default {
       type: Number,
       default: 1,
     },
+    lastSaved: {
+      type: String,
+      default: '',
+    },
   },
 
   created: async function () {
@@ -43,7 +47,9 @@ export default {
           this.views = data;
           this.viewNames = [];
           data.forEach((view) => {
-            this.viewNames.push(view.name);
+            if (this.viewCreatedByUser(view) || view.public) {
+              this.viewNames.push(view.name);
+            }
           });
         })
         .catch((error) => {
@@ -57,6 +63,9 @@ export default {
     async loadView() {
       await this.getViews();
       this.showLoadDialog = true;
-    },    
+    },
+    viewCreatedByUser(item) {
+      return this.girderRest.user._id === item.creatorId;
+    }
   },
 };

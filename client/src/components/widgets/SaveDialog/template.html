@@ -15,6 +15,14 @@
               />
             </v-col>
           </v-row>
+          <v-row>
+            <v-col cols="12" align-self="end">
+              <v-radio-group v-model="visibility" mandatory row>
+                <v-radio label="Public View" value="public"/>
+                <v-radio label="Private View" value="private"/>
+              </v-radio-group>
+            </v-col>
+          </v-row>
         </v-container>
       </v-form>
     </v-card-text>

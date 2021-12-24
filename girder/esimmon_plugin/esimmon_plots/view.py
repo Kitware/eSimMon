@@ -22,16 +22,24 @@ class View(Resource):
         Description('List or search for views.')
         .responseClass('View', array=True)
         .param('text', 'Pass this to perform a full text search for views', required=False)
+        .param('exact', 'If true, only return exact name matches. This is '
+               'case sensitive.', required=False, dataType='boolean', default=False)
         .pagingParams(defaultSort='name')
     )
-    def find(self, text=None, offset=0, limit=0, sort=None):
-        return list(self._model.search(
-            text=text,
-            user=self.getCurrentUser(),
-            offset=offset,
-            limit=limit,
-            sort=sort
-        ))
+    def find(self, text=None, exact=False, offset=0, limit=0, sort=None):
+        user = self.getCurrentUser()
+        if text is not None:
+          if exact:
+            viewList = self._model.find(
+              {'name': text}, offset=offset, limit=limit, sort=sort)
+          else:
+            viewList = self._model.textSearch(
+              text, user=user, offset=offset, limit=limit, sort=sort)
+        else:
+          viewList = self._model.list(
+            user=user, offset=offset, limit=limit, sort=sort)
+
+        return viewList
 
     @access.user
     @autoDescribeRoute(

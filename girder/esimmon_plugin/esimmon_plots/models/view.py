@@ -59,21 +59,5 @@ class View(AccessControlledModel):
 
         return view
 
-    def search(self, text, user, limit, offset, sort):
-        if text is not None:
-            cursor = self.textSearch(text, sort=sort)
-        else:
-            cursor = self.find({}, sort=sort)
-
-        filtered_results = self.filterResultsByPermission(
-            cursor=cursor,
-            user=user,
-            level=AccessType.READ,
-            limit=limit,
-            offset=offset
-        )
-
-        return filtered_results
-
     def remove(self, view):
       super().remove(view)

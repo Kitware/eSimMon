@@ -1,3 +1,5 @@
+import { saveLayout } from "../../../utils/utilityFunctions";
+
 export default {
   inject: ['girderRest'],
 
@@ -9,6 +11,7 @@ export default {
         unique: value => !this.viewNames.includes(value) || 'View name already exists.',
       },
       invalidInput: true,
+      visibility: 'true',
     };
   },
 
@@ -50,20 +53,10 @@ export default {
   },
 
   methods: {
-    processLayout(formData) {
-      const items = {}
-      this.layout.forEach(item => {
-        const { row, col } = item.$attrs;
-        items[`${row}::${col}`] = item.itemId;
-      });
-      formData.set('items', JSON.stringify(items));
-    },
     save() {
-      var formData = new FormData();
-      this.processLayout(formData);
-      formData.set('name', this.newViewName);
-      formData.set('rows', this.rows);
-      formData.set('columns', this.columns);
+      const isPublic = (this.visibility === 'public');
+      const formData = saveLayout(
+        this.layout, this.newViewName, this.rows, this.columns, isPublic);
       this.girderRest.post('/view', formData);
       this.saveDialog = false;
     },

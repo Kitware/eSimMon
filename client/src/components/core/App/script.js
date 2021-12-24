@@ -7,6 +7,7 @@ import { GirderAuthentication as GirderAuthentication } from '@girder/components
 import GirderFileManager from '../../widgets/GirderFileManager';
 import ViewControls from '../ViewControls';
 import RangeDialog from '../../widgets/RangeDialog';
+import { saveLayout } from '../../../utils/utilityFunctions';
 
 export default {
   name: 'App',
@@ -48,6 +49,10 @@ export default {
       globalRanges: {},
       paramIsJson: false,
       showRangeDialog: false,
+      run_name: undefined,
+      simulation: undefined,
+      defaultViewId: null,
+      lastSaved: '',
     };
   },
 
@@ -162,6 +167,9 @@ export default {
 
       // Setup polling to watch for new data.
       this.poll(itemId);
+
+      // Setup polling to autosave view
+      this.autosave();
 
       // Default to playing once a parameter has been selected
       this.togglePlayPause();
@@ -342,6 +350,38 @@ export default {
         }
       });
     },
+
+    autosave() {
+      this._autosave = setTimeout(async () => {
+        try {
+          if (this.run_name && this.simulation) {
+            const name = `${this.simulation}_${this.run_name}_default`;
+            const formData = saveLayout(
+              this.$refs.imageGallery,
+              name,
+              this.numrows,
+              this.numcols,
+              currentTimeStep,
+              false);
+            // Check if default view already exists
+            const { data } = await this.girderRest.get(
+              `/view?text=${name}&exact=true&limit=50&sort=name&sortdir=1`);
+            if (data.length) {
+              // If it does, update it
+              this.lastSaved = (
+                await this.girderRest.put(`/view/${data[0]._id}`, formData)
+                .then(() => { return new Date(); }));
+            } else {
+              // If not, create it
+              this.lastSaved = await this.girderRest.post('/view', formData)
+              .then(() => { return new Date(); });
+            }
+          }
+        } finally {
+          this.autosave();
+        }
+      }, 30000);
+    },
   },
 
   created: async function () {
@@ -395,6 +435,21 @@ export default {
     loggedOut(noCurrentUser) {
       if (noCurrentUser && this.numLoadedGalleries > 0) {
         this.resetView();
+      }
+    },
+
+    async location(current) {
+      const parent = current.parentId;
+      if (parent && current._modelType === 'folder') {
+        const { data } = await this.girderRest.get(`/folder/${parent}`);
+        const { name, parentId } = data;
+        if ('meta' in data && 'currentTimestep' in data.meta) {
+          // This is the run folder and its parent is the simulation
+          this.run_name = name;
+          const { data } = await this.girderRest.get(`/folder/${parentId}`);
+          this.simulation = data.name;
+          console.log('run name: ', this.run_name, ' simulation: ', this.simulation);
+        }
       }
     }
   },

@@ -41,7 +41,12 @@ export default {
           this.$emit('close');
         }
       }
-    }
+    },
+    filteredViews() {
+      return this.views.filter((item) => {
+        return this.viewIsPublic(item) || this.viewCreatedByUser(item);
+      })
+    },
   },
 
   methods: {
@@ -89,6 +94,22 @@ export default {
     },
     viewCreatedByUser(item) {
       return this.girderRest.user._id === item.creatorId;
+    },
+    viewIsPublic(item) {
+      if (item) {
+        return item.public;
+      }
+      return false;
+    },
+    async toggleViewStatus() {
+      this.dialogTogglePublic = false;
+      var formData = new FormData();
+      formData.set('public', !this.selection.public);
+      await this.girderRest.put(`/view/${this.selection._id}`, formData)
+        .then(() => {
+          this.$parent.$emit('views-modified');
+        })
+        .catch((error) => { console.log('error: ', error) });
     },
   },
 }

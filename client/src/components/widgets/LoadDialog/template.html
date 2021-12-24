@@ -23,7 +23,7 @@
                 hide-default-footer
                 height="300px"
                 :headers="headers"
-                :items="views"
+                :items="filteredViews"
                 :item-class="rowClass"
                 :search="search"
                 @click:row="rowSelected"
@@ -35,9 +35,45 @@
                   <span>{{new Date(item.created).toLocaleDateString()}}</span>
                 </template>
                 <template v-slot:item.actions="{item}">
-                  <v-icon v-show="viewCreatedByUser(item)" small @click='dialogDelete=true'>
-                    mdi-delete
-                  </v-icon>
+                  <v-tooltip left>
+                    <template v-slot:activator="{on}">
+                      <v-icon
+                        v-on="on"
+                        v-show="viewCreatedByUser(item)"
+                        small
+                        @click='dialogDelete=true'
+                      >
+                        mdi-delete
+                      </v-icon>
+                    </template>
+                    <span>Delete View</span>
+                  </v-tooltip>
+                  <v-tooltip right>
+                    <template v-slot:activator="{on}">
+                      <v-icon
+                        v-on="on"
+                        v-show="viewCreatedByUser(item) && viewIsPublic(item)"
+                        small
+                        @click='dialogTogglePublic=true'
+                      >
+                        mdi-earth
+                      </v-icon>
+                    </template>
+                    <span>Make View Private</span>
+                  </v-tooltip>
+                  <v-tooltip right>
+                    <template v-slot:activator="{on}">
+                      <v-icon
+                        v-on="on"
+                        v-show="viewCreatedByUser(item) && !viewIsPublic(item)"
+                        small
+                        @click='dialogTogglePublic=true'
+                      >
+                        mdi-lock
+                      </v-icon>
+                    </template>
+                    <span>Make View Public</span>
+                  </v-tooltip>
                 </template>
               </v-data-table>
             </v-col>
@@ -49,6 +85,22 @@
                 <v-spacer></v-spacer>
                 <v-btn text @click="dialogDelete=false">Cancel</v-btn>
                 <v-btn text @click="deleteView">OK</v-btn>
+                <v-spacer></v-spacer>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+          <v-dialog v-model="dialogTogglePublic" max-width="550px">
+            <v-card>
+              <v-card-title v-if="viewIsPublic(selection)" class="text-h5">
+                Are you sure you would like to make this view private?
+              </v-card-title>
+              <v-card-title v-else class="text-h5">
+                Are you sure you would like to make this view public?
+              </v-card-title>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn text @click="dialogTogglePublic=false">Cancel</v-btn>
+                <v-btn text @click="toggleViewStatus">OK</v-btn>
                 <v-spacer></v-spacer>
               </v-card-actions>
             </v-card>
