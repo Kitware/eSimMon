@@ -256,8 +256,4 @@ export default {
       this.initialLoad = true;
     },
   },
-
-  mounted () {
-    this.$root.$children[0].$emit("gallery-mounted");
-  },
 };

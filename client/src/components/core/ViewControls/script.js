@@ -63,6 +63,7 @@ export default {
     async saveView() {
       await this.getViews();
       this.showSaveDialog = true;
+      this.$root.$children[0].$emit("pause-gallery");
     },
     async loadView() {
       await this.getViews();
