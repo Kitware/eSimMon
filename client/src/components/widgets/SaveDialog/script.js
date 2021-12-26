@@ -20,6 +20,10 @@ export default {
       type: Number,
       default: 1,
     },
+    currentStep: {
+      type: Number,
+      default: 1,
+    },
     layout: {
       type: Array,
       default: () => [],
@@ -56,7 +60,12 @@ export default {
     save() {
       const isPublic = (this.visibility === 'public');
       const formData = saveLayout(
-        this.layout, this.newViewName, this.rows, this.columns, isPublic);
+        this.layout,
+        this.newViewName,
+        this.rows,
+        this.columns,
+        this.currentStep,
+        isPublic);
       this.girderRest.post('/view', formData);
       this.saveDialog = false;
     },

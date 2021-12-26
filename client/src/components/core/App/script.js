@@ -361,7 +361,7 @@ export default {
               name,
               this.numrows,
               this.numcols,
-              currentTimeStep,
+              this.currentTimeStep,
               false);
             // Check if default view already exists
             const { data } = await this.girderRest.get(

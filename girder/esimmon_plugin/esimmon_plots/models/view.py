@@ -42,11 +42,12 @@ class View(AccessControlledModel):
 
         return doc
 
-    def create_view(self, name, rows, columns, items, public, user):
+    def create_view(self, name, rows, columns, step, items, public, user):
         view = {
             'name': name,
             'rows': rows,
             'columns': columns,
+            'step': step,
             'items': items,
             'created': datetime.datetime.utcnow(),
             'creatorId': user['_id'],

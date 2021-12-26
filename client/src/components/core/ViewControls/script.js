@@ -34,6 +34,10 @@ export default {
       type: String,
       default: '',
     },
+    step: {
+      type: Number,
+      default: 1,
+    },
   },
 
   created: async function () {
