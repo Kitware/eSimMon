@@ -173,4 +173,15 @@
       Movie Generation Failed
     </v-snackbar>
   </div>
+  <v-dialog v-model="loadDefaultViewDialog" persistent max-width="300">
+    <v-card>
+      <v-card-title class="headline">Load default view?</v-card-title>
+      <v-card-text>A default view has been found for this run. Would you like to load it now?</v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn text @click.stop="loadDefaultViewDialog = false">Cancel</v-btn>
+        <v-btn text @click.stop="loadDefaultView">Load View</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </v-app>

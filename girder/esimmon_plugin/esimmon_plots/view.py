@@ -90,11 +90,12 @@ class View(Resource):
       .param('columns', 'The number of columns in the view.', required=False)
       .jsonParam('items', 'The object describing the items shown and their position in the grid.',
                  required=False)
+      .param('step', 'The step that the view should begin at.', required=False)
       .param('public', 'Whether this view should be available to everyone.',
              required=False, dataType='boolean')
       .errorResponse()
     )
-    def update_view(self, view, name=None, rows=None, columns=None, items=None, public=None):
+    def update_view(self, view, name=None, rows=None, columns=None, items=None, step=None, public=None):
       if name is not None:
         view['name'] = name
       if rows is not None:
@@ -103,6 +104,8 @@ class View(Resource):
         view['columns'] = columns
       if items is not None:
         view['items'] = items
+      if step is not None:
+        view['step'] = step
       if public is not None:
         self._model.setPublic(view, public, save=False)
 

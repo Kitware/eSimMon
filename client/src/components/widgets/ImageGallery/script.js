@@ -143,6 +143,7 @@ export default {
       event.preventDefault();
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
       this.itemId = items[0]._id;
+      this.$root.$children[0].$emit('item-added', this.itemId);
     },
 
     preCacheImages: function () {

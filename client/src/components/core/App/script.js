@@ -49,10 +49,11 @@ export default {
       globalRanges: {},
       paramIsJson: false,
       showRangeDialog: false,
-      run_name: undefined,
+      run_id: undefined,
       simulation: undefined,
-      defaultViewId: null,
+      defaultView: null,
       lastSaved: '',
+      loadDefaultViewDialog: false,
     };
   },
 
@@ -357,8 +358,8 @@ export default {
     autosave() {
       this._autosave = setTimeout(async () => {
         try {
-          if (this.run_name && this.simulation) {
-            const name = `${this.simulation}_${this.run_name}_default`;
+          if (this.run_id && this.simulation) {
+            const name = `${this.simulation}_${this.run_id}_default`;
             const formData = saveLayout(
               this.$refs.imageGallery,
               name,
@@ -385,6 +386,20 @@ export default {
         }
       }, 30000);
     },
+
+    async setRun(itemId) {
+      const { data } = await this.girderRest.get(`/item/${itemId}/rootpath`);
+      const runIdx = data.length - 2;
+      const simulationIdx = runIdx - 1;
+      this.run_id = data[runIdx].object._id;
+      this.simulation = data[simulationIdx].object._id;
+    },
+
+    loadDefaultView() {
+      this.viewSelected(this.defaultView);
+      this.defaultView = null;
+      this.loadDefaultViewDialog = false;
+    }
   },
 
   created: async function () {
@@ -395,6 +410,7 @@ export default {
     this.$on('view-selected', this.viewSelected);
     this.$on('range-updated', this.setGlobalRange);
     this.$on('pause-gallery', () => {this.paused = true});
+    this.$on('item-added', this.setRun);
   },
 
   asyncComputed: {
@@ -443,16 +459,25 @@ export default {
     },
 
     async location(current) {
-      const parent = current.parentId;
-      if (parent && current._modelType === 'folder') {
-        const { data } = await this.girderRest.get(`/folder/${parent}`);
-        const { name, parentId } = data;
-        if ('meta' in data && 'currentTimestep' in data.meta) {
-          // This is the run folder and its parent is the simulation
-          this.run_name = name;
-          const { data } = await this.girderRest.get(`/folder/${parentId}`);
-          this.simulation = data.name;
-          console.log('run name: ', this.run_name, ' simulation: ', this.simulation);
+      if (current._modelType !== 'folder') {
+        return;
+      }
+
+      const { data } = await this.girderRest.get(
+        `/folder/${current._id}/rootpath`);
+      const parent = data[data.length - 1].object;
+      const grandparent = data[data.length - 2].object;
+      if ('meta' in parent && 'currentTimestep' in parent.meta) {
+        // This is a run folder. Check for default view to load.
+        const simulation = grandparent._id;
+        const run = parent._id;
+        const viewName = `${simulation}_${run}_default`;
+        const { data } = await this.girderRest.get(
+          `/view?text=${viewName}&exact=true&limit=50&sort=name&sortdir=1`)
+        const view = data[0]
+        if (view) {
+          this.loadDefaultViewDialog = true;
+          this.defaultView = view;
         }
       }
     }

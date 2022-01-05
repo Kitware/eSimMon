@@ -44,7 +44,11 @@ export default {
     },
     filteredViews() {
       return this.views.filter((item) => {
-        return this.viewIsPublic(item) || this.viewCreatedByUser(item);
+        return (
+          this.viewIsPublic(item) ||
+          this.viewCreatedByUser(item) ||
+          this.viewIsDefault(item)
+        );
       })
     },
   },
@@ -81,7 +85,7 @@ export default {
         this.load();
       }
     },
-    loadSelectedRow(event, selection) {
+    loadSelectedRow(_event, selection) {
       this.selection = selection.item;
       this.load();
     },
@@ -100,6 +104,19 @@ export default {
         return item.public;
       }
       return false;
+    },
+    async viewIsDefault(item) {
+      if ('default' in item.name) {
+        const [simulation, run] = item.name.split('_');
+        let { data } = await this.girderRest.get(`/folder/${simulation}`)
+        if (data) {
+          let { data } = await this.girderRest.get(`/folder/${run}`);
+          if (data) {
+            return true
+          }
+        }
+      }
+      return false
     },
     async toggleViewStatus() {
       this.dialogTogglePublic = false;
