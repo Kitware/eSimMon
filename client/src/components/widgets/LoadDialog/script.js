@@ -3,6 +3,7 @@ export default {
 
   data () {
     return {
+      activeTab: 0,
       clicks: 0,
       dialogDelete: false,
       disableLoad: true,
@@ -44,11 +45,14 @@ export default {
     },
     filteredViews() {
       return this.views.filter((item) => {
-        return (
-          this.viewIsPublic(item) ||
-          this.viewCreatedByUser(item) ||
-          this.viewIsDefault(item)
-        );
+        const notDefault = this.viewIsNotDefault(item);
+        const isPublic = this.viewIsPublic(item);
+        const createdByUser = this.viewCreatedByUser(item);
+        if (parseInt(this.activeTab) === 0) {
+          return notDefault && (isPublic || createdByUser);
+        } else {
+          return notDefault && createdByUser;
+        }
       })
     },
   },
@@ -105,18 +109,12 @@ export default {
       }
       return false;
     },
-    async viewIsDefault(item) {
-      if ('default' in item.name) {
-        const [simulation, run] = item.name.split('_');
-        let { data } = await this.girderRest.get(`/folder/${simulation}`)
-        if (data) {
-          let { data } = await this.girderRest.get(`/folder/${run}`);
-          if (data) {
-            return true
-          }
-        }
-      }
-      return false
+    viewIsNotDefault(item) {
+      const userId = this.girderRest.user._id;
+      // Safe to assume the user did not create this view and it is an
+      // auto-saved default view for a run if it contains their userId
+      const nameIncludes = item.name.includes(`_${userId}_default`);
+      return !nameIncludes;
     },
     async toggleViewStatus() {
       this.dialogTogglePublic = false;

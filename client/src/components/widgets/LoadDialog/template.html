@@ -1,4 +1,8 @@
 <v-dialog v-model="loadDialog" max-width="700px">
+  <v-tabs v-model="activeTab">
+    <v-tab :key="0">All Views</v-tab>
+    <v-tab :key="1">My Views</v-tab>
+  </v-tabs>
   <v-card>
     <v-card-title>
       Load New View

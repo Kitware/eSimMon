@@ -359,7 +359,8 @@ export default {
       this._autosave = setTimeout(async () => {
         try {
           if (this.run_id && this.simulation) {
-            const name = `${this.simulation}_${this.run_id}_default`;
+            const userId = this.girderRest.user._id;
+            const name = `${this.simulation}_${this.run_id}_${userId}_default`;
             const formData = saveLayout(
               this.$refs.imageGallery,
               name,
@@ -471,7 +472,8 @@ export default {
         // This is a run folder. Check for default view to load.
         const simulation = grandparent._id;
         const run = parent._id;
-        const viewName = `${simulation}_${run}_default`;
+        const userId = this.girderRest.user._id;
+        const viewName = `${simulation}_${run}_${userId}_default`;
         const { data } = await this.girderRest.get(
           `/view?text=${viewName}&exact=true&limit=50&sort=name&sortdir=1`)
         const view = data[0]
