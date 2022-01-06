@@ -54,6 +54,7 @@ export default {
       defaultView: null,
       lastSaved: '',
       loadDefaultViewDialog: false,
+      viewGrid: null,
     };
   },
 
@@ -178,6 +179,7 @@ export default {
         this.currentTimeStep = parseInt(this.view.step, 10);
         this.paused = true;
         this.view = null;
+        this.viewGrid = null;
       }
     },
 
@@ -316,6 +318,7 @@ export default {
       const cols = parseInt(view.columns, 10);
       const rows = parseInt(view.rows, 10);
       this.numLoadedGalleries = 0;
+      this.viewGrid = cols * rows;
 
       if (this.numcols !== cols) {
         this.setColumns(cols);
@@ -323,7 +326,11 @@ export default {
       if (this.numrows !== rows) {
         this.setRows(rows);
       }
-      if (this.view) {
+      this.applyView();
+    },
+
+    applyView() {
+      if (this.$refs.imageGallery.length === this.viewGrid) {
         this.$refs.imageGallery.forEach((cell) => {
           const { row, col } = cell.$attrs;
           cell.itemId = this.view.items[`${row}::${col}`];
@@ -407,11 +414,11 @@ export default {
     this.$on('data-loaded', this.initialDataLoaded);
     this.$on('gallery-ready', this.incrementReady);
     this.$on('param-selected', this.contextMenu);
-    this.$on('gallery-mounted', this.imageGalleryCreated);
     this.$on('view-selected', this.viewSelected);
     this.$on('range-updated', this.setGlobalRange);
     this.$on('pause-gallery', () => {this.paused = true});
     this.$on('item-added', this.setRun);
+    this.$on('gallery-mounted', this.applyView);
   },
 
   asyncComputed: {
