@@ -51,9 +51,9 @@ export default {
       showRangeDialog: false,
       run_id: undefined,
       simulation: undefined,
-      defaultView: null,
+      autoSavedView: null,
       lastSaved: '',
-      loadDefaultViewDialog: false,
+      loadAutoSavedViewDialog: false,
       viewGrid: null,
     };
   },
@@ -375,7 +375,7 @@ export default {
               this.numcols,
               this.currentTimeStep,
               false);
-            // Check if default view already exists
+            // Check if auto-saved view already exists
             const { data } = await this.girderRest.get(
               `/view?text=${name}&exact=true&limit=50&sort=name&sortdir=1`);
             if (data.length) {
@@ -403,10 +403,10 @@ export default {
       this.simulation = data[simulationIdx].object._id;
     },
 
-    loadDefaultView() {
-      this.viewSelected(this.defaultView);
-      this.defaultView = null;
-      this.loadDefaultViewDialog = false;
+    loadAutoSavedView() {
+      this.viewSelected(this.autoSavedView);
+      this.autoSavedView = null;
+      this.loadAutoSavedViewDialog = false;
     }
   },
 
@@ -485,8 +485,8 @@ export default {
           `/view?text=${viewName}&exact=true&limit=50&sort=name&sortdir=1`)
         const view = data[0]
         if (view) {
-          this.loadDefaultViewDialog = true;
-          this.defaultView = view;
+          this.loadAutoSavedViewDialog = true;
+          this.autoSavedView = view;
         }
       }
     }

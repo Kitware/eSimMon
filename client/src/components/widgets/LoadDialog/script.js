@@ -45,13 +45,13 @@ export default {
     },
     filteredViews() {
       return this.views.filter((item) => {
-        const notDefault = this.viewIsNotDefault(item);
+        const notAutoSave = this.viewIsNotAutoSave(item);
         const isPublic = this.viewIsPublic(item);
         const createdByUser = this.viewCreatedByUser(item);
         if (parseInt(this.activeTab) === 0) {
-          return notDefault && (isPublic || createdByUser);
+          return notAutoSave && (isPublic || createdByUser);
         } else {
-          return notDefault && createdByUser;
+          return notAutoSave && createdByUser;
         }
       })
     },
@@ -109,11 +109,11 @@ export default {
       }
       return false;
     },
-    viewIsNotDefault(item) {
+    viewIsNotAutoSave(item) {
       const userId = this.girderRest.user._id;
       // Safe to assume the user did not create this view and it is an
-      // auto-saved default view for a run if it contains their userId
-      const nameIncludes = item.name.includes(`_${userId}_default`);
+      // auto-saved view for a run if it contains their userId
+      const nameIncludes = item.name.includes(`_${userId}`);
       return !nameIncludes;
     },
     async toggleViewStatus() {
