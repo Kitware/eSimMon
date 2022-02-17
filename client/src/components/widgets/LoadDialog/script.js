@@ -9,6 +9,7 @@ export default {
       disableLoad: true,
       search: '',
       selection: null,
+      dialogTogglePublic: false,
     };
   },
 
