@@ -259,6 +259,10 @@ export default {
   },
 
   mounted() {
-    this.$root.$children[0].$emit('gallery-mounted');
+    this.$root.$children[0].$emit('gallery-count-changed', 1);
+  },
+
+  destroyed() {
+    this.$root.$children[0].$emit('gallery-count-changed', -1);
   }
 };
