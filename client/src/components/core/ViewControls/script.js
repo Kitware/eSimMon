@@ -38,6 +38,14 @@ export default {
       type: Number,
       default: 1,
     },
+    simulation: {
+      type: String,
+      default: '',
+    },
+    run: {
+      type: String,
+      default: '',
+    },
   },
 
   created: async function () {
@@ -71,6 +79,12 @@ export default {
     },
     viewCreatedByUser(item) {
       return this.girderRest.user._id === item.creatorId;
+    }
+  },
+
+  computed: {
+    meta() {
+      return { simulation: this.simulation, run: this.run };
     }
   },
 };

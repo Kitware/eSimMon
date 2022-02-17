@@ -21,6 +21,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    meta: {
+      type: Object,
+      default: () => {},
+    },
   },
 
   computed: {

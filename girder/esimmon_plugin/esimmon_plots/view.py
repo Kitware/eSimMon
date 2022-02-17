@@ -52,11 +52,13 @@ class View(Resource):
         .param('step', "Time step to start at.")
         .jsonParam('items', 'The object describing the items shown and their position in the grid.',
                     paramType='formData', requireObject=True)
+        .jsonParam('meta', 'An object describing meta data to associate with the view.',
+                    paramType='formData', requireObject=True, required=False)
         .param('public', 'Whether this view should be available to everyone.', 
                 required=False, dataType='boolean', default=True, paramType='formData')
         .errorResponse('A parameter was invalid, or the specified name already exists in the system.')
     )
-    def create_view(self, name, rows, columns, items, step=1, public=True):
+    def create_view(self, name, rows, columns, items, meta, step=1, public=True):
         user = self.getCurrentUser()
 
         view = self._model.create_view(
@@ -66,7 +68,8 @@ class View(Resource):
             step=step,
             items=items,
             public=public,
-            user=user
+            user=user,
+            meta=meta,
         )
 
         return view

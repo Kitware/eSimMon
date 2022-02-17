@@ -36,10 +36,10 @@ export default {
       type: Boolean,
       default: false,
     },
-    viewNames: {
-      type: Array,
-      default: () => [],
-    }
+    meta: {
+      type: Object,
+      default: () => ({}),
+    },
   },
 
   computed: {
@@ -64,6 +64,7 @@ export default {
         this.newViewName,
         this.rows,
         this.columns,
+        this.meta,
         this.currentStep,
         isPublic);
       this.girderRest.post('/view', formData);

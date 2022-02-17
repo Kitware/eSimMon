@@ -369,11 +369,13 @@ export default {
           if (this.autosave_run) {
             const userId = this.girderRest.user._id;
             const name = `${this.simulation}_${this.run_id}_${userId}`;
+            const meta = {simulation: this.simulation, run: this.run_id};
             const formData = saveLayout(
               this.$refs.imageGallery,
               name,
               this.numrows,
               this.numcols,
+              meta,
               this.currentTimeStep,
               false);
             // Check if auto-saved view already exists
