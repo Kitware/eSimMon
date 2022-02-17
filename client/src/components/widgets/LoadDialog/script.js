@@ -81,6 +81,40 @@ export default {
       this.$root.$children[0].$emit('view-selected', this.selection);
       this.clearSelection();
     },
+    async loadAsTemplate() {
+      // Create a list of selection's item ids
+      let templateView = {
+        rows: this.selection.rows,
+        columns: this.selection.columns,
+        items: {},
+        step: 1,
+        meta: {...this.meta},
+      }
+
+      async function asyncForEach(keys, values, callback) {
+        for (let index = 0; index < values.length; index++) {
+          const data = await callback(values[index]);
+          templateView.items[`${keys[index]}`] = data;
+        }
+      }
+
+      const keys = Object.keys(this.selection.items);
+      const values = Object.values(this.selection.items);
+      await asyncForEach(keys, values, async(value) => {
+        const response = await this.girderRest.get(`/item/${value}`);
+        const run = this.meta.run;
+        const name = response.data.name;
+        const endpoint = `/resource/${run}/search?type=folder&q=${name}`;
+        const result = await this.girderRest.get(endpoint);
+        if (result.data && result.data.results.length) {
+          return result.data.results[0].value._id;
+        }
+        return null;
+      });
+
+      this.$root.$children[0].$emit('view-selected', templateView);
+      this.clearSelection();
+    },
     rowSelected(selection) {
       this.clicks++;
       this.selection = selection;
@@ -129,6 +163,13 @@ export default {
           this.$parent.$emit('views-modified');
         })
         .catch((error) => { console.log('error: ', error) });
+    },
+    canBeTemplate() {
+      if (this.selection && this.meta) {
+        const { simulation, run } = this.selection.meta;
+        return simulation === this.meta.simulation && run !== this.meta.run;
+      }
+      return false;
     },
   },
 }
