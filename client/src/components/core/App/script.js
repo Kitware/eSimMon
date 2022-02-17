@@ -55,6 +55,7 @@ export default {
       lastSaved: '',
       loadAutoSavedViewDialog: false,
       viewGrid: null,
+      autosave_run: false,
     };
   },
 
@@ -365,9 +366,9 @@ export default {
     autosave() {
       this._autosave = setTimeout(async () => {
         try {
-          if (this.run_id && this.simulation) {
+          if (this.autosave_run) {
             const userId = this.girderRest.user._id;
-            const name = `${this.simulation}_${this.run_id}_${userId}_default`;
+            const name = `${this.simulation}_${this.run_id}_${userId}`;
             const formData = saveLayout(
               this.$refs.imageGallery,
               name,
@@ -401,6 +402,7 @@ export default {
       const simulationIdx = runIdx - 1;
       this.run_id = data[runIdx].object._id;
       this.simulation = data[simulationIdx].object._id;
+      this.autosave_run = true;
     },
 
     loadAutoSavedView() {
@@ -473,14 +475,21 @@ export default {
 
       const { data } = await this.girderRest.get(
         `/folder/${current._id}/rootpath`);
-      const parent = data[data.length - 1].object;
-      const grandparent = data[data.length - 2].object;
-      if ('meta' in parent && 'currentTimestep' in parent.meta) {
-        // This is a run folder. Check for default view to load.
-        const simulation = grandparent._id;
-        const run = parent._id;
+      let runFolder = current;
+      let simFolder = data[data.length - 1].object;
+      if (!('meta' in runFolder && data.length > 1)) {
+        runFolder = data[data.length - 1].object;
+        simFolder = data[data.length - 2].object;
+      }
+
+      if ('meta' in runFolder && 'currentTimestep' in runFolder.meta) {
+        // This is a run folder. Check for auto-saved view to load and
+        // update simulation and run id.
+        this.simulation = simFolder._id;
+        this.run_id = runFolder._id;
+        this.autosave_run = false;
         const userId = this.girderRest.user._id;
-        const viewName = `${simulation}_${run}_${userId}_default`;
+        const viewName = `${this.simulation}_${this.run_id}_${userId}`;
         const { data } = await this.girderRest.get(
           `/view?text=${viewName}&exact=true&limit=50&sort=name&sortdir=1`)
         const view = data[0]
