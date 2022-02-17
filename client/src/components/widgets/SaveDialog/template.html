@@ -12,6 +12,7 @@
                 v-model="newViewName"
                 label="Name"
                 :rules="[rules.required, rules.unique]"
+                @keydown.enter="checkForOverwrite"
               />
             </v-col>
           </v-row>
@@ -24,6 +25,17 @@
             </v-col>
           </v-row>
         </v-container>
+        <v-dialog persistent v-model="dialogOverwrite" max-width="450px">
+          <v-card>
+            <v-card-title class="text-h5">A view with this name already exists, are you sure you'd like to overwrite it?</v-card-title>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn text @click="dialogOverwrite=false">Cancel</v-btn>
+              <v-btn text @click="save(false)">OK</v-btn>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-form>
     </v-card-text>
     <v-card-actions>
@@ -31,7 +43,7 @@
       <v-btn text @click.stop="saveDialog=false">
         Close
       </v-btn>
-      <v-btn text :disabled="invalidInput" @click.stop="save()">
+      <v-btn text @click.stop="checkForOverwrite">
         Save
       </v-btn>
     </v-card-actions>

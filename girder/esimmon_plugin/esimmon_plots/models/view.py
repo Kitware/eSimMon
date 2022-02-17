@@ -32,7 +32,7 @@ class View(AccessControlledModel):
             raise ValidationException('Items must not be empty.', 'items')
 
         # Ensure unique names
-        q = {'name': doc['name']}
+        q = {'name': doc['name'], 'creatorId': doc['creatorId']}
         if '_id' in doc:
             q['_id'] = {'$ne': doc['_id']}
         existing = self.findOne(q)

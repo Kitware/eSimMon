@@ -10,8 +10,8 @@ export default {
         required: value => !!value || 'Required',
         unique: value => !this.viewNames.includes(value) || 'View name already exists.',
       },
-      invalidInput: true,
       visibility: 'true',
+      dialogOverwrite: false,
     };
   },
 
@@ -36,6 +36,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    viewInfo: {
+      type: Object,
+      default: () => ({}),
+    },
     meta: {
       type: Object,
       default: () => ({}),
@@ -53,11 +57,14 @@ export default {
           this.newViewName = ''
         }
       }
+    },
+    viewNames() {
+      return Object.keys(this.viewInfo || {});
     }
   },
 
   methods: {
-    save() {
+    save(newView) {
       const isPublic = (this.visibility === 'public');
       const formData = saveLayout(
         this.layout,
@@ -67,17 +74,21 @@ export default {
         this.meta,
         this.currentStep,
         isPublic);
-      this.girderRest.post('/view', formData);
+      if (newView) {
+        this.girderRest.post('/view', formData);
+      } else {
+        const viewId = this.viewInfo[this.newViewName];
+        this.girderRest.put(`/view/${viewId}`, formData);
+      }
       this.saveDialog = false;
     },
-  },
-
-  watch: {
-    newViewName(name) {
+    checkForOverwrite(event) {
+      event.preventDefault()
+      const name = this.newViewName;
       if (!!name && this.viewNames.includes(name)) {
-        this.invalidInput = true;
+        this.dialogOverwrite = true;
       } else {
-        this.invalidInput = false;
+        this.save(true);
       }
     },
   },

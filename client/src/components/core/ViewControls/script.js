@@ -13,7 +13,7 @@ export default {
     return {
       showSaveDialog: false,
       showLoadDialog: false,
-      viewNames: [],
+      viewInfo: {},
     };
   },
 
@@ -57,10 +57,10 @@ export default {
       await this.girderRest.get('/view')
         .then(({ data }) => {
           this.views = data;
-          this.viewNames = [];
+          this.viewInfo = {};
           data.forEach((view) => {
-            if (this.viewCreatedByUser(view) || view.public) {
-              this.viewNames.push(view.name);
+            if (this.viewCreatedByUser(view)) {
+              this.viewInfo[view.name] = view._id;
             }
           });
         })
