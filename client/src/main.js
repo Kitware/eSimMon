@@ -1,7 +1,9 @@
 import Vue from 'vue'
+import Vuex from 'vuex';
 import Girder, { RestClient, vuetify } from '@girder/components/src';
 import {isNil} from 'lodash';
 import VueMathjax from 'vue-mathjax';
+import store from './store';
 
 Vue.use(Girder);
 Vue.use(VueMathjax)
@@ -29,11 +31,13 @@ const defaultLocation = { _modelType: 'folder', _id: folderId };
 import App from './components/core/App'
 
 Vue.config.productionTip = false
+Vue.use(Vuex);
 
 girderRest.fetchUser().then(() => {
   new Vue({
     provide: { girderRest, defaultLocation, fastRestUrl },
     vuetify,
+    store,
     render: h => h(App),
   }).$mount('#app')
 });
