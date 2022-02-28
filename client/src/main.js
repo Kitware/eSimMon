@@ -34,6 +34,7 @@ Vue.config.productionTip = false
 Vue.use(Vuex);
 
 girderRest.fetchUser().then(() => {
+  store.$girderRest = girderRest;
   new Vue({
     provide: { girderRest, defaultLocation, fastRestUrl },
     vuetify,

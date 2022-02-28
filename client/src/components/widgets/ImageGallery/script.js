@@ -1,23 +1,12 @@
 import Plotly from 'plotly.js-basic-dist-min';
 import { isNil, isEqual } from 'lodash';
+import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 export default {
   name: "plotly",
 
   props: {
-    currentTimeStep: {
-      type: Number,
-      required: true
-    },
     maxTimeStep: {
-      type: Number,
-      required: true
-    },
-    numrows: {
-      type: Number,
-      required: true
-    },
-    numcols: {
       type: Number,
       required: true
     },
@@ -36,13 +25,21 @@ export default {
       loadedImages: [],
       pendingImages: 0,
       rows: [],
-      step: 1,
       json: true,
       image: null,
+      eventHandlersSet: false,
+      loadedFromView: false,
     };
   },
 
   asyncComputed: {
+    ...mapGetters({
+      currentTimeStep: 'PLOT_TIME_STEP',
+      numcols: 'VIEW_COLUMNS',
+      numrows: 'VIEW_ROWS',
+      zoom: 'PLOT_ZOOM',
+    }),
+
     rows: {
       default: [],
       async get() {
@@ -62,8 +59,6 @@ export default {
     currentTimeStep: {
       immediate: true,
       handler () {
-        if (this.currentTimeStep >= 1)
-          this.step = this.currentTimeStep;
         this.preCacheImages();
         this.react();
       }
@@ -96,6 +91,14 @@ export default {
   },
 
   methods: {
+    ...mapActions({
+      updateZoom: 'PLOT_ZOOM_VALUES_UPDATED',
+    }),
+
+    ...mapMutations({
+      updateCellCount: 'PLOT_VISIBLE_CELL_COUNT_SET'
+    }),
+
     preventDefault: function (event) {
       event.preventDefault();
     },
@@ -120,7 +123,8 @@ export default {
       if (this.initialLoad) {
         // Not sure why this level of parent chaining is required
         // to get the app to be able to hear the event.
-        this.$parent.$parent.$parent.$parent.$emit("data-loaded", this.rows.length, this.itemId);
+        this.$parent.$parent.$parent.$parent.$emit(
+          "data-loaded", this.rows.length, this.itemId, this.loadedFromView);
         this.initialLoad = false;
       }
     },
@@ -139,7 +143,13 @@ export default {
       event.preventDefault();
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
       this.itemId = items[0]._id;
+      this.loadedFromView = false;
       this.$root.$children[0].$emit('item-added', this.itemId);
+    },
+
+    loadTemplateGallery: function (itemId) {
+      this.itemId = itemId;
+      this.loadedFromView = true;
     },
 
     preCacheImages: function () {
@@ -148,14 +158,14 @@ export default {
         return;
       }
       // Find index of current time step
-      let idx = this.rows.findIndex(file => file.step === this.step);
+      let idx = this.rows.findIndex(file => file.step === this.currentTimeStep);
       if (idx < 0) {
-        let prevStep = this.step - 1;
+        let prevStep = this.currentTimeStep - 1;
         while (prevStep > 0 && idx < 0) {
           idx = this.rows.findIndex(file => file.step === prevStep);
           prevStep -= 1;
         }
-        let nextStep = this.step + 1;
+        let nextStep = this.currentTimeStep + 1;
         while (nextStep <= this.maxTimeStep && idx < 0) {
           idx = this.rows.findIndex(file => file.step === nextStep);
           nextStep += 1;
@@ -211,7 +221,7 @@ export default {
     },
 
     react: function () {
-      let nextImage = this.loadedImages.find(img => img.timestep == this.step);
+      let nextImage = this.loadedImages.find(img => img.timestep == this.currentTimeStep);
       if (isNil(nextImage) && this.loadedImages.length == 1)
         nextImage = this.loadedImages[0];
       if (!isNil(nextImage)) {
@@ -254,11 +264,11 @@ export default {
     },
   },
 
-  mounted() {
-    this.$root.$children[0].$emit('gallery-count-changed', 1);
+  mounted () {
+    this.updateCellCount(1);
   },
 
   destroyed() {
-    this.$root.$children[0].$emit('gallery-count-changed', -1);
+    this.updateCellCount(-1);
   }
 };

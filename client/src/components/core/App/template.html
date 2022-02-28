@@ -59,11 +59,12 @@
                         :disabled="!dataLoaded"> arrow_back_ios </v-icon>
               </v-col>
               <v-col :sm="10">
-                <v-slider v-model="currentTimeStep"
-                          :min="1"
+                <v-slider :min="1"
                           :max="maxTimeStep"
                           :disabled="!dataLoaded"
-                          height="1px" />
+                          height="1px"
+                          :value="currentTimeStep"
+                          @change="updateTimeStep"/>
               </v-col>
               <v-col :sm="1" class="text-xs-center">
                 <v-icon v-on:click="incrementTimeStep(true)"
@@ -80,12 +81,13 @@
                         :disabled="!dataLoaded"> &#9208; </v-icon>
               </v-col>
               <v-col :sm="6" class="text-xs-center">
-                <input v-model="currentTimeStep"
-                       type="number"
+                <input type="number"
                        min="1"
                        :max="maxTimeStep"
                        size="4"
-                       :disabled="!dataLoaded">
+                       :disabled="!dataLoaded"
+                       :value="currentTimeStep"
+                       @change="(e) => {updateTimeStep(e.target.value)}"/>
               </v-col>
             </v-row>
             <v-row>
@@ -116,12 +118,6 @@
             </v-row>
             <view-controls
               :imageGallery.sync="$refs.imageGallery"
-              :numrows.sync="numrows"
-              :numcols.sync="numcols"
-              :lastSaved.sync="lastSaved"
-              :step.sync="currentTimeStep"
-              :simulation.sync="simulation"
-              :run.sync="run_id"
             />
           </v-container>
         </v-col>
@@ -139,10 +135,7 @@
               <v-col v-bind:key="j"
                      v-bind:style="{ width: cellWidth, height: cellHeight, padding: '0' }">
                 <image-gallery ref="imageGallery"
-                              :currentTimeStep.sync="currentTimeStep"
                               :maxTimeStep.sync="maxTimeStep"
-                              :numrows.sync="numrows"
-                              :numcols.sync="numcols"
                               v-bind:globalRanges="globalRanges"
                               v-bind:style="{padding: '0 0 0 3px'}"
                               v-bind:class="[paused ? 'show-toolbar' : 'hide-toolbar']"
@@ -175,13 +168,13 @@
       Movie Generation Failed
     </v-snackbar>
   </div>
-  <v-dialog v-model="loadAutoSavedViewDialog" persistent max-width="300">
+  <v-dialog v-model="autoSavedViewDialog" persistent max-width="300">
     <v-card>
       <v-card-title class="headline">Load auto-saved view?</v-card-title>
       <v-card-text>An auto-saved view has been found for this run. Would you like to load it now?</v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn text @click.stop="loadAutoSavedViewDialog = false">Cancel</v-btn>
+        <v-btn text @click.stop="setAutoSavedViewDialog(false)">Cancel</v-btn>
         <v-btn text @click.stop="loadAutoSavedView">Load View</v-btn>
       </v-card-actions>
     </v-card>

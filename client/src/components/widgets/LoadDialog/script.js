@@ -1,3 +1,5 @@
+import { mapActions, mapGetters, mapMutations } from 'vuex';
+
 export default {
   inject: ['girderRest'],
 
@@ -13,22 +15,23 @@ export default {
     };
   },
 
-  props: {
-    views: {
-      type: Array,
-      default: () => [],
-    },
-    visible: {
-      type: Boolean,
-      default: false,
-    },
-    meta: {
-      type: Object,
-      default: () => {},
-    },
-  },
-
   computed: {
+    ...mapGetters({
+      visible: 'UI_SHOW_LOAD_DIALOG',
+      meta: 'VIEW_META',
+      views: 'VIEW_LIST_ALL',
+    }),
+    loadDialog: {
+      get() {
+        return this.visible;
+      },
+      set(value) {
+        this.setShowLoadDialog(value);
+        if (!value) {
+          this.$emit('close');
+        }
+      },
+    },
     headers() {
       return [
         {text: 'View Name', value: 'name'},
@@ -37,16 +40,6 @@ export default {
         {text: 'Date Created', value: 'created'},
         {text: 'Actions', value: 'actions', sortable: false}
       ]
-    },
-    loadDialog: {
-      get () {
-        return this.visible;
-      },
-      set (value) {
-        if (!value) {
-          this.$emit('close');
-        }
-      }
     },
     filteredViews() {
       return this.views.filter((item) => {
@@ -63,23 +56,30 @@ export default {
   },
 
   methods: {
+    ...mapActions({
+      fetchAllViews: 'VIEW_FETCH_ALL_AVAILABLE',
+      loadView: 'VIEW_LOADED',
+    }),
+    ...mapMutations({
+      setShowLoadDialog: 'UI_SHOW_LOAD_DIALOG_SET',
+    }),
     clearSelection() {
       this.selection = null;
-      if (this.loadDialog) {
-        this.loadDialog = false;
+      if (this.visible) {
+        this.setShowLoadDialog(false);
       }
     },
     async deleteView() {
       this.dialogDelete = false;
       await this.girderRest.delete(`/view/${this.selection._id}`)
         .then(() => {
-          this.$parent.$emit('views-modified');
+          this.fetchAllViews();
           this.selection = null;
         })
         .catch((error) => { console.log('error: ', error) });
     },
     load() {
-      this.$root.$children[0].$emit('view-selected', this.selection);
+      this.loadView(this.selection);
       this.clearSelection();
     },
     async loadAsTemplate() {
@@ -113,7 +113,7 @@ export default {
         return null;
       });
 
-      this.$root.$children[0].$emit('view-selected', templateView);
+      this.loadView(templateView);
       this.clearSelection();
     },
     rowSelected(selection) {
@@ -160,9 +160,7 @@ export default {
       var formData = new FormData();
       formData.set('public', !this.selection.public);
       await this.girderRest.put(`/view/${this.selection._id}`, formData)
-        .then(() => {
-          this.$parent.$emit('views-modified');
-        })
+        .then(() => { this.fetchAllViews(); })
         .catch((error) => { console.log('error: ', error) });
     },
     canBeTemplate() {

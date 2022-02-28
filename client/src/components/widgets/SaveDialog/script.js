@@ -1,4 +1,4 @@
-import { saveLayout } from "../../../utils/utilityFunctions";
+import { mapActions, mapGetters, mapMutations } from 'vuex';
 
 export default {
   inject: ['girderRest'],
@@ -16,47 +16,32 @@ export default {
   },
 
   props: {
-    columns: {
-      type: Number,
-      default: 1,
-    },
-    currentStep: {
-      type: Number,
-      default: 1,
-    },
     layout: {
       type: Array,
       default: () => [],
     },
-    rows: {
-      type: Number,
-      default: 1,
-    },
-    visible: {
-      type: Boolean,
-      default: false,
-    },
-    viewInfo: {
-      type: Object,
-      default: () => ({}),
-    },
-    meta: {
-      type: Object,
-      default: () => ({}),
-    },
   },
 
   computed: {
+    ...mapGetters({
+      columns: 'VIEW_COLUMNS',
+      items: 'VIEW_ITEMS',
+      meta: 'VIEW_METAS',
+      rows: 'VIEW_ROWS',
+      visible: 'UI_SHOW_SAVE_DIALOG',
+      viewInfo: 'VIEW_INFO',
+    }),
     saveDialog: {
-      get () {
-        return this.visible
+      get() {
+        return this.visible;
       },
-      set (value) {
+      set(value) {
+        this.setShowSaveDialog(value);
         if (!value) {
-          this.$emit('close')
-          this.newViewName = ''
+          this.$emit('close');
+          this.newViewName = '';
         }
-      }
+      },
     },
     viewNames() {
       return Object.keys(this.viewInfo || {});
@@ -64,23 +49,25 @@ export default {
   },
 
   methods: {
+    ...mapActions({
+      createView: 'VIEW_CREATED',
+      setItems: 'VIEW_BUILD_ITEMS_OBJECT',
+      updateView: 'VIEW_UPDATE_EXISTING',
+    }),
+    ...mapMutations({
+      setPublic: 'VIEW_PUBLIC_SET',
+      setShowSaveDialog: 'UI_SHOW_SAVE_DIALOG_SET',
+    }),
     save(newView) {
-      const isPublic = (this.visibility === 'public');
-      const formData = saveLayout(
-        this.layout,
-        this.newViewName,
-        this.rows,
-        this.columns,
-        this.meta,
-        this.currentStep,
-        isPublic);
+      const isPublicView = this.visibility === 'public';
+      this.setPublic(isPublicView);
+      this.setItems(this.layout);
       if (newView) {
-        this.girderRest.post('/view', formData);
+        this.createView(this.newViewName);
       } else {
-        const viewId = this.viewInfo[this.newViewName];
-        this.girderRest.put(`/view/${viewId}`, formData);
+        this.updateView(this.newViewName);
       }
-      this.saveDialog = false;
+      this.setShowSaveDialog(false);
     },
     checkForOverwrite(event) {
       event.preventDefault()
