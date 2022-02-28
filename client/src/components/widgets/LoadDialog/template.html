@@ -1,4 +1,8 @@
 <v-dialog v-model="loadDialog" max-width="700px">
+  <v-tabs v-model="activeTab">
+    <v-tab :key="0">All Views</v-tab>
+    <v-tab :key="1">My Views</v-tab>
+  </v-tabs>
   <v-card>
     <v-card-title>
       Load New View
@@ -23,7 +27,7 @@
                 hide-default-footer
                 height="300px"
                 :headers="headers"
-                :items="views"
+                :items="filteredViews"
                 :item-class="rowClass"
                 :search="search"
                 @click:row="rowSelected"
@@ -35,20 +39,72 @@
                   <span>{{new Date(item.created).toLocaleDateString()}}</span>
                 </template>
                 <template v-slot:item.actions="{item}">
-                  <v-icon v-show="viewCreatedByUser(item)" small @click='dialogDelete=true'>
-                    mdi-delete
-                  </v-icon>
+                  <v-tooltip left>
+                    <template v-slot:activator="{on}">
+                      <v-icon
+                        v-on="on"
+                        v-show="viewCreatedByUser(item)"
+                        small
+                        @click='dialogDelete=true'
+                      >
+                        mdi-delete
+                      </v-icon>
+                    </template>
+                    <span>Delete View</span>
+                  </v-tooltip>
+                  <v-tooltip right>
+                    <template v-slot:activator="{on}">
+                      <v-icon
+                        v-on="on"
+                        v-show="viewCreatedByUser(item) && viewIsPublic(item)"
+                        small
+                        @click='dialogTogglePublic=true'
+                      >
+                        mdi-earth
+                      </v-icon>
+                    </template>
+                    <span>Make View Private</span>
+                  </v-tooltip>
+                  <v-tooltip right>
+                    <template v-slot:activator="{on}">
+                      <v-icon
+                        v-on="on"
+                        v-show="viewCreatedByUser(item) && !viewIsPublic(item)"
+                        small
+                        @click='dialogTogglePublic=true'
+                      >
+                        mdi-lock
+                      </v-icon>
+                    </template>
+                    <span>Make View Public</span>
+                  </v-tooltip>
                 </template>
               </v-data-table>
             </v-col>
           </v-row>
-          <v-dialog v-model="dialogDelete" max-width="500px">
+          <v-dialog persistent v-model="dialogDelete" max-width="500px">
             <v-card>
               <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn text @click="dialogDelete=false">Cancel</v-btn>
                 <v-btn text @click="deleteView">OK</v-btn>
+                <v-spacer></v-spacer>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+          <v-dialog persistent v-model="dialogTogglePublic" max-width="550px">
+            <v-card>
+              <v-card-title v-if="viewIsPublic(selection)" class="text-h5">
+                Are you sure you would like to make this view private?
+              </v-card-title>
+              <v-card-title v-else class="text-h5">
+                Are you sure you would like to make this view public?
+              </v-card-title>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn text @click="dialogTogglePublic=false">Cancel</v-btn>
+                <v-btn text @click="toggleViewStatus">OK</v-btn>
                 <v-spacer></v-spacer>
               </v-card-actions>
             </v-card>
@@ -60,6 +116,9 @@
       <v-spacer />
       <v-btn text @click.stop="clearSelection()">
         Cancel
+      </v-btn>
+      <v-btn :disabled="!canBeTemplate()" text @click.stop="loadAsTemplate()">
+        Load as Template
       </v-btn>
       <v-btn text :disabled="selection===null" @click.stop="load()">
         Load

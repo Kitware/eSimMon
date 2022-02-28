@@ -13,7 +13,7 @@ export default {
     return {
       showSaveDialog: false,
       showLoadDialog: false,
-      viewNames: [],
+      viewInfo: {},
     };
   },
 
@@ -30,6 +30,22 @@ export default {
       type: Number,
       default: 1,
     },
+    lastSaved: {
+      type: String,
+      default: '',
+    },
+    step: {
+      type: Number,
+      default: 1,
+    },
+    simulation: {
+      type: String,
+      default: '',
+    },
+    run: {
+      type: String,
+      default: '',
+    },
   },
 
   created: async function () {
@@ -41,9 +57,11 @@ export default {
       await this.girderRest.get('/view')
         .then(({ data }) => {
           this.views = data;
-          this.viewNames = [];
+          this.viewInfo = {};
           data.forEach((view) => {
-            this.viewNames.push(view.name);
+            if (this.viewCreatedByUser(view)) {
+              this.viewInfo[view.name] = view._id;
+            }
           });
         })
         .catch((error) => {
@@ -53,10 +71,20 @@ export default {
     async saveView() {
       await this.getViews();
       this.showSaveDialog = true;
+      this.$root.$children[0].$emit("pause-gallery");
     },
     async loadView() {
       await this.getViews();
       this.showLoadDialog = true;
-    },    
+    },
+    viewCreatedByUser(item) {
+      return this.girderRest.user._id === item.creatorId;
+    }
+  },
+
+  computed: {
+    meta() {
+      return { simulation: this.simulation, run: this.run };
+    }
   },
 };

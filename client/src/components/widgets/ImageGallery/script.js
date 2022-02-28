@@ -143,6 +143,7 @@ export default {
       event.preventDefault();
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
       this.itemId = items[0]._id;
+      this.$root.$children[0].$emit('item-added', this.itemId);
     },
 
     preCacheImages: function () {
@@ -257,7 +258,11 @@ export default {
     },
   },
 
-  mounted () {
-    this.$root.$children[0].$emit("gallery-mounted");
+  mounted() {
+    this.$root.$children[0].$emit('gallery-count-changed', 1);
   },
+
+  destroyed() {
+    this.$root.$children[0].$emit('gallery-count-changed', -1);
+  }
 };

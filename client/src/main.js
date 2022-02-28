@@ -4,7 +4,7 @@ import {isNil} from 'lodash';
 
 Vue.use(Girder);
 
-let apiRoot = `${window.location}/api/v1`
+let apiRoot = `${window.location}api/v1`
 let authenticateWithCredentials = false;
 if (!isNil(process.env.VUE_APP_API_URL)) {
   apiRoot = process.env.VUE_APP_API_URL;

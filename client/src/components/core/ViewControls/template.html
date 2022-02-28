@@ -1,54 +1,64 @@
-<v-row>
-  <v-col :sm="4" v-bind:style="{alignItems: 'center'}">
-    <v-tooltip top>
-      <template v-slot:activator="{on, attrs}">
-        <v-button icon v-on:click="loadView()">
-          <v-icon
-            v-on="on"
-            v-bind="attrs"
-          >
-            mdi-view-grid-outline
-          </v-icon>
-        </v-button>
-      </template>
-      <span>Load View</span>
-    </v-tooltip>
-  </v-col>
-  <v-col :sm="4" v-bind:style="{alignItems: 'center'}">
-    <v-tooltip top>
-      <template v-slot:activator="{on, attrs}">
-        <v-button icon @click.stop="saveView()">
-          <v-icon v-on="on" v-bind="attrs">
-            mdi-view-grid-plus-outline
-          </v-icon>
-        </v-button>
-      </template>
-    <span>Save View</span>
-    </v-tooltip>
-  </v-col>
-  <v-col :sm="4" v-bind:style="{alignItems: 'center'}">
-    <v-tooltip top>
-      <template v-slot:activator="{on, attrs}">
-        <v-button icon v-on:click="girderRest.logout()">
-          <v-icon v-on="on" v-bind="attrs">
-            $vuetify.icons.logout
-          </v-icon>
-        </v-button>
-      </template>
-    <span>Logout</span>
-    </v-tooltip>
-  </v-col>
-  <save-dialog
-    :visible="showSaveDialog"
-    :viewNames="viewNames"
-    :layout="imageGallery"
-    :rows="numrows"
-    :columns="numcols"
-    @close="showSaveDialog=false"
-  />
-  <load-dialog
-    :visible="showLoadDialog"
-    :views="views"
-    @close="showLoadDialog=false"
-  />
-</v-row>
+<v-column>
+  <v-row>
+    <v-col :sm="4" v-bind:style="{alignItems: 'center'}">
+      <v-tooltip top>
+        <template v-slot:activator="{on, attrs}">
+          <v-button icon v-on:click="loadView()">
+            <v-icon
+              v-on="on"
+              v-bind="attrs"
+            >
+              mdi-view-grid-outline
+            </v-icon>
+          </v-button>
+        </template>
+        <span>Load View</span>
+      </v-tooltip>
+    </v-col>
+    <v-col :sm="4" v-bind:style="{alignItems: 'center'}">
+      <v-tooltip top>
+        <template v-slot:activator="{on, attrs}">
+          <v-button icon @click.stop="saveView()">
+            <v-icon v-on="on" v-bind="attrs">
+              mdi-view-grid-plus-outline
+            </v-icon>
+          </v-button>
+        </template>
+      <span>Save View</span>
+      </v-tooltip>
+    </v-col>
+    <v-col :sm="4" v-bind:style="{alignItems: 'center'}">
+      <v-tooltip top>
+        <template v-slot:activator="{on, attrs}">
+          <v-button icon v-on:click="girderRest.logout()">
+            <v-icon v-on="on" v-bind="attrs">
+              $vuetify.icons.logout
+            </v-icon>
+          </v-button>
+        </template>
+      <span>Logout</span>
+      </v-tooltip>
+    </v-col>
+    <save-dialog
+      :visible="showSaveDialog"
+      :viewInfo="viewInfo"
+      :layout="imageGallery"
+      :rows="numrows"
+      :columns="numcols"
+      :currentStep="step"
+      :meta="meta"
+      @close="showSaveDialog=false"
+    />
+    <load-dialog
+      :visible="showLoadDialog"
+      :views="views"
+      :meta="meta"
+      @close="showLoadDialog=false"
+    />
+  </v-row>
+  <v-row v-if="lastSaved">
+    <span v-bind:style="{fontSize: 'small', opacity: '0.5'}">
+      View Autosaved: {{ new Date(lastSaved).toLocaleTimeString() }}
+    </span>
+  </v-row>
+</v-column>

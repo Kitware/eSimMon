@@ -7,6 +7,7 @@ import { GirderAuthentication as GirderAuthentication } from '@girder/components
 import GirderFileManager from '../../widgets/GirderFileManager';
 import ViewControls from '../ViewControls';
 import RangeDialog from '../../widgets/RangeDialog';
+import { saveLayout } from '../../../utils/utilityFunctions';
 
 export default {
   name: 'App',
@@ -48,6 +49,14 @@ export default {
       globalRanges: {},
       paramIsJson: false,
       showRangeDialog: false,
+      run_id: undefined,
+      simulation: undefined,
+      autoSavedView: null,
+      lastSaved: '',
+      loadAutoSavedViewDialog: false,
+      viewGrid: null,
+      autosave_run: false,
+      galleryCount: 0,
     };
   },
 
@@ -155,16 +164,23 @@ export default {
     initialDataLoaded(num_timesteps, itemId) {
       this.numLoadedGalleries += 1;
       if (this.dataLoaded) {
-        return;
+          return
       }
+
       this.dataLoaded = true;
       this.maxTimeStep = num_timesteps;
 
       // Setup polling to watch for new data.
       this.poll(itemId);
 
+      // Setup polling to autosave view
+      this.autosave();
+
       // Default to playing once a parameter has been selected
       this.togglePlayPause();
+
+      // Update step/play/pause state if initial data came from View
+      this.setViewStep();
     },
 
     lookupRunId(itemId) {
@@ -299,8 +315,9 @@ export default {
 
     viewSelected(view) {
       this.view = view;
-      const cols = parseInt(view.columns, 10)
-      const rows = parseInt(view.rows, 10)
+      const cols = parseInt(view.columns, 10);
+      const rows = parseInt(view.rows, 10);
+      this.viewGrid = cols * rows;
 
       if (this.numcols !== cols) {
         this.setColumns(cols);
@@ -308,16 +325,32 @@ export default {
       if (this.numrows !== rows) {
         this.setRows(rows);
       }
+      this.applyView(0);
     },
 
-    imageGalleryCreated() {
-      if (this.view) {
+    applyView(change) {
+      this.galleryCount += change;
+      if (this.galleryCount === this.viewGrid) {
         this.$refs.imageGallery.forEach((cell) => {
           const { row, col } = cell.$attrs;
-          cell.itemId = this.view.items[`${row}::${col}`]
+          const itemId = this.view.items[`${row}::${col}`];
+          if (itemId) {
+            cell.itemId = this.view.items[`${row}::${col}`];
+          } else {
+            cell.clearGallery()
+          }
         });
-        this.view = null;
+        this.setViewStep();
       }
+    },
+
+    setViewStep() {
+      if (!this.dataLoaded)
+        return
+      this.currentTimeStep = parseInt(this.view.step, 10);
+      this.paused = true;
+      this.view = null;
+      this.viewGrid = null;
     },
 
     resetView() {
@@ -342,15 +375,67 @@ export default {
         }
       });
     },
+
+    autosave() {
+      this._autosave = setTimeout(async () => {
+        try {
+          if (this.autosave_run) {
+            const userId = this.girderRest.user._id;
+            const name = `${this.simulation}_${this.run_id}_${userId}`;
+            const meta = {simulation: this.simulation, run: this.run_id};
+            const formData = saveLayout(
+              this.$refs.imageGallery,
+              name,
+              this.numrows,
+              this.numcols,
+              meta,
+              this.currentTimeStep,
+              false);
+            // Check if auto-saved view already exists
+            const { data } = await this.girderRest.get(
+              `/view?text=${name}&exact=true&limit=50&sort=name&sortdir=1`);
+            if (data.length) {
+              // If it does, update it
+              this.lastSaved = (
+                await this.girderRest.put(`/view/${data[0]._id}`, formData)
+                .then(() => { return new Date(); }));
+            } else {
+              // If not, create it
+              this.lastSaved = await this.girderRest.post('/view', formData)
+              .then(() => { return new Date(); });
+            }
+          }
+        } finally {
+          this.autosave();
+        }
+      }, 30000);
+    },
+
+    async setRun(itemId) {
+      const { data } = await this.girderRest.get(`/item/${itemId}/rootpath`);
+      const runIdx = data.length - 2;
+      const simulationIdx = runIdx - 1;
+      this.run_id = data[runIdx].object._id;
+      this.simulation = data[simulationIdx].object._id;
+      this.autosave_run = true;
+    },
+
+    loadAutoSavedView() {
+      this.viewSelected(this.autoSavedView);
+      this.autoSavedView = null;
+      this.loadAutoSavedViewDialog = false;
+    }
   },
 
   created: async function () {
     this.$on('data-loaded', this.initialDataLoaded);
     this.$on('gallery-ready', this.incrementReady);
     this.$on('param-selected', this.contextMenu);
-    this.$on('gallery-mounted', this.imageGalleryCreated);
     this.$on('view-selected', this.viewSelected);
     this.$on('range-updated', this.setGlobalRange);
+    this.$on('pause-gallery', () => {this.paused = true});
+    this.$on('item-added', this.setRun);
+    this.$on('gallery-count-changed', this.applyView);
   },
 
   asyncComputed: {
@@ -395,6 +480,38 @@ export default {
     loggedOut(noCurrentUser) {
       if (noCurrentUser && this.numLoadedGalleries > 0) {
         this.resetView();
+      }
+    },
+
+    async location(current) {
+      if (current._modelType !== 'folder') {
+        return;
+      }
+
+      const { data } = await this.girderRest.get(
+        `/folder/${current._id}/rootpath`);
+      let runFolder = current;
+      let simFolder = data[data.length - 1].object;
+      if (!('meta' in runFolder && data.length > 1)) {
+        runFolder = data[data.length - 1].object;
+        simFolder = data[data.length - 2].object;
+      }
+
+      if ('meta' in runFolder && 'currentTimestep' in runFolder.meta) {
+        // This is a run folder. Check for auto-saved view to load and
+        // update simulation and run id.
+        this.simulation = simFolder._id;
+        this.run_id = runFolder._id;
+        this.autosave_run = false;
+        const userId = this.girderRest.user._id;
+        const viewName = `${this.simulation}_${this.run_id}_${userId}`;
+        const { data } = await this.girderRest.get(
+          `/view?text=${viewName}&exact=true&limit=50&sort=name&sortdir=1`)
+        const view = data[0]
+        if (view) {
+          this.loadAutoSavedViewDialog = true;
+          this.autoSavedView = view;
+        }
       }
     }
   },
