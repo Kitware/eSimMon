@@ -1,4 +1,4 @@
-Flask
+fastapi
 ffmpeg-python
-Flask-Cors
 girder-client
+python-dotenv
