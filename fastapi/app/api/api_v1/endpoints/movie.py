@@ -3,21 +3,17 @@ import os
 import tempfile
 
 from fastapi.responses import FileResponse
-from girder_client import GirderClient
 
-from app.core.config import settings
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header
+
+from .utils import get_girder_client
 
 router = APIRouter()
 
 
 @router.get("/{id}", response_class=FileResponse)
 def create_movie(id: str, girderToken: str = Header(None)):
-    if girderToken is None:
-        raise HTTPException(status_code=400, detail="Invalid token or parameter ID.")
-
-    gc = GirderClient(apiUrl=settings.GIRDER_API_URL)
-    gc.setToken(girderToken)
+    gc = get_girder_client(girderToken)
     with tempfile.TemporaryDirectory() as tmpdir:
         gc.downloadItem(id, tmpdir)
         item_name = os.listdir(tmpdir)[0]
