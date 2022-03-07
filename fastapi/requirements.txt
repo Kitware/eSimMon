@@ -1,4 +1,5 @@
 fastapi
 ffmpeg-python
 girder-client
-python-dotenv
+pydantic[dotenv]
+uvicorn[standard]
