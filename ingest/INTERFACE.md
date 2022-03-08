@@ -39,6 +39,7 @@ This is for a project. If we have multiple projects, then we need multiple dashb
 
 ```json
 [{
+    "group_name": "myGroup",
     "variable_name": "myVar",
     "image_name": "path/in/archive/myVarImage.png"
 }]
