@@ -10,7 +10,7 @@
           absolute
           offset-y>
     <v-list>
-      <v-list-item dense @click="fetchMovie">
+      <v-list-item  v-if="!paramIsJson" dense @click="fetchMovie">
         <v-list-item-title>
           Download Movie for {{ parameter }}
         </v-list-item-title>
