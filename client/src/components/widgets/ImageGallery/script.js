@@ -2,6 +2,14 @@ import Plotly from 'plotly.js-basic-dist-min';
 import { isNil, isEqual } from 'lodash';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
 
+function parseZoomValues(data) {
+  const zoomLevel = {
+    xAxis: [data['xaxis.range[0]'], data['xaxis.range[1]']],
+    yAxis: [data['yaxis.range[0]'], data['yaxis.range[1]']]
+  }
+  return zoomLevel;
+}
+
 export default {
   name: "plotly",
 
@@ -35,9 +43,9 @@ export default {
   asyncComputed: {
     ...mapGetters({
       currentTimeStep: 'PLOT_TIME_STEP',
+      globalZoom: 'PLOT_ZOOM',
       numcols: 'VIEW_COLUMNS',
       numrows: 'VIEW_ROWS',
-      zoom: 'PLOT_ZOOM',
     }),
 
     rows: {
@@ -230,11 +238,14 @@ export default {
           if (this.itemId in this.globalRanges) {
             const range = this.globalRanges[`${this.itemId}`];
             if (range) {
-              nextImage.layout.yaxis.autorange = false;
               nextImage.layout.yaxis.range = range;
+            } else if(this.zoom) {
+              nextImage.layout.yaxis.range = this.zoom.yAxis;
             }
           }
           Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {autosize: true});
+          if (!this.eventHandlersSet)
+            this.setEventHandlers();
           this.json = true;
         } else {
           this.json = false;
@@ -261,6 +272,13 @@ export default {
       this.json = true;
       this.image = null;
       this.initialLoad = true;
+    },
+
+    setEventHandlers() {
+      this.$refs.plotly.on('plotly_relayout', (eventdata) => {
+        this.zoom = parseZoomValues(eventdata);
+      });
+      this.eventHandlersSet = true;
     },
   },
 

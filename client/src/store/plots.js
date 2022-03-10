@@ -30,8 +30,8 @@ export default {
     PLOT_ZOOM_VALUES_UPDATED({commit}, zoomLevel) {
       if (zoomLevel) {
         zoomLevel = {
-          xAxis: [zoomVals['xaxis.range[0]'], zoomVals['xaxis.range[1]']],
-          yAxis: [zoomVals['yaxis.range[0]'], zoomVals['yaxis.range[1]']]
+          xAxis: [zoomLevel['xaxis.range[0]'], zoomLevel['xaxis.range[1]']],
+          yAxis: [zoomLevel['yaxis.range[0]'], zoomLevel['yaxis.range[1]']]
         }
       }
       commit('PLOT_ZOOM_SET', zoomLevel);
