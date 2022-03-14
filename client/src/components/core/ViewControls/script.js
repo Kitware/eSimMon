@@ -14,6 +14,7 @@ export default {
       showSaveDialog: false,
       showLoadDialog: false,
       viewInfo: {},
+      views: []
     };
   },
 

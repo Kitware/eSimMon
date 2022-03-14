@@ -1,16 +1,16 @@
-<v-column>
+<v-col>
   <v-row>
     <v-col :sm="4" v-bind:style="{alignItems: 'center'}">
       <v-tooltip top>
         <template v-slot:activator="{on, attrs}">
-          <v-button icon v-on:click="loadView()">
+          <v-btn icon v-on:click="loadView()">
             <v-icon
               v-on="on"
               v-bind="attrs"
             >
               mdi-view-grid-outline
             </v-icon>
-          </v-button>
+          </v-btn>
         </template>
         <span>Load View</span>
       </v-tooltip>
@@ -18,11 +18,11 @@
     <v-col :sm="4" v-bind:style="{alignItems: 'center'}">
       <v-tooltip top>
         <template v-slot:activator="{on, attrs}">
-          <v-button icon @click.stop="saveView()">
+          <v-btn icon @click.stop="saveView()">
             <v-icon v-on="on" v-bind="attrs">
               mdi-view-grid-plus-outline
             </v-icon>
-          </v-button>
+          </v-btn>
         </template>
       <span>Save View</span>
       </v-tooltip>
@@ -30,11 +30,11 @@
     <v-col :sm="4" v-bind:style="{alignItems: 'center'}">
       <v-tooltip top>
         <template v-slot:activator="{on, attrs}">
-          <v-button icon v-on:click="girderRest.logout()">
+          <v-btn icon v-on:click="girderRest.logout()">
             <v-icon v-on="on" v-bind="attrs">
               $vuetify.icons.logout
             </v-icon>
-          </v-button>
+          </v-btn>
         </template>
       <span>Logout</span>
       </v-tooltip>
@@ -61,4 +61,4 @@
       View Autosaved: {{ new Date(lastSaved).toLocaleTimeString() }}
     </span>
   </v-row>
-</v-column>
+</v-col>

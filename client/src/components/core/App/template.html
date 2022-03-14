@@ -158,19 +158,19 @@
   <div>
     <v-snackbar
       v-model="movieRequested"
-      :color="green"
       :timeout="5000"
       bottom
       right
+      v-bind:style="{color: 'green'}"
     >
       Movie Download Requested
     </v-snackbar>
     <v-snackbar
       v-model="generationFailed"
-      :color="red"
       :timeout="5000"
       bottom
       right
+      v-bind:style="{color: 'red'}"
     >
       Movie Generation Failed
     </v-snackbar>

@@ -494,7 +494,7 @@ export default {
       let simFolder = data[data.length - 1].object;
       if (!('meta' in runFolder && data.length > 1)) {
         runFolder = data[data.length - 1].object;
-        simFolder = data[data.length - 2].object;
+        simFolder = data[data.length - 2]?.object;
       }
 
       if ('meta' in runFolder && 'currentTimestep' in runFolder.meta) {
