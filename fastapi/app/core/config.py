@@ -21,7 +21,7 @@ class Settings(BaseSettings):
         raise ValueError(v)
 
     PROJECT_NAME: str
-    GIRDER_API_URL: str = "https://localhost:8080/api/v1/"
+    GIRDER_API_URL: str = "http://localhost:8080/api/v1/"
 
     class Config:
         case_sensitive = True
