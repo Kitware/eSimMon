@@ -18,7 +18,7 @@ Bringing up the stack will create a series of Docker containers that allow the u
 - ```docker-compose.client.yml``` - Builds the client application and uses NGINX to make the app available on ```localhost:9090```.
 - ```docker-compose.watch.yml``` - Runs a Python script to watch the simulation assets site (where the data is being hosted) and upload that data to Girder as it comes in.
 - ```docker-compose.watch-standalone.yml``` - Runs the same monitoring code as ```docker-compose.watch.yml```, but does not require that the ```Girder``` container be run as well. Used to run the monitoring service outside of the stack.
-- ```docker-compose.movie.yml``` - A Flask service that uses FFmpeg to create movies of the selected parameter's data, then downloads them to the local machine.
+- ```docker-compose.fastapi.yml``` - A FastAPI service that uses FFmpeg to create movies of the selected parameter's data, then downloads them to the local machine. This service also handles extracting data from ADIOS BP files.
 - ```docker-compose.demo.yml``` - A static simulation assets site that has been pre-populated with sample data and can be used as a simple way to populate and interact with the dashboard. This is set to be the default ```UPLOAD_SITE_URL```, which is what the ingest script in the ```watch``` container will watch for new data.
 
 
@@ -49,7 +49,7 @@ To bring up the stack each time run the following command:
     docker-compose -p esimmon \
     -f docker-compose.client.yml \
     -f docker-compose.girder.yml \
-    -f docker-compose.movie.yml \
+    -f docker-compose.fastapi.yml \
     -f docker-compose.watch.yml \
     -f docker-compose.demo.yml up
 
