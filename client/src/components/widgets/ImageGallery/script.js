@@ -27,7 +27,7 @@ export default {
     },
   },
 
-  inject: ['girderRest'],
+  inject: ['girderRest', 'fastRestUrl'],
 
   data() {
     return {
@@ -105,23 +105,14 @@ export default {
         return;
       }
 
-      const endpoint = `item/${this.itemId}/files?limit=0`;
-      const response = await this.callEndpoint(endpoint);
+
+
+      const response = await this.callFastEndpoint(`variables/${this.itemId}/timesteps`);
 
       this.rows = await Promise.all(response.map(async function(val) {
-        let info =  await this.callEndpoint(`file/${val._id}`);
-        let name = info.name.split('.');
-        if (name[1] == 'json') {
-          let img = await this.callEndpoint(
-            `file/${val._id}/download?contentDisposition=inline`);
-          return {'img': img, 'step': parseInt(name[0], 10), 'ext': name[1]};
-        } else {
-          return {
-            'img': this.girderRest.apiRoot + "/file/" + val._id + "/download?contentDisposition=inline",
-            'step': parseInt(name[0], 10),
-            'ext': name[1]
-          }
-        }
+        let img = await this.callFastEndpoint(`variables/${this.itemId}/timesteps/${val}/plot`);
+
+        return {'img': img, 'step': val, 'ext': 'json'};
       }, this));
 
       this.preCacheImages();
@@ -136,6 +127,11 @@ export default {
 
     callEndpoint: async function (endpoint) {
       const { data } = await this.girderRest.get(endpoint);
+      return data;
+    },
+
+    callFastEndpoint: async function (endpoint) {
+      const { data } = await this.girderRest.get(`${this.fastRestUrl}/${endpoint}`);
       return data;
     },
 

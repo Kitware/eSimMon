@@ -11,9 +11,9 @@ if (!isNil(process.env.VUE_APP_API_URL)) {
   authenticateWithCredentials = true;
 }
 
-let flaskRest = `http://localhost:5000/api`
-if (!isNil(process.env.VUE_APP_FLASK_API_URL)) {
-  flaskRest = process.env.VUE_APP_FLASK_API_URL;
+var fastRestUrl = `http://localhost:5000/api/v1`
+if (!isNil(process.env.VUE_APP_FASTAPI_API_URL)) {
+  fastRestUrl = process.env.VUE_APP_FASTAPI_API_URL;
 }
 
 let folderId = null;
@@ -30,7 +30,7 @@ Vue.config.productionTip = false
 
 girderRest.fetchUser().then(() => {
   new Vue({
-    provide: { girderRest, defaultLocation, flaskRest },
+    provide: { girderRest, defaultLocation, fastRestUrl },
     vuetify,
     render: h => h(App),
   }).$mount('#app')

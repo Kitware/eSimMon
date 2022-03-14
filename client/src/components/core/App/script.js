@@ -11,7 +11,7 @@ import { saveLayout } from '../../../utils/utilityFunctions';
 
 export default {
   name: 'App',
-  inject: ['girderRest', 'defaultLocation', 'flaskRest'],
+  inject: ['girderRest', 'defaultLocation', 'fastRestUrl'],
 
   components: {
     GirderAuthentication,
@@ -127,16 +127,9 @@ export default {
       const data = this.girderRest.get(endpoint)
                     .then(function(result) {
                       if (result && !self.cancel && result.data.length) {
-                        var offset = self.currentTimeStep ? self.currentTimeStep-1 : 1;
-                        endpoint = `item/${result.data[0]._id}/files?limit=1&offset=${offset}&sort=name&sortdir=1`;
-                        return new Promise((resolve) => {
-                          const file = self.girderRest.get(endpoint);
-                          resolve(file);
-                        });}
-                    })
-                    .then(function(result) {
-                      if (result && !self.cancel && result.data.length) {
-                        endpoint = `file/${result.data[0]._id}/download?contentDisposition=inline`;
+                        let timestep = self.currentTimeStep ? self.currentTimeStep-1 : 1;
+                        endpoint = `${self.fastRestUrl}/variables/${result.data[0]._id}/timesteps/${timestep}`;
+
                         return new Promise((resolve) => {
                           const data = self.girderRest.get(endpoint);
                           resolve(data);
@@ -287,7 +280,7 @@ export default {
       let name = this.parameter;
       this.movieRequested = true;
       axios({
-        url: `${this.flaskRest}/movie/${this.itemId}`,
+        url: `${this.fastRestUrl}/movie/${this.itemId}`,
         method: 'GET',
         headers: { 'girderToken': this.girderRest.token },
         responseType: 'blob'
