@@ -1,8 +1,10 @@
 import Vue from 'vue'
 import Girder, { RestClient, vuetify } from '@girder/components/src';
 import {isNil} from 'lodash';
+import VueMathjax from 'vue-mathjax';
 
 Vue.use(Girder);
+Vue.use(VueMathjax)
 
 let apiRoot = `${window.location}api/v1`
 let authenticateWithCredentials = false;

@@ -52,8 +52,9 @@
         </template>
       </v-combobox>
     </template>
-    <template #row-widget="props">
+    <template #row="props">
       <slot v-bind="props" name="row-widget" />
+      <vue-mathjax :formula="props.item.name"></vue-mathjax>
     </template>
   </girder-data-browser>
 </v-card>
