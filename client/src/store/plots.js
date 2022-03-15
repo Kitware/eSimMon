@@ -3,6 +3,8 @@ export default {
     zoom: null,
     currentTimeStep: 1,
     visibleCells: 0,
+    globalRanges: {},
+    itemId: null,
   },
   getters: {
     PLOT_ZOOM(state) {
@@ -13,6 +15,12 @@ export default {
     },
     PLOT_VISIBLE_CELL_COUNT(state) {
       return state.visibleCells;
+    },
+    PLOT_GLOBAL_RANGES(state) {
+      return state.globalRanges;
+    },
+    PLOT_CURRENT_ITEM_ID(state) {
+      return state.itemId;
     },
   },
   mutations: {
@@ -25,6 +33,12 @@ export default {
     PLOT_VISIBLE_CELL_COUNT_SET(state, val) {
       state.visibleCells += val;
     },
+    PLOT_GLOBAL_RANGES_SET(state, val) {
+      state.globalRanges = val;
+    },
+    PLOT_CURRENT_ITEM_ID_SET(state, val) {
+      state.itemId = val;
+    },
   },
   actions: {
     PLOT_ZOOM_VALUES_UPDATED({commit}, zoomLevel) {
@@ -35,6 +49,9 @@ export default {
         }
       }
       commit('PLOT_ZOOM_SET', zoomLevel);
-    }
+    },
+    PLOT_GLOBAL_RANGES_UPDATED({state}, range) {
+      state.globalRanges = {...state.globalRanges, [`${state.itemId}`]: range};
+    },
   },
 }

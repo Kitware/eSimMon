@@ -1,3 +1,5 @@
+import { mapActions } from "vuex";
+
 export default {
     inject: ['girderRest'],
 
@@ -34,14 +36,14 @@ export default {
       }
     },
     methods: {
+      ...mapActions({
+        updateGlobalRanges: 'PLOT_GLOBAL_RANGES_UPDATED'
+      }),
       save() {
-        const range = this.newEnd - this.newStart;
-        if (range < 1) {
-          this.$root.$children[0].$emit('range-updated', null);
-        } else {
-          this.$root.$children[0].$emit(
-            'range-updated', [this.newStart, this.newEnd]);
-        }
+        const min = parseFloat(this.newStart);
+        const max = parseFloat(this.newEnd)
+        const range = (max - min) < 1 ? null : [min, max];
+        this.updateGlobalRanges(range);
         this.settingsDialog = false;
       },
       clear() {

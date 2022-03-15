@@ -2,12 +2,47 @@ import Plotly from 'plotly.js-basic-dist-min';
 import { isNil, isEqual } from 'lodash';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
 
-function parseZoomValues(data) {
+function parseZoomValues(data, globalY) {
+  if (data['xaxis.autorange'] || data['yaxis.autorange']) {
+    return
+  }
+
   const zoomLevel = {
     xAxis: [data['xaxis.range[0]'], data['xaxis.range[1]']],
     yAxis: [data['yaxis.range[0]'], data['yaxis.range[1]']]
   }
+  if (globalY) {
+    zoomLevel.yAxis = globalY;
+  }
   return zoomLevel;
+}
+
+function addAnnotations(data, zoom, yRange) {
+  if (!zoom) {
+    return
+  }
+
+  const xRange = [data.x[0], data.x[data.x.length-1]];
+  if (!yRange)
+    yRange = [Math.min(...data.y), Math.max(...data.y)];
+  const rangeText = (
+    `<b>
+      X: [${xRange[0].toPrecision(4)}, ${xRange[1].toPrecision(4)}]
+      Y: [${yRange[0].toPrecision(4)}, ${yRange[1].toPrecision(4)}]
+    </b>`
+  )
+
+  const annotations = [{
+    xref: 'paper',
+    yref: 'paper',
+    x: 0,
+    xanchor: 'left',
+    y: 1,
+    yanchor: 'bottom',
+    text: rangeText,
+    showarrow: false
+  }]
+  return annotations;
 }
 
 export default {
@@ -16,10 +51,6 @@ export default {
   props: {
     maxTimeStep: {
       type: Number,
-      required: true
-    },
-    globalRanges: {
-      type: Object,
       required: true
     },
   },
@@ -44,6 +75,7 @@ export default {
   asyncComputed: {
     ...mapGetters({
       currentTimeStep: 'PLOT_TIME_STEP',
+      globalRanges: 'PLOT_GLOBAL_RANGES',
       globalZoom: 'PLOT_ZOOM',
       numcols: 'VIEW_COLUMNS',
       numrows: 'VIEW_ROWS',
@@ -96,6 +128,13 @@ export default {
       handler() {
         this.react();
       }
+    },
+    globalRanges: {
+      handler() {
+        this.react();
+      },
+      deep: true,
+      immediate: true,
     },
   },
 
@@ -150,6 +189,7 @@ export default {
 
     loadGallery: function (event) {
       event.preventDefault();
+      this.zoom = null
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
       this.itemId = items[0]._id;
       this.loadedFromView = false;
@@ -238,15 +278,18 @@ export default {
           nextImage.layout.yaxis.autorange = true;
           if (this.zoom) {
             nextImage.layout.xaxis.range = this.zoom.xAxis;
+            nextImage.layout.yaxis.range = this.zoom.yAxis;
+            nextImage.layout.yaxis.autorange = false;
           }
+          var range = null;
           if (this.itemId in this.globalRanges) {
-            const range = this.globalRanges[`${this.itemId}`];
+            range = this.globalRanges[`${this.itemId}`];
             if (range) {
-              nextImage.layout.yaxis.range = range;
-            } else if(this.zoom) {
-              nextImage.layout.yaxis.range = this.zoom.yAxis;
+              nextImage.layout.yaxis.range = [...range];
+              nextImage.layout.yaxis.autorange = false;
             }
           }
+          nextImage.layout['annotations'] = addAnnotations(nextImage.data[0], this.zoom, range);
           Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {autosize: true});
           if (!this.eventHandlersSet)
             this.setEventHandlers();
@@ -280,7 +323,11 @@ export default {
 
     setEventHandlers() {
       this.$refs.plotly.on('plotly_relayout', (eventdata) => {
-        this.zoom = parseZoomValues(eventdata);
+        this.zoom = parseZoomValues(eventdata, this.globalRanges[this.itemId]);
+        this.react();
+      });
+      this.$refs.plotly.on('plotly_doubleclick', () => {
+        this.zoom = null;
       });
       this.eventHandlersSet = true;
     },

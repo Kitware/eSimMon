@@ -41,7 +41,6 @@ export default {
       showMenu: false,
       movieRequested: false,
       generationFailed: false,
-      globalRanges: {},
       paramIsJson: false,
       showRangeDialog: false,
     };
@@ -62,6 +61,7 @@ export default {
       setColumns: 'VIEW_COLUMNS_SET',
       setCreator: 'VIEW_CREATOR_SET',
       setCurrentTimeStep: 'PLOT_TIME_STEP_SET',
+      setCurrentItemId: 'PLOT_CURRENT_ITEM_ID_SET',
       setGridSize: 'VIEW_GRID_SIZE_SET',
       setPaused: 'UI_PAUSE_GALLERY_SET',
       setPublic: 'VIEW_PUBLIC_SET',
@@ -170,11 +170,12 @@ export default {
           return
       }
 
+      this.setCurrentItemId(itemId);
       this.dataLoaded = true;
       this.maxTimeStep = num_timesteps;
 
       // Setup polling to watch for new data.
-      this.poll(itemId);
+      this.poll();
 
       // Setup polling to autosave view
       this.autosave();
@@ -185,22 +186,22 @@ export default {
       }
     },
 
-    lookupRunId(itemId) {
+    lookupRunId() {
       // Get the grandparent folder for this item. Its metadata will tell us
       // what timestamps are available.
-      this.girderRest.get(`/item/${itemId}`)
+      this.girderRest.get(`/item/${this.itemId}`)
       .then((response) => {
         return this.girderRest.get(`/folder/${response.data.folderId}`);
       })
       .then((response) => {
         this.runId = response.data.parentId;
-        return this.poll(itemId);
+        return this.poll();
       });
     },
 
-    poll(itemId) {
+    poll() {
       if (!this.runId) {
-        return this.lookupRunId(itemId);
+        return this.lookupRunId(this.itemId);
       }
 
       let timeout = this.currentTimeStep >= 1 ? 10000 : 0;
@@ -214,7 +215,7 @@ export default {
             }
           }
         } finally {
-          this.poll(itemId);
+          this.poll();
         }
       }, timeout);
     },
@@ -266,7 +267,7 @@ export default {
     contextMenu(data) {
       const { id, name, event, isJson } = data;
       this.parameter = name;
-      this.itemId = id;
+      this.setCurrentItemId(id);
       this.showMenu = false;
       this.pos = [event.clientX, event.clientY];
       this.paramIsJson = isJson;
@@ -322,15 +323,6 @@ export default {
       this.location = null;
     },
 
-    setGlobalRange(range) {
-      this.globalRanges[`${this.itemId}`] = range;
-      this.$refs.imageGallery.forEach((cell) => {
-        if (cell.itemId === this.itemId) {
-          cell.react();
-        }
-      });
-    },
-
     autosave() {
       this._autosave = setTimeout(async () => {
         try {
@@ -365,7 +357,6 @@ export default {
     this.$on('data-loaded', this.initialDataLoaded);
     this.$on('gallery-ready', this.incrementReady);
     this.$on('param-selected', this.contextMenu);
-    this.$on('range-updated', this.setGlobalRange);
     this.$on('item-added', this.setRun);
   },
 
@@ -375,7 +366,9 @@ export default {
       cellCount: 'PLOT_VISIBLE_CELL_COUNT',
       creator: 'VIEW_CREATOR',
       currentTimeStep: 'PLOT_TIME_STEP',
+      globalRanges: 'PLOT_GLOBAL_RANGES',
       gridSize: 'VIEW_GRID_SIZE',
+      itemId: 'PLOT_CURRENT_ITEM_ID',
       items: 'VIEW_ITEMS',
       numcols: 'VIEW_COLUMNS',
       numrows: 'VIEW_ROWS',
