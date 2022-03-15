@@ -37,6 +37,7 @@ export default {
       image: null,
       eventHandlersSet: false,
       loadedFromView: false,
+      zoom: null,
     };
   },
 
@@ -154,9 +155,9 @@ export default {
       this.loadedFromView = false;
       this.$root.$children[0].$emit('item-added', this.itemId);
     },
-
-    loadTemplateGallery: function (itemId) {
-      this.itemId = itemId;
+    loadTemplateGallery: function (item) {
+      this.itemId = item.id;
+      this.zoom = item.zoom;
       this.loadedFromView = true;
     },
 
@@ -235,6 +236,9 @@ export default {
       if (!isNil(nextImage)) {
         if (isEqual(nextImage.ext, 'json')) {
           nextImage.layout.yaxis.autorange = true;
+          if (this.zoom) {
+            nextImage.layout.xaxis.range = this.zoom.xAxis;
+          }
           if (this.itemId in this.globalRanges) {
             const range = this.globalRanges[`${this.itemId}`];
             if (range) {

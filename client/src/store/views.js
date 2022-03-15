@@ -176,7 +176,10 @@ export default {
       const items = {}
       layout.forEach(item => {
         const { row, col } = item.$attrs;
-        items[`${row}::${col}`] = item.itemId;
+        items[`${row}::${col}`] = {
+          id: item.itemId,
+          zoom: item.zoom,
+        };
       });
       commit('VIEW_ITEMS_SET', items);
     },

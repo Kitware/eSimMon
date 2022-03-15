@@ -298,9 +298,9 @@ export default {
     applyView() {
       this.$refs.imageGallery.forEach((cell) => {
         const { row, col } = cell.$attrs;
-        const itemId = this.items[`${row}::${col}`];
-        if (itemId) {
-          cell.loadTemplateGallery(itemId);
+        const item = this.items[`${row}::${col}`];
+        if (item) {
+          cell.loadTemplateGallery(item);
         } else {
           cell.clearGallery()
         }
@@ -384,7 +384,6 @@ export default {
       shouldAutoSave: 'VIEW_AUTO_SAVE_RUN',
       simulation: 'VIEW_SIMULATION',
       step: 'VIEW_STEP',
-      viewLoading: 'VIEW_LOADING',
     }),
 
     location: {
@@ -474,7 +473,7 @@ export default {
       if (this.gridSize === count) {
         if (this.loggedOut) {
           this.$refs.imageGallery.forEach((cell) => {
-            cell.loadTemplateGallery(null);
+            cell.loadTemplateGallery({id: null, zoom: null});
             cell.clearGallery();
           });
         } else if (this.$refs.imageGallery) {
