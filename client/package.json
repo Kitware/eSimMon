@@ -8,7 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@girder/components": "^3.0.3",
+    "@girder/components": "^3.2.0",
     "axios": "^0.21.2",
     "lodash": "^4.17.21",
     "plotly.js-basic-dist-min": "^2.1.0",
