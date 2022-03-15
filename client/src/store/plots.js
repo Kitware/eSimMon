@@ -5,6 +5,8 @@ export default {
     visibleCells: 0,
     globalRanges: {},
     itemId: null,
+    zoomXAxis: null,
+    zoomOrigin: null,
   },
   getters: {
     PLOT_ZOOM(state) {
@@ -21,6 +23,12 @@ export default {
     },
     PLOT_CURRENT_ITEM_ID(state) {
       return state.itemId;
+    },
+    PLOT_ZOOM_X_AXIS(state) {
+      return state.zoomXAxis;
+    },
+    PLOT_ZOOM_ORIGIN(state) {
+      return state.zoomOrigin;
     },
   },
   mutations: {
@@ -39,19 +47,20 @@ export default {
     PLOT_CURRENT_ITEM_ID_SET(state, val) {
       state.itemId = val;
     },
+    PLOT_ZOOM_X_AXIS_SET(state, val) {
+      state.zoomXAxis = val;
+    },
+    PLOT_ZOOM_ORIGIN_SET(state, val) {
+      state.zoomOrigin = val;
+    }
   },
   actions: {
-    PLOT_ZOOM_VALUES_UPDATED({commit}, zoomLevel) {
-      if (zoomLevel) {
-        zoomLevel = {
-          xAxis: [zoomLevel['xaxis.range[0]'], zoomLevel['xaxis.range[1]']],
-          yAxis: [zoomLevel['yaxis.range[0]'], zoomLevel['yaxis.range[1]']]
-        }
-      }
-      commit('PLOT_ZOOM_SET', zoomLevel);
-    },
     PLOT_GLOBAL_RANGES_UPDATED({state}, range) {
       state.globalRanges = {...state.globalRanges, [`${state.itemId}`]: range};
+    },
+    PLOT_ZOOM_DETAILS({commit}, zoom, xAxis) {
+      commit('PLOT_ZOOM_SET', zoom);
+      commit('PLOT_ZOOM_X_AXIS_SET', xAxis);
     },
   },
 }

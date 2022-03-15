@@ -90,7 +90,7 @@
                        @change="(e) => {updateTimeStep(e.target.value)}"/>
               </v-col>
             </v-row>
-            <v-row>
+            <v-row v-bind:style="{alignItems: 'center', paddingTop: '10px'}">
               <v-col :sm="2">
                 <v-icon v-on:click="removeRow()"
                         :disabled="numrows < 2"> remove_circle_outline </v-icon>
@@ -102,8 +102,6 @@
                 <v-icon v-on:click="addRow()"
                         :disabled="numrows > 7"> add_circle_outline </v-icon>
               </v-col>
-            </v-row>
-            <v-row>
               <v-col :sm="2">
                 <v-icon v-on:click="removeColumn()"
                         :disabled="numcols < 2"> remove_circle_outline </v-icon>
