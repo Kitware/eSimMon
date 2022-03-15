@@ -1,6 +1,7 @@
 from typing import Dict
 
 import numpy as np
+from fastapi.responses import JSONResponse
 
 
 def generate_data(x: np.ndarray, y: np.ndarray, name: str):
@@ -34,7 +35,7 @@ def generate_layout(title: str, x_label: str, y_label: str, name: str):
     }
 
 
-async def generate_plotly_json(plot_config: Dict, bp_file, variable: str):
+async def generate_plotly_response(plot_config: Dict, bp_file, variable: str):
     x_variable = plot_config["x"]
     x_label = plot_config["xlabel"]
     y_variables = plot_config["y"]
@@ -55,4 +56,6 @@ async def generate_plotly_json(plot_config: Dict, bp_file, variable: str):
         ),
     }
 
-    return plotly_json
+    return JSONResponse(
+        media_type="application/vnd.plotly.v1+json", content=plotly_json
+    )

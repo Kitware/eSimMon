@@ -8,7 +8,8 @@ import adios2
 from app.schemas.format import PlotFormat
 from fastapi import APIRouter, Header, HTTPException
 
-from .plotly import generate_plotly_json
+from .mesh import generate_mesh_response
+from .plotly import generate_plotly_response
 from .utils import get_girder_client
 
 router = APIRouter()
@@ -78,16 +79,18 @@ async def download_bp_file(
     return Path(output_dir) / bp_filename
 
 
-async def generate_plot_data(bp, variable: str):
+async def generate_plot_response(bp, variable: str):
     plot_config = bp.read_attribute_string(variable)
     plot_config = json.loads(plot_config[0])
 
     plot_type = plot_config["type"]
 
     if plot_type == PlotFormat.plotly:
-        return await generate_plotly_json(plot_config, bp, variable)
+        return await generate_plotly_response(plot_config, bp, variable)
+    elif plot_type == PlotFormat.mesh:
+        return await generate_mesh_response(plot_config, bp, variable)
 
-    return HTTPException(status_code=400, detail="Unsupported plot type.")
+    raise HTTPException(status_code=400, detail="Unsupported plot type.")
 
 
 @router.get("/{variable_id}/timesteps")
@@ -103,9 +106,7 @@ async def get_timesteps(variable_id: str, girder_token: str = Header(None)):
 # variable_id => Girder item id for item used to represent the variable.
 @router.get("/{variable_id}/timesteps/{timestep}/plot")
 async def get_timestep_plot(
-    variable_id: str,
-    timestep: int,
-    girder_token: str = Header(None),
+    variable_id: str, timestep: int, girder_token: str = Header(None)
 ):
     gc = get_girder_client(girder_token)
     group_folder_id = get_group_folder_id(gc, variable_id)
@@ -125,4 +126,4 @@ async def get_timestep_plot(
         )
         # Extract data from the BP file
         with adios2.open(str(bp_file_path), "r") as bp:
-            return await generate_plot_data(bp, variable)
+            return await generate_plot_response(bp, variable)
