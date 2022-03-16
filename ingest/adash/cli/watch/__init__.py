@@ -245,8 +245,6 @@ async def create_variable_item(gc, folder, shot_name, run_name, group_name, vari
     timesteps = meta.setdefault('timesteps', [])
     timesteps.append(timestep)
 
-    print(meta)
-
     await gc.set_metadata('item', item['_id'], meta)
 
 
@@ -371,7 +369,6 @@ async def fetch_images_scheduler(queue):
     while True:
         try:
             fetch = await queue.get()
-            log.info(fetch)
             await fetch
             queue.task_done()
         except asyncio.CancelledError:
