@@ -56,7 +56,12 @@ export default {
       }
       const { location, counts } = this;
       if (counts.nFolders || counts.nItems) {
-        return this.fetchPaginatedFolderRows();
+        return this.fetchPaginatedFolderRows().then((rows) => {
+          // Filter out the internal 'timesteps' folder
+          return rows.filter((folder) => {
+            return folder.name !== 'timesteps';
+          });
+        });
       }
       const locationType = getLocationType(location);
       if (locationType === 'users' || locationType === 'collections') {

@@ -1,0 +1,5 @@
+fastapi
+ffmpeg-python
+girder-client
+pydantic[dotenv]
+uvicorn[standard]

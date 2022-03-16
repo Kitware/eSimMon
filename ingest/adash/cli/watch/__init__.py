@@ -2,6 +2,7 @@ import types
 import sys
 import os
 import io
+import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
 import logging
@@ -11,6 +12,8 @@ from io import BytesIO
 import mimetypes
 import functools
 import ssl
+from io import BytesIO
+import re
 
 import click
 from girder_client import GirderClient
@@ -133,6 +136,9 @@ class AsyncGirderClient(object):
         async with self._item_create_semaphore:
             return await self.post('item', params=params)
 
+    async def get_item(self, item_id):
+        return await self.get(f'item/{item_id}')
+
     async def upload_file(self, item, file_name, bits, size):
         mime_type, _ = mimetypes.guess_type(file_name)
 
@@ -226,6 +232,42 @@ async def upload_image(gc, folder, shot_name, run_name, variable, timestep, bits
         log.info('Uploading "%s/%s/%s".' % ('/'.join([str(i) for i in image_folders]), name, image_name))
         await gc.upload_file(variable_item, image_name, bits, size)
 
+async def create_variable_item(gc, folder, shot_name, run_name, group_name, variable_name, timestep):
+    log = logging.getLogger('adash')
+    image_path = Path(variable_name)
+
+    image_folders = [shot_name, run_name, group_name]
+    parent_folder = await ensure_folders(gc, folder, image_folders)
+
+    item = await gc.create_item(parent_folder['_id'], variable_name)
+
+    meta = item['meta']
+    timesteps = meta.setdefault('timesteps', [])
+    timesteps.append(timestep)
+
+    print(meta)
+
+    await gc.set_metadata('item', item['_id'], meta)
+
+
+async def upload_timestep_bp_archive(gc, folder, shot_name, run_name, timestep, bp_filename, bits, size, check_exists=False):
+    log = logging.getLogger('adash')
+
+    folders = [shot_name, run_name, "timesteps"]
+    parent_folder = await ensure_folders(gc, folder, folders)
+
+    # Get/create the timesteps item
+    timesteps_item = await gc.create_item(parent_folder['_id'], timestep)
+
+    create = True
+    if check_exists:
+        create = not await gc.file_exist(timesteps_item, bp_filename)
+
+    if create:
+        log.info('Uploading "%s/%s/%s".' % ('/'.join([str(i) for i in folders]), timestep, bp_filename))
+        await gc.upload_file(timesteps_item, bp_filename, bits, size)
+
+
 @tenacity.retry(retry=tenacity.retry_if_exception_type(aiohttp.client_exceptions.ServerConnectionError),
                 wait=tenacity.wait_exponential(max=10),
                 stop=tenacity.stop_after_attempt(10))
@@ -261,30 +303,54 @@ async def fetch_images(session, gc, folder, upload_site_url, shot_name, run_name
 
     # Fetch variables.json
     variables = await fetch_variables(session, upload_site_url, shot_name, run_name, timestep)
+
+    if not variables:
+        log.info('No variables for timestep "%d".' % timestep)
+        return
+
+
     if variables is None:
         log.warning('Unable to fetch variables.json. Timestep "%d" is missing.' % timestep)
     else:
         log.info('Fetching images.tar.gz for timestep: "%d".' % timestep)
         buffer = BytesIO(await fetch_images_archive(session, upload_site_url, shot_name, run_name, timestep))
-        tasks = []
-        with tarfile.open(fileobj=buffer) as tgz:
+
+        with tarfile.open(fileobj=buffer) as images_tgz:
+            bp_files_added = set()
+            bp_files_to_upload = set([v['file_name'] for v in variables])
+
+            # First ensure will be all variable items created
             for v in variables:
+                bp_file_name = v['file_name']
+                variable_name = v['attribute_name']
+                group_name = v['group_name']
+
                 info = None
-                k = '%s/%s' % (v['group_name'], v['image_name'])
-                try:
-                    info = tgz.getmember(k)
-                except KeyError:
-                    pass
 
-                if info is None:
-                    raise Exception('Unable to extract image: "%s"' % k)
+                # Ensure we have the variable item created
+                await create_variable_item(gc, folder, shot_name, run_name, group_name, variable_name, timestep)
 
-                br = tgz.extractfile(info)
-                bits = br.read()
+            tasks = []
+            # Now upload the BP files
+            for bp in bp_files_to_upload:
+                timestep_bp_bytes = BytesIO()
+                with tarfile.open(mode='w:gz', fileobj=timestep_bp_bytes) as timestep_bp_tgz:
+                    # Remove the prefix
+                    bp_file_path = "/".join(bp.split('/')[2:])
+                    bp_file_regex = f'^{bp_file_path}.*'
+
+
+                    bp_members = [m for m in images_tgz.getmembers() if re.match(bp_file_regex, m.name)]
+                    for m in bp_members:
+                        f = images_tgz.extractfile(m)
+                        timestep_bp_tgz.addfile(m, f)
+
+                upload_filename = Path(bp).name.split('.')[0]
+                upload_filename = f'{upload_filename}.bp.tgz'
+                bytes = timestep_bp_bytes.getvalue()
                 tasks.append(
                     asyncio.create_task(
-                        upload_image(gc, folder, shot_name, run_name, v,
-                                     timestep, bits, info.size, check_exists)
+                        upload_timestep_bp_archive(gc, folder, shot_name, run_name, f'{timestep:04}', upload_filename, bytes, len(bytes), check_exists=False)
                     )
                 )
             # Gather, so we fetch all images for this timestep before moving on to the
