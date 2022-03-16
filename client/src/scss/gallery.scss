@@ -8,6 +8,9 @@
 .plot {
   min-height: 100%;
   min-width: 100%;
+  display: flex;
+  justify-content: center;
+  height: inherit;
 }
 
 .text-xs-center {
@@ -35,6 +38,7 @@
       padding: 0;
       .v-card {
         height: 100%;
+        background-color: transparent;
       }
     }
   }
@@ -169,4 +173,16 @@
 
 .selectedRow {
   background-color: #ababab;
+}
+
+.imageGallery {
+  padding: 0px;
+  max-width: 100%;
+  position: fixed;
+  right: 0;
+  top: 0;
+  pointer-events: none;
+  width: 77%;
+  z-index: 0;
+  height: 100%;
 }

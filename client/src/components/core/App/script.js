@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
 import _ from 'lodash';
+import RenderWindow from '../../widgets/RenderWindow';
 import ImageGallery from '../../widgets/ImageGallery';
 import { GirderAuthentication as GirderAuthentication } from '@girder/components/src';
 import GirderFileManager from '../../widgets/GirderFileManager';
@@ -16,6 +17,7 @@ export default {
   components: {
     GirderAuthentication,
     GirderFileManager,
+    RenderWindow,
     ImageGallery,
     Splitpanes,
     Pane,

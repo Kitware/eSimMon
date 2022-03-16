@@ -1,7 +1,24 @@
 import Plotly from 'plotly.js-basic-dist-min';
 import { isNil } from 'lodash';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
+import { decode } from '@msgpack/msgpack'
 
+// Load the rendering pieces we want to use (for both WebGL and WebGPU)
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkCubeAxesActor from '@kitware/vtk.js/Rendering/Core/CubeAxesActor';
+import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
+import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
+import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
+
+//-----------------------------------------------------------------------------
+// Utility Functions
+//-----------------------------------------------------------------------------
 function parseZoomValues(data, globalY) {
   if (data['xaxis.autorange'] || data['yaxis.autorange']) {
     return
@@ -71,6 +88,13 @@ export default {
       zoom: null,
       xaxis: null,
       selectedTimeStep: 0,
+      renderer: null,
+      cells: [],
+      mesh: null,
+      mapper: null,
+      actor: null,
+      axes: null,
+      scalarBar: null,
     };
   },
 
@@ -81,6 +105,7 @@ export default {
       globalZoom: 'PLOT_ZOOM',
       numcols: 'VIEW_COLUMNS',
       numrows: 'VIEW_ROWS',
+      renderWindow: 'UI_RENDER_WINDOW',
       syncZoom: 'UI_ZOOM_SYNC',
       zoomAxis: 'PLOT_ZOOM_X_AXIS',
       timeStepSelectorMode: 'UI_TIME_STEP_SELECTOR',
@@ -133,12 +158,14 @@ export default {
       immediate: true,
       handler() {
         this.react();
+        this.$nextTick(this.updateViewPort);
       }
     },
     numcols: {
       immediate: true,
       handler() {
         this.react();
+        this.$nextTick(this.updateViewPort);
       }
     },
     globalRanges: {
@@ -176,14 +203,32 @@ export default {
         return;
       }
 
-
-
       const response = await this.callFastEndpoint(`variables/${this.itemId}/timesteps`);
 
       this.rows = await Promise.all(response.map(async function(val) {
-        let img = await this.callFastEndpoint(`variables/${this.itemId}/timesteps/${val}/plot`);
-
-        return {'img': img, 'step': val, 'ext': 'json'};
+        var plotType = 'vtk';
+        let img = await this.callFastEndpoint(`variables/${this.itemId}/timesteps/${val}/plot`, {responseType: 'blob'})
+          .then((response) => {
+            const reader = new FileReader();
+            if (response.type === 'application/msgpack') {
+              reader.readAsArrayBuffer(response);
+            } else {
+              reader.readAsText(response);
+              plotType = 'plotly';
+            }
+            return new Promise(resolve => {
+              reader.onload = () => {
+                if (plotType === 'vtk') {
+                  const data = decode(reader.result);
+                  this.addRenderer(data);
+                  return resolve(data);
+                } else {
+                  return resolve(JSON.parse(reader.result));
+                }
+              };
+            });
+          });
+        return {'img': img, 'step': val, 'type': plotType};
       }, this));
 
       this.preCacheImages();
@@ -202,8 +247,9 @@ export default {
       return data;
     },
 
-    callFastEndpoint: async function (endpoint) {
-      const { data } = await this.girderRest.get(`${this.fastRestUrl}/${endpoint}`);
+    callFastEndpoint: async function (endpoint, options=null) {
+      const { data } = await this.girderRest.get(
+        `${this.fastRestUrl}/${endpoint}`, options ? options : {});
       return data;
     },
 
@@ -220,7 +266,6 @@ export default {
       this.zoom = item.zoom;
       this.loadedFromView = true;
     },
-
     preCacheImages: function () {
       // Return early if we haven't loaded the list of images from Girder yet.
       if (this.rows === null || this.rows.constructor !== Array || this.rows.length < 1) {
@@ -260,17 +305,21 @@ export default {
           any_images_loaded = true;
           this.pendingImages = 1;
           const img = this.rows[i - 1].img;
-          const ext = this.rows[i - 1].ext;
+          const type = this.rows[i - 1].type;
           const step = this.rows[i - 1].step;
-          if (ext == 'json') {
+          if (type === 'plotly') {
             this.loadedImages.push({
               timestep: step,
               data: img.data,
               layout: img.layout,
-              ext: ext,
+              type: type,
             });
           } else {
-            this.loadedImages.push({timestep: step, src: img, ext: ext});
+            this.loadedImages.push({
+              timestep: step,
+              data: img,
+              type: type
+            });
           }
           if (this.loadedImages.length == 1) {
             this.react();
@@ -288,38 +337,45 @@ export default {
         this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
       }
     },
-
     react: function () {
       let nextImage = this.loadedImages.find(img => img.timestep == this.currentTimeStep);
       if (isNil(nextImage) && this.loadedImages.length == 1)
         nextImage = this.loadedImages[0];
-      if (!isNil(nextImage)) {
-        if (!this.xaxis)
-          this.xaxis = nextImage.layout.xaxis.title.text;
 
-        nextImage.layout.yaxis.autorange = true;
-        if (this.zoomLevels) {
-          nextImage.layout.xaxis.range = this.zoomLevels.xAxis;
-          nextImage.layout.yaxis.range = this.zoomLevels.yAxis;
-          nextImage.layout.yaxis.autorange = false;
-        }
-        var range = null;
-        if (this.itemId in this.globalRanges) {
-          range = this.globalRanges[`${this.itemId}`];
-          if (range) {
-            nextImage.layout.yaxis.range = [...range];
+      if (!isNil(nextImage)) {
+        if (nextImage.type === 'plotly') {
+          if (!this.xaxis) {
+            this.xaxis = nextImage.layout.xaxis.title.text;
+          }
+
+          nextImage.layout.yaxis.autorange = true;
+          if (this.zoomLevels) {
+            nextImage.layout.xaxis.range = this.zoomLevels.xAxis;
+            nextImage.layout.yaxis.range = this.zoomLevels.yAxis;
             nextImage.layout.yaxis.autorange = false;
           }
+          var range = null;
+          if (this.itemId in this.globalRanges) {
+            range = this.globalRanges[`${this.itemId}`];
+            if (range) {
+              nextImage.layout.yaxis.range = [...range];
+              nextImage.layout.yaxis.autorange = false;
+            }
+          }
+          nextImage.layout['annotations'] = addAnnotations(nextImage.data[0], this.zoomLevels, range);
+          Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {autosize: true});
+          if (!this.eventHandlersSet)
+            this.setEventHandlers();
+          this.json = true;
+        } else {
+          if (!this.xaxis) {
+            this.xaxis = nextImage.data.xLabel;
+          }
+          this.updateRenderer(nextImage.data);
         }
-        nextImage.layout['annotations'] = addAnnotations(nextImage.data[0], this.zoomLevels, range);
-        Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {autosize: true});
-        if (!this.eventHandlersSet)
-          this.setEventHandlers();
-        this.json = true;
       }
       this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
     },
-
     async fetchMovie(e) {
       const response = await this.callEndpoint(`item/${this.itemId}`);
       const data = {
@@ -330,7 +386,6 @@ export default {
       }
       this.$parent.$parent.$parent.$parent.$emit("param-selected", data);
     },
-
     clearGallery() {
       this.itemId = null;
       this.pendingImages = 0;
@@ -365,6 +420,108 @@ export default {
       });
       this.eventHandlersSet = true;
     },
+    updateViewPort() {
+      if (!this.renderer)
+        return
+
+      const parent = this.$parent.$el.getBoundingClientRect();
+      const { x, y, width, height } = this.$el.getBoundingClientRect();
+      const viewport = [
+        (x - parent.x) / parent.width,
+        1 - (y + height) / parent.height,
+        ((x - parent.x) + width) / parent.width,
+        1 - y / parent.height,
+      ];
+      this.renderer.setViewport(...viewport);
+    },
+    addRenderer(data) {
+      if (this.renderer)
+        return
+      // Create the building blocks we will need for the polydata
+      this.renderer = vtkRenderer.newInstance({background: [0.8, 0.8, 0.8]});
+      this.mesh = vtkPolyData.newInstance();
+      this.actor = vtkActor.newInstance();
+      this.mapper = vtkMapper.newInstance();
+
+      // Load the cell attributes
+      this.cells = new Array(data.connectivity.length * 4);
+      var idx = 0;
+      data.connectivity.forEach((indicies) => {
+        this.cells[idx++] = 3;
+        this.cells[idx++] = indicies[0];
+        this.cells[idx++] = indicies[1];
+        this.cells[idx++] = indicies[2];
+      });
+      this.mesh.getPolys().setData(Uint32Array.from(this.cells));
+
+      // Setup colormap
+      const lut = vtkColorTransferFunction.newInstance();
+      lut.applyColorMap(vtkColorMaps.getPresetByName('jet'));
+
+      // Setup mapper and actor
+      this.mapper.setInputData(this.mesh);
+      this.mapper.setLookupTable(lut);
+      this.actor.setMapper(this.mapper);
+      this.renderer.addActor(this.actor);
+
+      // Update renderer window
+      const camera = this.renderer.getActiveCamera();
+      camera.setPosition(0, 0, 1);
+      camera.setFocalPoint(0, 0, 0);
+
+      // Create axis
+      this.axes = vtkCubeAxesActor.newInstance();
+      this.axes.setCamera(camera);
+      this.axes.setAxisLabels(data.xLabel, data.yLabel, '');
+      this.renderer.addActor(this.axes);
+
+      // Build color bar
+      this.scalarBar = vtkScalarBarActor.newInstance();
+      this.scalarBar.setScalarsToColors(lut);
+      this.scalarBar.setAxisLabel(data.colorLabel);
+      this.scalarBar.setDrawNanAnnotation(false);
+      this.renderer.addActor2D(this.scalarBar);
+
+      this.$nextTick(this.updateViewPort);
+      this.renderWindow.addRenderer(this.renderer);
+    },
+    updateRenderer(data) {
+      // Load the point attributes
+      const points = new Array(data.nodes.length * 3);
+      var idx = 0;
+      data.nodes.forEach((coords) => {
+        points[idx++] = coords[0];
+        points[idx++] = coords[1];
+        points[idx++] = 0.0;
+      });
+
+      // Set the scalars
+      const scalars = vtkDataArray.newInstance({
+        name: 'scalars',
+        values: Float32Array.from(data.color),
+      });
+
+      // Build the polydata
+      this.mesh.getPoints().setData(Float32Array.from(points), 3);
+      this.mesh.getPointData().setScalars(scalars);
+
+      // Setup colormap
+      const lut = this.mapper.getLookupTable();
+      lut.setMappingRange(...scalars.getRange());
+      lut.updateRange();
+
+      // Setup mapper and actor
+      this.mapper.setInputData(this.mesh);
+      this.mapper.setScalarRange(...scalars.getRange());
+
+      // Update axes
+      this.axes.setDataBounds(this.actor.getBounds());
+
+      // Update color bar
+      this.scalarBar.setScalarsToColors(lut);
+
+      this.renderer.resetCamera();
+    },
   },
 
   mounted () {
@@ -373,5 +530,8 @@ export default {
 
   destroyed() {
     this.updateCellCount(-1);
+    if (this.renderer) {
+      this.renderWindow.removeRenderer(this.renderer);
+    }
   }
 };
