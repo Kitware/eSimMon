@@ -199,6 +199,9 @@ class AsyncGirderClient(object):
 
         return await self.lookup_resource('%s/%s' % (item_path, name)) is not None
 
+    async def get_folder(self, folder_id):
+        return await self.get(f'folder/{folder_id}')
+
 async def ensure_folders(gc, parent, folders):
     for folder_name in folders:
         parent = await gc.create_folder(parent['_id'], 'folder', folder_name)
@@ -240,8 +243,15 @@ async def create_variable_item(gc, folder, shot_name, run_name, group_name, vari
     parent_folder = await ensure_folders(gc, folder, image_folders)
 
     item = await gc.create_item(parent_folder['_id'], variable_name)
-
     meta = item['meta']
+
+    # Save the shot and run folder in the metadata
+    if 'runFolderId' not in meta:
+        run_folder = await gc.get_folder(parent_folder['parentId'])
+        shot_folder = await gc.get_folder(run_folder['parentId'])
+        meta['runFolderId'] = run_folder['_id']
+        meta['shotFolderId'] = shot_folder['_id']
+
     timesteps = meta.setdefault('timesteps', [])
     timesteps.append(timestep)
 
