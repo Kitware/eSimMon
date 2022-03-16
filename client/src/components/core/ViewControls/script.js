@@ -15,6 +15,7 @@ export default {
       showSaveDialog: false,
       showLoadDialog: false,
       zoomSync: 0,
+      selectTimeStep: null,
     };
   },
 
@@ -29,6 +30,7 @@ export default {
     ...mapActions({
       fetchAllViews: 'VIEW_FETCH_ALL_AVAILABLE',
       toggleSyncZoom: 'UI_TOGGLE_ZOOM_SYNC',
+      toggleSelectTimeStep: 'UI_TOGGLE_TIME_STEP',
     }),
     ...mapMutations({
       setPaused: 'UI_PAUSE_GALLERY_SET',

@@ -70,6 +70,7 @@ export default {
       loadedFromView: false,
       zoom: null,
       xaxis: null,
+      selectedTimeStep: 0,
     };
   },
 
@@ -82,6 +83,7 @@ export default {
       numrows: 'VIEW_ROWS',
       syncZoom: 'UI_ZOOM_SYNC',
       zoomAxis: 'PLOT_ZOOM_X_AXIS',
+      timeStepSelectorMode: 'UI_TIME_STEP_SELECTOR',
     }),
 
     rows: {
@@ -159,8 +161,8 @@ export default {
       setZoomDetails: 'PLOT_ZOOM_DETAILS',
       updateZoom: 'PLOT_ZOOM_VALUES_UPDATED',
     }),
-
     ...mapMutations({
+      setTimeStep: 'PLOT_TIME_STEP_SET',
       setZoomOrigin: 'PLOT_ZOOM_ORIGIN_SET',
       updateCellCount: 'PLOT_VISIBLE_CELL_COUNT_SET'
     }),
@@ -347,10 +349,18 @@ export default {
         }
         this.react();
       });
+      this.$refs.plotly.on('plotly_click', (data) => {
+        this.selectedTimeStep = parseInt(data.points[0].x);
+      });
       this.$refs.plotly.on('plotly_doubleclick', () => {
-        this.zoom = null;
-        if (this.syncZoom) {
-          this.setZoomDetails(null, null);
+        if (this.timeStepSelectorMode && this.xaxis.toLowerCase() === 'time') {
+          this.setTimeStep(this.selectedTimeStep);
+          return false;
+        } else {
+          this.zoom = null;
+          if (this.syncZoom) {
+            this.setZoomDetails(null, null);
+          }
         }
       });
       this.eventHandlersSet = true;

@@ -1,6 +1,6 @@
 <v-col>
   <v-row>
-    <v-col :sm="3" v-bind:style="{alignItems: 'center'}">
+    <v-col :sm="2" v-bind:style="{alignItems: 'center'}">
       <v-tooltip top>
         <template v-slot:activator="{on, attrs}">
           <v-btn-toggle v-model="zoomSync" borderless rounded>
@@ -14,7 +14,21 @@
         <span>Sync Plot Zoom</span>
       </v-tooltip>
     </v-col>
-    <v-col :sm="3" v-bind:style="{alignItems: 'center'}">
+    <v-col :sm="2" v-bind:style="{alignItems: 'center'}">
+      <v-tooltip top>
+        <template v-slot:activator="{on, attrs}">
+          <v-btn-toggle v-model="selectTimeStep" borderless rounded>
+            <v-btn icon v-on:click="toggleSelectTimeStep">
+              <v-icon v-on="on" v-bind="attrs">
+                mdi-timetable
+              </v-icon>
+            </v-btn>
+          </v-btn-toggle>
+        </template>
+        <span>Select Time Step from Plot</span>
+      </v-tooltip>
+    </v-col>
+    <v-col :sm="2" v-bind:style="{alignItems: 'center'}">
       <v-tooltip top>
         <template v-slot:activator="{on, attrs}">
           <v-btn icon v-on:click="loadView()">
@@ -29,7 +43,7 @@
         <span>Load View</span>
       </v-tooltip>
     </v-col>
-    <v-col :sm="3" v-bind:style="{alignItems: 'center'}">
+    <v-col :sm="2" v-bind:style="{alignItems: 'center'}">
       <v-tooltip top>
         <template v-slot:activator="{on, attrs}">
           <v-btn icon @click.stop="saveView()">
@@ -41,7 +55,7 @@
       <span>Save View</span>
       </v-tooltip>
     </v-col>
-    <v-col :sm="3" v-bind:style="{alignItems: 'center'}">
+    <v-col :sm="2" v-bind:style="{alignItems: 'center'}">
       <v-tooltip top>
         <template v-slot:activator="{on, attrs}">
           <v-btn icon v-on:click="girderRest.logout()">

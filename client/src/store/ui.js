@@ -4,6 +4,7 @@ export default {
     galleryPaused: true,
     showLoadDialog: false,
     showSaveDialog: false,
+    timeStepSelection: false,
     zoomSync: true,
   },
   getters: {
@@ -22,6 +23,9 @@ export default {
     UI_ZOOM_SYNC(state) {
       return state.zoomSync;
     },
+    UI_TIME_STEP_SELECTOR(state) {
+      return state.timeStepSelection;
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {
@@ -39,6 +43,9 @@ export default {
     UI_ZOOM_SYNC_SET(state, val) {
       state.zoomSync = val;
     },
+    UI_TIME_STEP_SELECTOR_SET(state, val) {
+      state.timeStepSelection = val;
+    },
   },
   actions: {
     UI_TOGGLE_PLAY_PAUSE({state}) {
@@ -46,6 +53,9 @@ export default {
     },
     UI_TOGGLE_ZOOM_SYNC({state}) {
       state.zoomSync = !state.zoomSync;
+    },
+    UI_TOGGLE_TIME_STEP({state}) {
+      state.timeStepSelection = !state.timeStepSelection;
     }
   },
 }
