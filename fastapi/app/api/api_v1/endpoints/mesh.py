@@ -28,8 +28,9 @@ async def generate_mesh_response(plot_config: Dict, bp_file, variable: str):
         "connectivity": connectivity,
         "nodes": nodes,
         "color": color,
-        "xlabel": x_label,
-        "ylabel": y_label,
+        "xLabel": x_label,
+        "yLabel": y_label,
+        "colorLabel": color_variable,
         "title": title,
     }
 
