@@ -331,7 +331,11 @@ async def fetch_images(session, gc, folder, upload_site_url, shot_name, run_name
             for v in variables:
                 bp_file_name = v['file_name']
                 variable_name = v['attribute_name']
-                group_name = v['group_name']
+                try:
+                    group_name = v['group_name']
+                except KeyError:
+                    log.warning(f"Unable to extract groups_name for '{variable_name}' in {shot_name}, skipping.")
+                    return
 
                 info = None
 
