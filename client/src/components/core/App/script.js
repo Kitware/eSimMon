@@ -7,7 +7,7 @@ import { GirderAuthentication as GirderAuthentication } from '@girder/components
 import GirderFileManager from '../../widgets/GirderFileManager';
 import ViewControls from '../ViewControls';
 import RangeDialog from '../../widgets/RangeDialog';
-import { saveLayout } from '../../../utils/utilityFunctions';
+import { mapActions, mapGetters, mapMutations } from 'vuex';
 
 export default {
   name: 'App',
@@ -28,15 +28,11 @@ export default {
       browserLocation: null,
       cellWidth: '100%',
       cellHeight: '100vh',
-      currentTimeStep: 1,
       dataLoaded: false,
       forgotPasswordUrl: '/#?dialog=resetpassword',
       maxTimeStep: 0,
-      numrows: 1,
-      numcols: 1,
       numLoadedGalleries: 0,
       numReady: 0,
-      paused: true,
       runId: null,
       range: '',
       pos: [],
@@ -45,39 +41,51 @@ export default {
       showMenu: false,
       movieRequested: false,
       generationFailed: false,
-      view: null,
-      globalRanges: {},
       paramIsJson: false,
       showRangeDialog: false,
-      run_id: undefined,
-      simulation: undefined,
-      autoSavedView: null,
-      lastSaved: '',
-      loadAutoSavedViewDialog: false,
-      viewGrid: null,
-      autosave_run: false,
-      galleryCount: 0,
     };
   },
 
   methods: {
+    ...mapActions({
+      viewAutoSaved: 'VIEW_AUTO_SAVE',
+      createItems: 'VIEW_BUILD_ITEMS_OBJECT',
+      fetchAutoSave: 'VIEW_FETCH_AUTO_SAVE',
+      loadAutoSave: 'VIEW_LOAD_AUTO_SAVE',
+      togglePlayPause: 'UI_TOGGLE_PLAY_PAUSE',
+    }),
+
+    ...mapMutations({
+      setAutoSaveName: 'VIEW_AUTO_SAVE_NAME_SET',
+      setAutoSavedViewDialog: 'UI_AUTO_SAVE_DIALOG_SET',
+      setColumns: 'VIEW_COLUMNS_SET',
+      setCreator: 'VIEW_CREATOR_SET',
+      setCurrentTimeStep: 'PLOT_TIME_STEP_SET',
+      setCurrentItemId: 'PLOT_CURRENT_ITEM_ID_SET',
+      setGridSize: 'VIEW_GRID_SIZE_SET',
+      setPaused: 'UI_PAUSE_GALLERY_SET',
+      setPublic: 'VIEW_PUBLIC_SET',
+      setRows: 'VIEW_ROWS_SET',
+      setRunId: 'VIEW_RUN_ID_SET',
+      setShouldAutoSave: 'VIEW_AUTO_SAVE_RUN_SET',
+      setSimulation: 'VIEW_SIMULATION_SET',
+    }),
+
     addColumn() {
-      this.numcols += 1;
-      this.updateCellWidth();
+      this.setColumns(this.numcols + 1);
+      this.setGridSize(this.rows * this.columns);
     },
 
     addRow() {
-      this.numrows += 1;
-      this.updateCellHeight();
+      this.setRows(this.numrows + 1);
+      this.setGridSize(this.rows * this.columns);
     },
 
     decrementTimeStep(should_pause) {
       if (this.currentTimeStep > 1) {
-        this.currentTimeStep -= 1;
+        this.setCurrentTimeStep(this.currentTimeStep - 1);
       }
-      if (should_pause) {
-        this.paused = true;
-      }
+      this.setPaused(should_pause);
     },
 
     hoverOut() {
@@ -144,57 +152,59 @@ export default {
                        + Math.max(...yVals).toExponential(3) + ']';
     },
 
-    incrementTimeStep(should_pause) {
-      if (this.currentTimeStep < this.maxTimeStep) {
-        this.currentTimeStep += 1;
-        this.numReady = 0;
-      }
-      if (should_pause) {
-        this.paused = true;
-      }
+    updateTimeStep(val) {
+      this.setCurrentTimeStep(parseInt(val));
     },
 
-    initialDataLoaded(num_timesteps, itemId) {
+    incrementTimeStep(should_pause) {
+      if (this.currentTimeStep < this.maxTimeStep) {
+        this.setCurrentTimeStep(this.currentTimeStep + 1);
+        this.numReady = 0;
+      }
+      this.setPaused(should_pause);
+    },
+
+    initialDataLoaded(num_timesteps, itemId, loadedFromView) {
       this.numLoadedGalleries += 1;
       if (this.dataLoaded) {
           return
       }
 
+      this.setCurrentItemId(itemId);
       this.dataLoaded = true;
       this.maxTimeStep = num_timesteps;
 
       // Setup polling to watch for new data.
-      this.poll(itemId);
+      this.poll();
 
       // Setup polling to autosave view
       this.autosave();
 
-      // Default to playing once a parameter has been selected
-      this.togglePlayPause();
-
-      // Update step/play/pause state if initial data came from View
-      this.setViewStep();
+      if (!loadedFromView) {
+        // Default to playing once a parameter has been selected
+        this.setPaused(false);
+      }
     },
 
-    lookupRunId(itemId) {
+    lookupRunId() {
       // Get the grandparent folder for this item. Its metadata will tell us
       // what timestamps are available.
-      this.girderRest.get(`/item/${itemId}`)
+      this.girderRest.get(`/item/${this.itemId}`)
       .then((response) => {
         return this.girderRest.get(`/folder/${response.data.folderId}`);
       })
       .then((response) => {
         this.runId = response.data.parentId;
-        return this.poll(itemId);
+        return this.poll();
       });
     },
 
-    poll(itemId) {
+    poll() {
       if (!this.runId) {
-        return this.lookupRunId(itemId);
+        return this.lookupRunId(this.itemId);
       }
 
-      let timeout = this.currentTimeStep > 1 ? 10000 : 0;
+      let timeout = this.currentTimeStep >= 1 ? 10000 : 0;
       this._poller = setTimeout(async () => {
         try {
           const { data } = await this.girderRest.get(`/folder/${this.runId}`);
@@ -205,21 +215,21 @@ export default {
             }
           }
         } finally {
-          this.poll(itemId);
+          this.poll();
         }
       }, timeout);
     },
 
     removeColumn() {
       this.numLoadedGalleries -= this.numrows;
-      this.numcols -= 1;
-      this.updateCellWidth();
+      this.setColumns(this.numcols - 1);
+      this.setGridSize(this.rows * this.columns);
     },
 
     removeRow() {
       this.numLoadedGalleries -= this.numcols;
-      this.numrows -= 1;
-      this.updateCellHeight();
+      this.setRows(this.numrows - 1);
+      this.setGridSize(this.rows * this.columns);
     },
 
     tick() {
@@ -241,16 +251,6 @@ export default {
       }, wait_ms);
     },
 
-    togglePlayPause() {
-      this.paused = ! this.paused;
-      if (!this.paused) {
-        // Give the user a moment to view the first time step
-        // before progressing
-        const wait_ms = this.currentTimeStep === 1 ? 2000 : 0;
-        this.setTickWait(wait_ms);
-      }
-    },
-
     updateCellWidth() {
       this.cellWidth = (100 / this.numcols) + "%";
     },
@@ -267,7 +267,7 @@ export default {
     contextMenu(data) {
       const { id, name, event, isJson } = data;
       this.parameter = name;
-      this.itemId = id;
+      this.setCurrentItemId(id);
       this.showMenu = false;
       this.pos = [event.clientX, event.clientY];
       this.paramIsJson = isJson;
@@ -296,107 +296,42 @@ export default {
       });
     },
 
-    setColumns(val) {
-      this.numcols = val;
-      this.updateCellWidth();
-    },
-
-    setRows(val) {
-      this.numrows = val;
-      this.updateCellHeight();
-    },
-
-    viewSelected(view) {
-      this.view = view;
-      const cols = parseInt(view.columns, 10);
-      const rows = parseInt(view.rows, 10);
-      this.viewGrid = cols * rows;
-
-      if (this.numcols !== cols) {
-        this.setColumns(cols);
-      }
-      if (this.numrows !== rows) {
-        this.setRows(rows);
-      }
-      this.applyView(0);
-    },
-
-    applyView(change) {
-      this.galleryCount += change;
-      if (this.galleryCount === this.viewGrid) {
-        this.$refs.imageGallery.forEach((cell) => {
-          const { row, col } = cell.$attrs;
-          const itemId = this.view.items[`${row}::${col}`];
-          if (itemId) {
-            cell.itemId = this.view.items[`${row}::${col}`];
-          } else {
-            cell.clearGallery()
-          }
-        });
-        this.setViewStep();
-      }
-    },
-
-    setViewStep() {
-      if (!this.dataLoaded)
-        return
-      this.currentTimeStep = parseInt(this.view.step, 10);
-      this.paused = true;
-      this.view = null;
-      this.viewGrid = null;
+    applyView() {
+      this.$refs.imageGallery.forEach((cell) => {
+        const { row, col } = cell.$attrs;
+        const item = this.items[`${row}::${col}`];
+        if (item) {
+          cell.loadTemplateGallery(item);
+        } else {
+          cell.clearGallery()
+        }
+      });
+      this.setGridSize(0);
     },
 
     resetView() {
-      this.paused = true;
-      this.currentTimeStep = 0;
+      this.setPaused(true);
+      this.setCurrentTimeStep(1);
       this.maxTimeStep = 0;
       this.setColumns(1);
       this.setRows(1);
+      this.setGridSize(1);
       this.numLoadedGalleries = 0;
       this.numReady = 0;
       this.dataLoaded = false;
       this.runId = null;
       this.location = null;
-      this.$refs.imageGallery[0].clearGallery();
-    },
-
-    setGlobalRange(range) {
-      this.globalRanges[`${this.itemId}`] = range;
-      this.$refs.imageGallery.forEach((cell) => {
-        if (cell.itemId === this.itemId) {
-          cell.react();
-        }
-      });
     },
 
     autosave() {
       this._autosave = setTimeout(async () => {
         try {
-          if (this.autosave_run) {
-            const userId = this.girderRest.user._id;
-            const name = `${this.simulation}_${this.run_id}_${userId}`;
-            const meta = {simulation: this.simulation, run: this.run_id};
-            const formData = saveLayout(
-              this.$refs.imageGallery,
-              name,
-              this.numrows,
-              this.numcols,
-              meta,
-              this.currentTimeStep,
-              false);
-            // Check if auto-saved view already exists
-            const { data } = await this.girderRest.get(
-              `/view?text=${name}&exact=true&limit=50&sort=name&sortdir=1`);
-            if (data.length) {
-              // If it does, update it
-              this.lastSaved = (
-                await this.girderRest.put(`/view/${data[0]._id}`, formData)
-                .then(() => { return new Date(); }));
-            } else {
-              // If not, create it
-              this.lastSaved = await this.girderRest.post('/view', formData)
-              .then(() => { return new Date(); });
-            }
+          if (this.shouldAutoSave) {
+            this.createItems(this.$refs.imageGallery);
+            const name = `${this.simulation}_${this.runId}_${this.creator}`;
+            this.setAutoSaveName(name);
+            this.setPublic(false);
+            this.viewAutoSaved();
           }
         } finally {
           this.autosave();
@@ -408,15 +343,13 @@ export default {
       const { data } = await this.girderRest.get(`/item/${itemId}/rootpath`);
       const runIdx = data.length - 2;
       const simulationIdx = runIdx - 1;
-      this.run_id = data[runIdx].object._id;
-      this.simulation = data[simulationIdx].object._id;
-      this.autosave_run = true;
+      this.setRunId(data[runIdx].object._id);
+      this.setSimulation(data[simulationIdx].object._id);
+      this.setShouldAutoSave(true);
     },
 
     loadAutoSavedView() {
-      this.viewSelected(this.autoSavedView);
-      this.autoSavedView = null;
-      this.loadAutoSavedViewDialog = false;
+      this.loadAutoSave();
     }
   },
 
@@ -424,14 +357,28 @@ export default {
     this.$on('data-loaded', this.initialDataLoaded);
     this.$on('gallery-ready', this.incrementReady);
     this.$on('param-selected', this.contextMenu);
-    this.$on('view-selected', this.viewSelected);
-    this.$on('range-updated', this.setGlobalRange);
-    this.$on('pause-gallery', () => {this.paused = true});
     this.$on('item-added', this.setRun);
-    this.$on('gallery-count-changed', this.applyView);
   },
 
   asyncComputed: {
+    ...mapGetters({
+      autoSavedViewDialog: 'UI_AUTO_SAVE_DIALOG',
+      cellCount: 'PLOT_VISIBLE_CELL_COUNT',
+      creator: 'VIEW_CREATOR',
+      currentTimeStep: 'PLOT_TIME_STEP',
+      globalRanges: 'PLOT_GLOBAL_RANGES',
+      gridSize: 'VIEW_GRID_SIZE',
+      itemId: 'PLOT_CURRENT_ITEM_ID',
+      items: 'VIEW_ITEMS',
+      numcols: 'VIEW_COLUMNS',
+      numrows: 'VIEW_ROWS',
+      paused: 'UI_PAUSE_GALLERY',
+      runId: 'VIEW_RUN_ID',
+      shouldAutoSave: 'VIEW_AUTO_SAVE_RUN',
+      simulation: 'VIEW_SIMULATION',
+      step: 'VIEW_STEP',
+    }),
+
     location: {
       async get() {
         if (this.browserLocation) {
@@ -453,7 +400,15 @@ export default {
     },
 
     loggedOut() {
-      return this.girderRest.user === null;
+      const loggedOut = (this.girderRest.user === null);
+      if (loggedOut) {
+        if (this.numLoadedGalleries > 0) {
+          this.resetView();
+        }
+      } else {
+        this.setCreator(this.girderRest.user._id);
+      }
+      return loggedOut;
     },
   },
 
@@ -470,12 +425,6 @@ export default {
       }
     },
 
-    loggedOut(noCurrentUser) {
-      if (noCurrentUser && this.numLoadedGalleries > 0) {
-        this.resetView();
-      }
-    },
-
     async location(current) {
       if (current._modelType !== 'folder') {
         return;
@@ -486,26 +435,53 @@ export default {
       let runFolder = current;
       let simFolder = data[data.length - 1].object;
       if (!('meta' in runFolder && data.length > 1)) {
-        runFolder = data[data.length - 1].object;
+        runFolder = data[data.length - 1]?.object;
         simFolder = data[data.length - 2]?.object;
       }
 
       if ('meta' in runFolder && 'currentTimestep' in runFolder.meta) {
         // This is a run folder. Check for auto-saved view to load and
         // update simulation and run id.
-        this.simulation = simFolder._id;
-        this.run_id = runFolder._id;
-        this.autosave_run = false;
-        const userId = this.girderRest.user._id;
-        const viewName = `${this.simulation}_${this.run_id}_${userId}`;
-        const { data } = await this.girderRest.get(
-          `/view?text=${viewName}&exact=true&limit=50&sort=name&sortdir=1`)
-        const view = data[0]
-        if (view) {
-          this.loadAutoSavedViewDialog = true;
-          this.autoSavedView = view;
+        this.setSimulation(simFolder._id);
+        this.setRunId(runFolder._id);
+        this.fetchAutoSave();
+      }
+    },
+
+    numcols() {
+      this.updateCellWidth();
+    },
+
+    numrows() {
+      this.updateCellHeight();
+    },
+
+    gridSize(size) {
+      if (size === this.cellCount && this.$refs.imageGallery) {
+        this.applyView();
+      }
+    },
+
+    cellCount(count) {
+      if (this.gridSize === count) {
+        if (this.loggedOut && this.$refs.imageGallery) {
+          this.$refs.imageGallery.forEach((cell) => {
+            cell.loadTemplateGallery({id: null, zoom: null});
+            cell.clearGallery();
+          });
+        } else if (this.$refs.imageGallery) {
+          this.applyView();
         }
       }
-    }
+    },
+
+    paused(isPaused) {
+      if (!isPaused) {
+        // Give the user a moment to view the first time step
+        // before progressing
+        const wait_ms = this.currentTimeStep === 1 ? 2000 : 0;
+        this.setTickWait(wait_ms);
+      }
+    },
   },
 };

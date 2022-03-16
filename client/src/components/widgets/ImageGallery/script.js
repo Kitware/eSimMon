@@ -1,28 +1,56 @@
 import Plotly from 'plotly.js-basic-dist-min';
-import { isNil, isEqual } from 'lodash';
+import { isNil } from 'lodash';
+import { mapGetters, mapActions, mapMutations } from 'vuex';
+
+function parseZoomValues(data, globalY) {
+  if (data['xaxis.autorange'] || data['yaxis.autorange']) {
+    return
+  }
+
+  const zoomLevel = {
+    xAxis: [data['xaxis.range[0]'], data['xaxis.range[1]']],
+    yAxis: [data['yaxis.range[0]'], data['yaxis.range[1]']]
+  }
+  if (globalY) {
+    zoomLevel.yAxis = globalY;
+  }
+  return zoomLevel;
+}
+
+function addAnnotations(data, zoom, yRange) {
+  if (!zoom) {
+    return
+  }
+
+  const xRange = [data.x[0], data.x[data.x.length-1]];
+  if (!yRange)
+    yRange = [Math.min(...data.y), Math.max(...data.y)];
+  const rangeText = (
+    `<b>
+      X: [${xRange[0].toPrecision(4)}, ${xRange[1].toPrecision(4)}]
+      Y: [${yRange[0].toPrecision(4)}, ${yRange[1].toPrecision(4)}]
+    </b>`
+  )
+
+  const annotations = [{
+    xref: 'paper',
+    yref: 'paper',
+    x: 0,
+    xanchor: 'left',
+    y: 1,
+    yanchor: 'bottom',
+    text: rangeText,
+    showarrow: false
+  }]
+  return annotations;
+}
 
 export default {
   name: "plotly",
 
   props: {
-    currentTimeStep: {
-      type: Number,
-      required: true
-    },
     maxTimeStep: {
       type: Number,
-      required: true
-    },
-    numrows: {
-      type: Number,
-      required: true
-    },
-    numcols: {
-      type: Number,
-      required: true
-    },
-    globalRanges: {
-      type: Object,
       required: true
     },
   },
@@ -36,13 +64,28 @@ export default {
       loadedImages: [],
       pendingImages: 0,
       rows: [],
-      step: 1,
       json: true,
       image: null,
+      eventHandlersSet: false,
+      loadedFromView: false,
+      zoom: null,
+      xaxis: null,
+      selectedTimeStep: 0,
     };
   },
 
   asyncComputed: {
+    ...mapGetters({
+      currentTimeStep: 'PLOT_TIME_STEP',
+      globalRanges: 'PLOT_GLOBAL_RANGES',
+      globalZoom: 'PLOT_ZOOM',
+      numcols: 'VIEW_COLUMNS',
+      numrows: 'VIEW_ROWS',
+      syncZoom: 'UI_ZOOM_SYNC',
+      zoomAxis: 'PLOT_ZOOM_X_AXIS',
+      timeStepSelectorMode: 'UI_TIME_STEP_SELECTOR',
+    }),
+
     rows: {
       default: [],
       async get() {
@@ -56,14 +99,19 @@ export default {
         return this.rows;
       },
     },
+
+    zoomLevels() {
+      var zoom = this.zoom;
+      if (this.syncZoom && this.globalZoom && this.xaxis === this.zoomAxis)
+        zoom = this.globalZoom;
+      return zoom;
+    }
   },
 
   watch: {
     currentTimeStep: {
       immediate: true,
       handler () {
-        if (this.currentTimeStep >= 1)
-          this.step = this.currentTimeStep;
         this.preCacheImages();
         this.react();
       }
@@ -93,9 +141,32 @@ export default {
         this.react();
       }
     },
+    globalRanges: {
+      handler() {
+        this.react();
+      },
+      deep: true,
+      immediate: true,
+    },
+    zoomLevels: {
+      immediate: true,
+      handler() {
+        this.react();
+      }
+    },
   },
 
   methods: {
+    ...mapActions({
+      setZoomDetails: 'PLOT_ZOOM_DETAILS',
+      updateZoom: 'PLOT_ZOOM_VALUES_UPDATED',
+    }),
+    ...mapMutations({
+      setTimeStep: 'PLOT_TIME_STEP_SET',
+      setZoomOrigin: 'PLOT_ZOOM_ORIGIN_SET',
+      updateCellCount: 'PLOT_VISIBLE_CELL_COUNT_SET'
+    }),
+
     preventDefault: function (event) {
       event.preventDefault();
     },
@@ -120,7 +191,8 @@ export default {
       if (this.initialLoad) {
         // Not sure why this level of parent chaining is required
         // to get the app to be able to hear the event.
-        this.$parent.$parent.$parent.$parent.$emit("data-loaded", this.rows.length, this.itemId);
+        this.$parent.$parent.$parent.$parent.$emit(
+          "data-loaded", this.rows.length, this.itemId, this.loadedFromView);
         this.initialLoad = false;
       }
     },
@@ -137,9 +209,16 @@ export default {
 
     loadGallery: function (event) {
       event.preventDefault();
+      this.zoom = null
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
       this.itemId = items[0]._id;
+      this.loadedFromView = false;
       this.$root.$children[0].$emit('item-added', this.itemId);
+    },
+    loadTemplateGallery: function (item) {
+      this.itemId = item.id;
+      this.zoom = item.zoom;
+      this.loadedFromView = true;
     },
 
     preCacheImages: function () {
@@ -148,14 +227,14 @@ export default {
         return;
       }
       // Find index of current time step
-      let idx = this.rows.findIndex(file => file.step === this.step);
+      let idx = this.rows.findIndex(file => file.step === this.currentTimeStep);
       if (idx < 0) {
-        let prevStep = this.step - 1;
+        let prevStep = this.currentTimeStep - 1;
         while (prevStep > 0 && idx < 0) {
           idx = this.rows.findIndex(file => file.step === prevStep);
           prevStep -= 1;
         }
-        let nextStep = this.step + 1;
+        let nextStep = this.currentTimeStep + 1;
         while (nextStep <= this.maxTimeStep && idx < 0) {
           idx = this.rows.findIndex(file => file.step === nextStep);
           nextStep += 1;
@@ -211,25 +290,32 @@ export default {
     },
 
     react: function () {
-      let nextImage = this.loadedImages.find(img => img.timestep == this.step);
+      let nextImage = this.loadedImages.find(img => img.timestep == this.currentTimeStep);
       if (isNil(nextImage) && this.loadedImages.length == 1)
         nextImage = this.loadedImages[0];
       if (!isNil(nextImage)) {
-        if (isEqual(nextImage.ext, 'json')) {
-          nextImage.layout.yaxis.autorange = true;
-          if (this.itemId in this.globalRanges) {
-            const range = this.globalRanges[`${this.itemId}`];
-            if (range) {
-              nextImage.layout.yaxis.autorange = false;
-              nextImage.layout.yaxis.range = range;
-            }
-          }
-          Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {autosize: true});
-          this.json = true;
-        } else {
-          this.json = false;
-          this.image = nextImage;
+        if (!this.xaxis)
+          this.xaxis = nextImage.layout.xaxis.title.text;
+
+        nextImage.layout.yaxis.autorange = true;
+        if (this.zoomLevels) {
+          nextImage.layout.xaxis.range = this.zoomLevels.xAxis;
+          nextImage.layout.yaxis.range = this.zoomLevels.yAxis;
+          nextImage.layout.yaxis.autorange = false;
         }
+        var range = null;
+        if (this.itemId in this.globalRanges) {
+          range = this.globalRanges[`${this.itemId}`];
+          if (range) {
+            nextImage.layout.yaxis.range = [...range];
+            nextImage.layout.yaxis.autorange = false;
+          }
+        }
+        nextImage.layout['annotations'] = addAnnotations(nextImage.data[0], this.zoomLevels, range);
+        Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {autosize: true});
+        if (!this.eventHandlersSet)
+          this.setEventHandlers();
+        this.json = true;
       }
       this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
     },
@@ -252,13 +338,40 @@ export default {
       this.image = null;
       this.initialLoad = true;
     },
+    setEventHandlers() {
+      this.$refs.plotly.on('plotly_relayout', (eventdata) => {
+        this.zoom = parseZoomValues(eventdata, this.globalRanges[this.itemId]);
+        if (!this.zoomOrigin) {
+          this.setZoomOrigin(this.itemId);
+        }
+        if (this.syncZoom && this.itemId !== this.zoomOrigin) {
+          this.setZoomDetails(this.zoom, this.xaxis);
+        }
+        this.react();
+      });
+      this.$refs.plotly.on('plotly_click', (data) => {
+        this.selectedTimeStep = parseInt(data.points[0].x);
+      });
+      this.$refs.plotly.on('plotly_doubleclick', () => {
+        if (this.timeStepSelectorMode && this.xaxis.toLowerCase() === 'time') {
+          this.setTimeStep(this.selectedTimeStep);
+          return false;
+        } else {
+          this.zoom = null;
+          if (this.syncZoom) {
+            this.setZoomDetails(null, null);
+          }
+        }
+      });
+      this.eventHandlersSet = true;
+    },
   },
 
-  mounted() {
-    this.$root.$children[0].$emit('gallery-count-changed', 1);
+  mounted () {
+    this.updateCellCount(1);
   },
 
   destroyed() {
-    this.$root.$children[0].$emit('gallery-count-changed', -1);
+    this.updateCellCount(-1);
   }
 };

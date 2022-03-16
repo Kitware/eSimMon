@@ -1,5 +1,6 @@
 import SaveDialog from '../../widgets/SaveDialog';
 import LoadDialog from '../../widgets/LoadDialog';
+import { mapActions, mapGetters, mapMutations } from 'vuex';
 
 export default {
   inject: ['girderRest'],
@@ -13,8 +14,8 @@ export default {
     return {
       showSaveDialog: false,
       showLoadDialog: false,
-      viewInfo: {},
-      views: []
+      zoomSync: 0,
+      selectTimeStep: null,
     };
   },
 
@@ -23,69 +24,48 @@ export default {
       type: Array,
       default: () => [],
     },
-    numrows: {
-      type: Number,
-      default: 1,
-    },
-    numcols: {
-      type: Number,
-      default: 1,
-    },
-    lastSaved: {
-      type: String,
-      default: '',
-    },
-    step: {
-      type: Number,
-      default: 1,
-    },
-    simulation: {
-      type: String,
-      default: '',
-    },
-    run: {
-      type: String,
-      default: '',
-    },
-  },
-
-  created: async function () {
-    this.$on('views-modified', this.getViews);
   },
 
   methods: {
-    async getViews() {
-      await this.girderRest.get('/view')
-        .then(({ data }) => {
-          this.views = data;
-          this.viewInfo = {};
-          data.forEach((view) => {
-            if (this.viewCreatedByUser(view)) {
-              this.viewInfo[view.name] = view._id;
-            }
-          });
-        })
-        .catch((error) => {
-          console.log('Could not fetch views: ', error);
-        });
-    },
+    ...mapActions({
+      fetchAllViews: 'VIEW_FETCH_ALL_AVAILABLE',
+      toggleSyncZoom: 'UI_TOGGLE_ZOOM_SYNC',
+      toggleSelectTimeStep: 'UI_TOGGLE_TIME_STEP',
+    }),
+    ...mapMutations({
+      setPaused: 'UI_PAUSE_GALLERY_SET',
+      setLoadDialogVisible: 'UI_SHOW_LOAD_DIALOG_SET',
+      setSaveDialogVisible: 'UI_SHOW_SAVE_DIALOG_SET',
+      setZoomOrigin: 'PLOT_ZOOM_ORIGIN_SET',
+    }),
     async saveView() {
-      await this.getViews();
-      this.showSaveDialog = true;
-      this.$root.$children[0].$emit("pause-gallery");
+      await this.fetchAllViews();
+      this.setSaveDialogVisible(true);
+      this.setPaused(true);
     },
     async loadView() {
-      await this.getViews();
-      this.showLoadDialog = true;
+      await this.fetchAllViews();
+      this.setLoadDialogVisible(true);
     },
-    viewCreatedByUser(item) {
-      return this.girderRest.user._id === item.creatorId;
-    }
   },
 
   computed: {
-    meta() {
-      return { simulation: this.simulation, run: this.run };
+    ...mapGetters({
+      lastSaved: 'VIEW_LAST_SAVED',
+      numcols: 'VIEW_COLUMNS',
+      numrows: 'VIEW_ROWS',
+      run: 'VIEW_RUN_ID',
+      simulation: 'VIEW_SIMULATION',
+      step: 'PLOT_TIME_STEP',
+    }),
+  },
+
+  watch: {
+    zoomSync(selected) {
+      this.toggleSyncZoom();
+      if(!selected) {
+        this.setZoomOrigin(null);
+      }
     }
   },
 };

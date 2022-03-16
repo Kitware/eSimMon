@@ -15,7 +15,8 @@
     "serialize-javascript": "^6.0.0",
     "set-value": "^4.0.1",
     "splitpanes": "^2.3.6",
-    "vue-mathjax": "^0.0.11"
+    "vue-mathjax": "^0.0.11",
+    "vuex": "^3.6.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.5.13",
