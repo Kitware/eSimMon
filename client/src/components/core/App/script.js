@@ -52,11 +52,11 @@ export default {
       createItems: 'VIEW_BUILD_ITEMS_OBJECT',
       fetchAutoSave: 'VIEW_FETCH_AUTO_SAVE',
       loadAutoSave: 'VIEW_LOAD_AUTO_SAVE',
-      setAutoSaveName: 'VIEW_AUTO_SAVE_NAME_SET',
       togglePlayPause: 'UI_TOGGLE_PLAY_PAUSE',
     }),
 
     ...mapMutations({
+      setAutoSaveName: 'VIEW_AUTO_SAVE_NAME_SET',
       setAutoSavedViewDialog: 'UI_AUTO_SAVE_DIALOG_SET',
       setColumns: 'VIEW_COLUMNS_SET',
       setCreator: 'VIEW_CREATOR_SET',
@@ -464,7 +464,7 @@ export default {
 
     cellCount(count) {
       if (this.gridSize === count) {
-        if (this.loggedOut) {
+        if (this.loggedOut && this.$refs.imageGallery) {
           this.$refs.imageGallery.forEach((cell) => {
             cell.loadTemplateGallery({id: null, zoom: null});
             cell.clearGallery();

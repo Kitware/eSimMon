@@ -1,5 +1,5 @@
 import Plotly from 'plotly.js-basic-dist-min';
-import { isNil, isEqual } from 'lodash';
+import { isNil } from 'lodash';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 function parseZoomValues(data, globalY) {
