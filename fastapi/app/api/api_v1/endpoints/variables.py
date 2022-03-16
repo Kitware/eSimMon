@@ -16,7 +16,6 @@ router = APIRouter()
 
 
 def get_group_folder_id(gc, variable_item_id):
-    print(variable_item_id)
     return gc.getItem(variable_item_id)["folderId"]
 
 

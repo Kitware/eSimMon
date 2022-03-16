@@ -3,3 +3,4 @@ ffmpeg-python
 girder-client
 pydantic[dotenv]
 uvicorn[standard]
+msgpack
