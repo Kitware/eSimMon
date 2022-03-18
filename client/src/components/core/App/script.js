@@ -174,7 +174,7 @@ export default {
 
       this.setCurrentItemId(itemId);
       this.dataLoaded = true;
-      this.maxTimeStep = num_timesteps;
+      this.maxTimeStep = num_timesteps + 2862;
 
       // Setup polling to watch for new data.
       this.poll();
