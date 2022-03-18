@@ -446,7 +446,7 @@ export default {
       // Load the cell attributes
       // Create a view of the data
       const connectivityView = new DataView(data.connectivity.buffer, data.connectivity.byteOffset,  data.connectivity.byteLength);
-      this.cells = new Uint32Array(data.connectivity.length * 4);
+      this.cells = new Int32Array(data.connectivity.length * 4);
       var idx = 0;
       const rowSize = 3 * Int32Array.BYTES_PER_ELEMENT; // 3 => columns
       for (let i = 0; i < data.connectivity.length; i+=rowSize) {
