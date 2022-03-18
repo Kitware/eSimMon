@@ -18,11 +18,6 @@
   display: flex;
 }
 
-.text-xs-end {
-  justify-content: flex-end;
-  display: flex;
-}
-
 // Make sure main content and plot divs are
 // as large as possible
 .v-card__text {
@@ -72,10 +67,9 @@
 .playback-controls {
   display: flex;
   flex-flow: column;
-  max-height: 20%;
-  min-height: 220px;
+  max-height: 240px;
+  min-height: 240px;
   overflow: auto;
-  padding: 5px;
   .row {
     justify-content: space-around;
     align-items: baseline;

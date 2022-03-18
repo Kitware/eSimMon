@@ -95,6 +95,7 @@ export default {
       axes: null,
       scalarBar: null,
       availableTimeSteps: [],
+      currentAvailableStep: 1,
     };
   },
 
@@ -268,7 +269,7 @@ export default {
             }
           }
           if (step < 1) {
-            step = 1;
+            step = Math.min(...this.availableTimeSteps);
           }
           return step;
         });
@@ -298,18 +299,18 @@ export default {
     },
     preCacheImages: async function () {
       // Load the next three images.
-      for (var i = this.currentTimeStep; i < this.currentTimeStep + 3; i++) {
-        if (i > this.maxTimeStep || i > this.rows.length) {
+      for (var i = 0; i < 3; i++) {
+        if (i > this.maxTimeStep) {
           break;
         }
+        this.currentAvailableStep += i;
         // Only load this image we haven't done so already.
-        let nextStep = this.availableTimeSteps[i];
+        let nextStep = this.availableTimeSteps[this.currentAvailableStep];
         let idx = this.rows.findIndex(image => image.step === nextStep);
-        if (idx) {
-          return;
+        if (idx < 0) {
+          const {plotType, img} = await this.fetchImage(nextStep);
+          this.rows.push({'img': img, 'step': nextStep, 'type': plotType});
         }
-        const {plotType, img} = await this.fetchImage(nextStep);
-        this.rows.push({'img': img, 'step': nextStep, 'type': plotType});
       }
       this.react()
     },
