@@ -444,15 +444,22 @@ export default {
       this.mapper = vtkMapper.newInstance();
 
       // Load the cell attributes
-      this.cells = new Array(data.connectivity.length * 4);
+      // Create a view of the data
+      const connectivityView = new DataView(data.connectivity.buffer, data.connectivity.byteOffset,  data.connectivity.byteLength);
+      this.cells = new Uint32Array(data.connectivity.length * 4);
       var idx = 0;
-      data.connectivity.forEach((indicies) => {
+      const rowSize = 3 * Int32Array.BYTES_PER_ELEMENT; // 3 => columns
+      for (let i = 0; i < data.connectivity.length; i+=rowSize) {
         this.cells[idx++] = 3;
-        this.cells[idx++] = indicies[0];
-        this.cells[idx++] = indicies[1];
-        this.cells[idx++] = indicies[2];
-      });
-      this.mesh.getPolys().setData(Uint32Array.from(this.cells));
+        let index = i
+        this.cells[idx++] = connectivityView.getInt32(index, true);
+        index += 4
+        this.cells[idx++] = connectivityView.getInt32(index, true);
+        index += 4
+        this.cells[idx++] = connectivityView.getInt32(index, true);
+      }
+      this.mesh.getPolys().setData(this.cells);
+
 
       // Setup colormap
       const lut = vtkColorTransferFunction.newInstance();
@@ -487,22 +494,29 @@ export default {
     },
     updateRenderer(data) {
       // Load the point attributes
-      const points = new Array(data.nodes.length * 3);
+      // Create a view of the data
+      const pointsView = new DataView(data.nodes.buffer, data.nodes.byteOffset,  data.nodes.byteLength);
+      const points = new Float64Array(data.nodes.length * 3);
       var idx = 0;
-      data.nodes.forEach((coords) => {
-        points[idx++] = coords[0];
-        points[idx++] = coords[1];
+      const rowSize = 2 * Float64Array.BYTES_PER_ELEMENT; // 3 => columns
+      for (let i = 0; i < data.nodes.length; i+=rowSize) {
+        points[idx++] = pointsView.getFloat64(i, true);
+        points[idx++] = pointsView.getFloat64(i + 8, true);
         points[idx++] = 0.0;
-      });
+      }
 
       // Set the scalars
+      // As we need a typed array we have to copy the data as its unaligned, so we have an aligned buffer to
+      // use to create the typed array
+      const buffer = data.color.buffer.slice(data.color.byteOffset, data.color.byteOffset + data.color.byteLength)
+      const color = new Float64Array(buffer, 0, buffer.byteLength / Float64Array.BYTES_PER_ELEMENT)
       const scalars = vtkDataArray.newInstance({
         name: 'scalars',
-        values: Float32Array.from(data.color),
+        values: color,
       });
 
       // Build the polydata
-      this.mesh.getPoints().setData(Float32Array.from(points), 3);
+      this.mesh.getPoints().setData(points, 3);
       this.mesh.getPointData().setScalars(scalars);
 
       // Setup colormap
