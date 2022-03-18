@@ -230,6 +230,7 @@ export default {
             reader.onload = () => {
               if (plotType === 'vtk') {
                 const img = decode(reader.result);
+                Plotly.purge(this.$refs.plotly);
                 this.addRenderer(img);
                 this.loadedImages.push({
                   timestep: timeStep,
@@ -238,6 +239,7 @@ export default {
                 });
                 return resolve(img);
               } else {
+                this.removeRenderer();
                 const img = JSON.parse(reader.result);
                 this.loadedImages.push({
                   timestep: timeStep,
@@ -437,7 +439,6 @@ export default {
       }
       this.mesh.getPolys().setData(this.cells);
 
-
       // Setup colormap
       const lut = vtkColorTransferFunction.newInstance();
       lut.applyColorMap(vtkColorMaps.getPresetByName('jet'));
@@ -512,6 +513,12 @@ export default {
       this.scalarBar.setScalarsToColors(lut);
 
       this.renderer.resetCamera();
+    },
+    removeRenderer() {
+      if (this.renderer) {
+        this.renderWindow.removeRenderer(this.renderer);
+        this.renderer = null;
+      }
     },
   },
 
