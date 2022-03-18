@@ -7,6 +7,9 @@ export default {
     itemId: null,
     zoomXAxis: null,
     zoomOrigin: null,
+    maxTimeStep: 0,
+    loadedFromView: false,
+    initialLoad: true,
   },
   getters: {
     PLOT_ZOOM(state) {
@@ -30,6 +33,15 @@ export default {
     PLOT_ZOOM_ORIGIN(state) {
       return state.zoomOrigin;
     },
+    PLOT_MAX_TIME_STEP(state) {
+      return state.maxTimeStep;
+    },
+    PLOT_LOADED_FROM_VIEW(state) {
+      return state.loadedFromView;
+    },
+    PLOT_INITIAL_LOAD(state) {
+      return state.initialLoad;
+    },
   },
   mutations: {
     PLOT_ZOOM_SET(state, val) {
@@ -52,7 +64,16 @@ export default {
     },
     PLOT_ZOOM_ORIGIN_SET(state, val) {
       state.zoomOrigin = val;
-    }
+    },
+    PLOT_MAX_TIME_STEP_SET(state, val) {
+      state.maxTimeStep = val;
+    },
+    PLOT_LOADED_FROM_VIEW_SET(state, val) {
+      state.loadedFromView = val;
+    },
+    PLOT_INITIAL_LOAD_SET(state, val) {
+      state.initialLoad = val;
+    },
   },
   actions: {
     PLOT_GLOBAL_RANGES_UPDATED({state}, range) {

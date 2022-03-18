@@ -76,7 +76,6 @@ export default {
 
   data() {
     return {
-      initialLoad: true,
       itemId: null,
       loadedImages: [],
       pendingImages: 0,
@@ -95,6 +94,7 @@ export default {
       actor: null,
       axes: null,
       scalarBar: null,
+      availableTimeSteps: [],
     };
   },
 
@@ -109,6 +109,7 @@ export default {
       syncZoom: 'UI_ZOOM_SYNC',
       zoomAxis: 'PLOT_ZOOM_X_AXIS',
       timeStepSelectorMode: 'UI_TIME_STEP_SELECTOR',
+      initialLoad: 'PLOT_INITIAL_LOAD',
     }),
 
     rows: {
@@ -119,7 +120,7 @@ export default {
         }
 
         if (this.rows.length == 0) {
-          this.loadImageUrls();
+          this.loadImage();
         }
         return this.rows;
       },
@@ -151,7 +152,7 @@ export default {
     maxTimeStep: {
       immediate: true,
       handler () {
-        this.loadImageUrls();
+        this.loadImage();
       }
     },
     numrows: {
@@ -191,55 +192,15 @@ export default {
     ...mapMutations({
       setTimeStep: 'PLOT_TIME_STEP_SET',
       setZoomOrigin: 'PLOT_ZOOM_ORIGIN_SET',
-      updateCellCount: 'PLOT_VISIBLE_CELL_COUNT_SET'
+      updateCellCount: 'PLOT_VISIBLE_CELL_COUNT_SET',
+      setMaxTimeStep: 'PLOT_MAX_TIME_STEP_SET',
+      setItemId: 'PLOT_CURRENT_ITEM_ID_SET',
+      setLoadedFromView: 'PLOT_LOADED_FROM_VIEW_SET',
+      setInitialLoad: 'PLOT_INITIAL_LOAD_SET',
     }),
 
     preventDefault: function (event) {
       event.preventDefault();
-    },
-
-    loadImageUrls: async function () {
-      if (!this.itemId) {
-        return;
-      }
-
-      const response = await this.callFastEndpoint(`variables/${this.itemId}/timesteps`);
-
-      this.rows = await Promise.all(response.map(async function(val) {
-        var plotType = 'vtk';
-        let img = await this.callFastEndpoint(`variables/${this.itemId}/timesteps/${val}/plot`, {responseType: 'blob'})
-          .then((response) => {
-            const reader = new FileReader();
-            if (response.type === 'application/msgpack') {
-              reader.readAsArrayBuffer(response);
-            } else {
-              reader.readAsText(response);
-              plotType = 'plotly';
-            }
-            return new Promise(resolve => {
-              reader.onload = () => {
-                if (plotType === 'vtk') {
-                  const data = decode(reader.result);
-                  this.addRenderer(data);
-                  return resolve(data);
-                } else {
-                  return resolve(JSON.parse(reader.result));
-                }
-              };
-            });
-          });
-        return {'img': img, 'step': val, 'type': plotType};
-      }, this));
-
-      this.preCacheImages();
-
-      if (this.initialLoad) {
-        // Not sure why this level of parent chaining is required
-        // to get the app to be able to hear the event.
-        this.$parent.$parent.$parent.$parent.$emit(
-          "data-loaded", this.rows.length, this.itemId, this.loadedFromView);
-        this.initialLoad = false;
-      }
     },
 
     callEndpoint: async function (endpoint) {
@@ -253,89 +214,104 @@ export default {
       return data;
     },
 
+    fetchImage: async function(timeStep) {
+      var plotType = 'vtk';
+      let img = await this.callFastEndpoint(`variables/${this.itemId}/timesteps/${timeStep}/plot`, {responseType: 'blob'})
+        .then((response) => {
+          const reader = new FileReader();
+          if (response.type === 'application/msgpack') {
+            reader.readAsArrayBuffer(response);
+          } else {
+            reader.readAsText(response);
+            plotType = 'plotly';
+          }
+          return new Promise(resolve => {
+            reader.onload = () => {
+              if (plotType === 'vtk') {
+                const img = decode(reader.result);
+                this.addRenderer(img);
+                this.loadedImages.push({
+                  timestep: timeStep,
+                  data: img,
+                  type: plotType
+                });
+                return resolve(img);
+              } else {
+                const img = JSON.parse(reader.result);
+                this.loadedImages.push({
+                  timestep: timeStep,
+                  data: img.data,
+                  layout: img.layout,
+                  type: plotType,
+                });
+                return resolve(img);
+              }
+            };
+          });
+        });
+      return {plotType, img};
+    },
+    loadImage: async function() {
+      if (!this.itemId) {
+        return;
+      }
+      const firstAvailableStep = await this.callFastEndpoint(`variables/${this.itemId}/timesteps`)
+        .then((response) => {
+          this.availableTimeSteps = response.sort();
+          let step = -Infinity;
+          for (let i = 0; i < response.length; i++) {
+            if (response[i] === this.currentTimeStep) {
+              step = this.currentTimeStep;
+              break;
+            } else if (response[i] < this.currentTimeStep && response[i] > step){
+              step = response[i];
+            }
+          }
+          if (step < 1) {
+            step = 1;
+          }
+          return step;
+        });
+      const {plotType, img} = await this.fetchImage(firstAvailableStep);
+      this.rows[0] = {'img': img, 'step': firstAvailableStep, 'type': plotType};
+
+      this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...this.availableTimeSteps)));
+      this.setItemId(this.itemId);
+      this.setInitialLoad(false);
+
+      this.react();
+
+      this.preCacheImages();
+    },
     loadGallery: function (event) {
       event.preventDefault();
       this.zoom = null
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
       this.itemId = items[0]._id;
-      this.loadedFromView = false;
+      this.setLoadedFromView(false);
       this.$root.$children[0].$emit('item-added', this.itemId);
     },
     loadTemplateGallery: function (item) {
       this.itemId = item.id;
       this.zoom = item.zoom;
-      this.loadedFromView = true;
+      this.setLoadedFromView(true);
     },
-    preCacheImages: function () {
-      // Return early if we haven't loaded the list of images from Girder yet.
-      if (this.rows === null || this.rows.constructor !== Array || this.rows.length < 1) {
-        return;
-      }
-      // Find index of current time step
-      let idx = this.rows.findIndex(file => file.step === this.currentTimeStep);
-      if (idx < 0) {
-        let prevStep = this.currentTimeStep - 1;
-        while (prevStep > 0 && idx < 0) {
-          idx = this.rows.findIndex(file => file.step === prevStep);
-          prevStep -= 1;
-        }
-        let nextStep = this.currentTimeStep + 1;
-        while (nextStep <= this.maxTimeStep && idx < 0) {
-          idx = this.rows.findIndex(file => file.step === nextStep);
-          nextStep += 1;
-        }
-      }
-      // Load the current image and the next two.
-      var any_images_loaded = false;
-      for (var i = idx + 1; i < idx + 3; i++) {
+    preCacheImages: async function () {
+      // Load the next three images.
+      for (var i = this.currentTimeStep; i < this.currentTimeStep + 3; i++) {
         if (i > this.maxTimeStep || i > this.rows.length) {
           break;
         }
-
         // Only load this image we haven't done so already.
-        var load_image = true;
-        for (var j = 0; j < this.loadedImages.length; j++) {
-          if (this.loadedImages[j].timestep === i) {
-            load_image = false;
-            break;
-          }
+        let nextStep = this.availableTimeSteps[i];
+        let idx = this.rows.findIndex(image => image.step === nextStep);
+        if (idx) {
+          return;
         }
-        if (load_image) {
-          // Javascript arrays are 0-indexed but our simulation timesteps are 1-indexed.
-          any_images_loaded = true;
-          this.pendingImages = 1;
-          const img = this.rows[i - 1].img;
-          const type = this.rows[i - 1].type;
-          const step = this.rows[i - 1].step;
-          if (type === 'plotly') {
-            this.loadedImages.push({
-              timestep: step,
-              data: img.data,
-              layout: img.layout,
-              type: type,
-            });
-          } else {
-            this.loadedImages.push({
-              timestep: step,
-              data: img,
-              type: type
-            });
-          }
-          if (this.loadedImages.length == 1) {
-            this.react();
-          }
-        }
+        const {plotType, img} = await this.fetchImage(nextStep);
+        this.rows.push({'img': img, 'step': nextStep, 'type': plotType});
       }
-
-      // Reduce memory footprint by only keeping ten images per gallery.
-      if (this.loadedImages.length > 10) {
-        this.loadedImages = this.loadedImages.slice(-10);
-      }
-
-      // Report this gallery as ready if we didn't need to load any new images.
-      if (!any_images_loaded && this.pendingImages == 0) {
-        this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
-      }
+      this.react()
     },
     react: function () {
       let nextImage = this.loadedImages.find(img => img.timestep == this.currentTimeStep);
@@ -391,7 +367,7 @@ export default {
       this.pendingImages = 0;
       this.json = true;
       this.image = null;
-      this.initialLoad = true;
+      this.setInitialLoad(true);
     },
     setEventHandlers() {
       this.$refs.plotly.on('plotly_relayout', (eventdata) => {

@@ -32,7 +32,6 @@ export default {
       cellHeight: '100vh',
       dataLoaded: false,
       forgotPasswordUrl: '/#?dialog=resetpassword',
-      maxTimeStep: 0,
       numLoadedGalleries: 0,
       numReady: 0,
       runId: null,
@@ -71,6 +70,7 @@ export default {
       setRunId: 'VIEW_RUN_ID_SET',
       setShouldAutoSave: 'VIEW_AUTO_SAVE_RUN_SET',
       setSimulation: 'VIEW_SIMULATION_SET',
+      setMaxTimeStep: 'PLOT_MAX_TIME_STEP_SET',
     }),
 
     addColumn() {
@@ -165,28 +165,6 @@ export default {
       this.setPaused(should_pause);
     },
 
-    initialDataLoaded(num_timesteps, itemId, loadedFromView) {
-      this.numLoadedGalleries += 1;
-      if (this.dataLoaded) {
-          return
-      }
-
-      this.setCurrentItemId(itemId);
-      this.dataLoaded = true;
-      this.maxTimeStep = num_timesteps + 2862;
-
-      // Setup polling to watch for new data.
-      this.poll();
-
-      // Setup polling to autosave view
-      this.autosave();
-
-      if (!loadedFromView) {
-        // Default to playing once a parameter has been selected
-        this.setPaused(false);
-      }
-    },
-
     lookupRunId() {
       // Get the grandparent folder for this item. Its metadata will tell us
       // what timestamps are available.
@@ -212,7 +190,7 @@ export default {
           if ('meta' in data && 'currentTimestep' in data.meta) {
             var new_timestep = data.meta.currentTimestep;
             if (new_timestep > this.maxTimeStep) {
-              this.maxTimeStep = new_timestep;
+              this.setMaxTimeStep(new_timestep);
             }
           }
         } finally {
@@ -313,7 +291,7 @@ export default {
     resetView() {
       this.setPaused(true);
       this.setCurrentTimeStep(1);
-      this.maxTimeStep = 0;
+      this.setMaxTimeStep(0);
       this.setColumns(1);
       this.setRows(1);
       this.setGridSize(1);
@@ -378,6 +356,9 @@ export default {
       shouldAutoSave: 'VIEW_AUTO_SAVE_RUN',
       simulation: 'VIEW_SIMULATION',
       step: 'VIEW_STEP',
+      maxTimeStep: 'PLOT_MAX_TIME_STEP',
+      loadedFromView: 'PLOT_LOADED_FROM_VIEW',
+      initialDataLoaded: 'PLOT_INITIAL_LOAD',
     }),
 
     location: {
@@ -482,6 +463,29 @@ export default {
         // before progressing
         const wait_ms = this.currentTimeStep === 1 ? 2000 : 0;
         this.setTickWait(wait_ms);
+      }
+    },
+
+    initialDataLoaded(initialLoad) {
+      if (initialLoad) {
+        return;
+      }
+
+      this.numLoadedGalleries += 1;
+      if (this.dataLoaded) {
+          return
+      }
+      this.dataLoaded = true;
+
+      // Setup polling to watch for new data.
+      this.poll();
+
+      // Setup polling to autosave view
+      this.autosave();
+
+      if (!this.loadedFromView) {
+        // Default to playing once a parameter has been selected
+        this.setPaused(false);
       }
     },
   },
