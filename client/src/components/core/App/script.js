@@ -137,8 +137,7 @@ export default {
       const data = this.girderRest.get(endpoint)
                     .then(function(result) {
                       if (result && !self.cancel && result.data.length) {
-                        let timestep = self.currentTimeStep ? self.currentTimeStep-1 : 1;
-                        endpoint = `${self.fastRestUrl}/variables/${result.data[0]._id}/timesteps/${timestep}/plot`;
+                        endpoint = `${self.fastRestUrl}/variables/${result.data[0]._id}/timesteps/${self.currentTimeStep}/plot`;
 
                         return new Promise((resolve) => {
                           const data = self.girderRest.get(endpoint);
