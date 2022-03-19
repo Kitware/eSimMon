@@ -10,6 +10,7 @@ export default {
     maxTimeStep: 0,
     loadedFromView: false,
     initialLoad: true,
+    minTimeStep: 1,
   },
   getters: {
     PLOT_ZOOM(state) {
@@ -41,6 +42,9 @@ export default {
     },
     PLOT_INITIAL_LOAD(state) {
       return state.initialLoad;
+    },
+    PLOT_MIN_TIME_STEP(state) {
+      return state.minTimeStep;
     },
   },
   mutations: {
@@ -74,6 +78,9 @@ export default {
     PLOT_INITIAL_LOAD_SET(state, val) {
       state.initialLoad = val;
     },
+    PLOT_MIN_TIME_STEP_SET(state, val) {
+      state.minTimeStep = val;
+    },
   },
   actions: {
     PLOT_GLOBAL_RANGES_UPDATED({state}, range) {
@@ -82,6 +89,10 @@ export default {
     PLOT_ZOOM_DETAILS({commit}, zoom, xAxis) {
       commit('PLOT_ZOOM_SET', zoom);
       commit('PLOT_ZOOM_X_AXIS_SET', xAxis);
+    },
+    PLOT_MIN_TIME_STEP_CHANGED({state, commit}, val) {
+      commit('PLOT_MIN_TIME_STEP_SET', val);
+      commit('PLOT_TIME_STEP_SET', Math.max(state.currentTimeStep, val));
     },
   },
 }

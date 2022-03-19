@@ -358,6 +358,7 @@ export default {
       maxTimeStep: 'PLOT_MAX_TIME_STEP',
       loadedFromView: 'PLOT_LOADED_FROM_VIEW',
       initialDataLoaded: 'PLOT_INITIAL_LOAD',
+      minTimeStep: 'PLOT_MIN_TIME_STEP',
     }),
 
     location: {

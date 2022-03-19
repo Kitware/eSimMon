@@ -111,6 +111,7 @@ export default {
       zoomAxis: 'PLOT_ZOOM_X_AXIS',
       timeStepSelectorMode: 'UI_TIME_STEP_SELECTOR',
       initialLoad: 'PLOT_INITIAL_LOAD',
+      minTimeStep: 'PLOT_MIN_TIME_STEP',
     }),
 
     rows: {
@@ -188,6 +189,7 @@ export default {
     ...mapActions({
       setZoomDetails: 'PLOT_ZOOM_DETAILS',
       updateZoom: 'PLOT_ZOOM_VALUES_UPDATED',
+      setMinTimeStep: 'PLOT_MIN_TIME_STEP_CHANGED',
     }),
     ...mapMutations({
       setTimeStep: 'PLOT_TIME_STEP_SET',
@@ -259,6 +261,8 @@ export default {
       const firstAvailableStep = await this.callFastEndpoint(`variables/${this.itemId}/timesteps`)
         .then((response) => {
           this.availableTimeSteps = response.sort();
+          this.setMinTimeStep(
+            Math.max(this.minTimeStep, Math.min(...this.availableTimeSteps)));
           // Make sure there is an image associated with this time step
           let step = this.availableTimeSteps.find(
             step => step === this.currentTimeStep);
