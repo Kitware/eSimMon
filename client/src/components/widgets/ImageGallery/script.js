@@ -239,7 +239,6 @@ export default {
                 });
                 return resolve(img);
               } else {
-                this.removeRenderer();
                 const img = JSON.parse(reader.result);
                 this.loadedImages.push({
                   timestep: timeStep,
@@ -292,12 +291,14 @@ export default {
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
       this.itemId = items[0]._id;
       this.setLoadedFromView(false);
+      this.removeRenderer();
       this.$root.$children[0].$emit('item-added', this.itemId);
     },
     loadTemplateGallery: function (item) {
       this.itemId = item.id;
       this.zoom = item.zoom;
       this.setLoadedFromView(true);
+      this.removeRenderer();
     },
     preCacheImages: async function () {
       // Load the next three images.
