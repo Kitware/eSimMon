@@ -140,7 +140,6 @@ export default {
       immediate: true,
       handler () {
         this.preCacheImages();
-        this.react();
       }
     },
     itemId: {
@@ -301,12 +300,18 @@ export default {
       this.removeRenderer();
     },
     preCacheImages: async function () {
+      const numTimeSteps = this.availableTimeSteps.length;
+      if (!numTimeSteps) {
+        // We have not selected an item, do not attempt to load the images
+        return;
+      }
       // Load the next three images.
       for (var i = 0; i < 3; i++) {
-        if (i > this.maxTimeStep) {
+        this.currentAvailableStep += i;
+        if (i > this.maxTimeStep || this.currentAvailableStep >= numTimeSteps) {
+          // There are no more images to load
           break;
         }
-        this.currentAvailableStep += i;
         // Only load this image we haven't done so already.
         let nextStep = this.availableTimeSteps[this.currentAvailableStep];
         let idx = this.rows.findIndex(image => image.step === nextStep);
