@@ -74,5 +74,9 @@ export default {
       }
       return [];
     }
-  }
+  },
+
+  mounted() {
+    this.options.itemsPerPage = -1;
+  },
 };
