@@ -106,7 +106,7 @@ export default {
               && node.textContent != parent.textContent)) {
           this.parameter = node.textContent.trim();
           this.cancel = false;
-          this.getRangeData(event);
+          // this.getRangeData(event);
         }
       }, 100),
 
@@ -128,22 +128,21 @@ export default {
       }
     },
 
-    callEndpoints(folderId) {
+    async callEndpoints(folderId) {
       if (!folderId)
         return;
 
-      var self = this;
+      var data = null;
       var endpoint = `item?folderId=${folderId}&name=${this.parameter}&limit=50&sort=lowerName&sortdir=1`;
-      const data = this.girderRest.get(endpoint)
-                    .then(function(result) {
-                      if (result && !self.cancel && result.data.length) {
-                        endpoint = `${self.fastRestUrl}/variables/${result.data[0]._id}/timesteps/${self.currentTimeStep}/plot`;
-
-                        return new Promise((resolve) => {
-                          const data = self.girderRest.get(endpoint);
-                          resolve(data);
-                        });}
-                    });
+      const itemId = await this.girderRest.get(endpoint).then(result => result.data[0]?._id);
+      if (itemId) {
+        var timeSteps = await this.girderRest.get(`${this.fastRestUrl}/variables/${itemId}/timesteps`)
+                          .then(results => results.data);
+        if (timeSteps.find(step => step === this.currentTimeStep)) {
+          endpoint = `${this.fastRestUrl}/variables/${itemId}/timesteps/${this.currentTimeStep}/plot`;
+          data = await this.girderRest.get(endpoint).then(response => response.data);
+        }
+      }
       return data;
     },
 
@@ -240,7 +239,7 @@ export default {
 
     incrementReady() {
       this.numReady += 1;
-      this.getRangeData(event);
+      // this.getRangeData();
     },
 
     contextMenu(data) {
