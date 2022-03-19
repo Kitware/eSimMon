@@ -1,7 +1,7 @@
 export default {
   state: {
     zoom: null,
-    currentTimeStep: 2862,
+    currentTimeStep: 1,
     visibleCells: 0,
     globalRanges: {},
     itemId: null,

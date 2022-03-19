@@ -259,17 +259,16 @@ export default {
       const firstAvailableStep = await this.callFastEndpoint(`variables/${this.itemId}/timesteps`)
         .then((response) => {
           this.availableTimeSteps = response.sort();
-          let step = -Infinity;
-          for (let i = 0; i < response.length; i++) {
-            if (response[i] === this.currentTimeStep) {
-              step = this.currentTimeStep;
-              break;
-            } else if (response[i] < this.currentTimeStep && response[i] > step){
-              step = response[i];
-            }
-          }
-          if (step < 1) {
-            step = Math.min(...this.availableTimeSteps);
+          // Make sure there is an image associated with this time step
+          let step = this.availableTimeSteps.find(
+            step => step === this.currentTimeStep);
+          if (isNil(step)) {
+            // If not, display the previous available image
+            // If no previous image display first available
+            let idx = this.availableTimeSteps.findIndex(
+              step => step > this.currentTimeStep);
+            idx = Math.max(idx-1, 0);
+            step = this.availableTimeSteps[idx];
           }
           return step;
         });
