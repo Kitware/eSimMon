@@ -235,7 +235,7 @@ async def upload_image(gc, folder, shot_name, run_name, variable, timestep, bits
         log.info('Uploading "%s/%s/%s".' % ('/'.join([str(i) for i in image_folders]), name, image_name))
         await gc.upload_file(variable_item, image_name, bits, size)
 
-async def create_variable_item(gc, folder, shot_name, run_name, group_name, variable_name, timestep):
+async def create_variable_item(gc, folder, shot_name, run_name, group_name, variable_name, timestep, time):
     log = logging.getLogger('adash')
     image_path = Path(variable_name)
 
@@ -254,6 +254,8 @@ async def create_variable_item(gc, folder, shot_name, run_name, group_name, vari
 
     timesteps = meta.setdefault('timesteps', [])
     timesteps.append(timestep)
+    time_values = meta.setdefault('time', [])
+    time_values.append(time)
 
     await gc.set_metadata('item', item['_id'], meta)
 
@@ -337,10 +339,16 @@ async def fetch_images(session, gc, folder, upload_site_url, shot_name, run_name
                     log.warning(f"Unable to extract groups_name for '{variable_name}' in {shot_name}, skipping.")
                     return
 
+                try:
+                    time = v['time']
+                except KeyError:
+                    log.warning(f"Unable to extract time for '{variable_name}' in {shot_name}, skipping.")
+                    return
+
                 info = None
 
                 # Ensure we have the variable item created
-                await create_variable_item(gc, folder, shot_name, run_name, group_name, variable_name, timestep)
+                await create_variable_item(gc, folder, shot_name, run_name, group_name, variable_name, timestep, time)
 
             tasks = []
             # Now upload the BP files

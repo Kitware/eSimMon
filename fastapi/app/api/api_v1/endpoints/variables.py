@@ -99,7 +99,10 @@ async def get_timesteps(variable_id: str, girder_token: str = Header(None)):
     item = gc.getItem(variable_id)
     meta = item["meta"]
 
-    return meta["timesteps"]
+    return {
+        "steps": meta["timesteps"],
+        "time": meta["time"]
+    }
 
 
 # variable_id => Girder item id for item used to represent the variable.
