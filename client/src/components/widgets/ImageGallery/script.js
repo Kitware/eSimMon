@@ -1,7 +1,7 @@
 import Plotly from 'plotly.js-basic-dist-min';
 import { isNil } from 'lodash';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
-import { decode } from '@msgpack/msgpack'
+import { decode } from '@msgpack/msgpack';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
@@ -426,7 +426,7 @@ export default {
       if (this.renderer)
         return
       // Create the building blocks we will need for the polydata
-      this.renderer = vtkRenderer.newInstance({background: [0.8, 0.8, 0.8]});
+      this.renderer = vtkRenderer.newInstance({background: [1, 1, 1]});
       this.mesh = vtkPolyData.newInstance();
       this.actor = vtkActor.newInstance();
       this.mapper = vtkMapper.newInstance();
@@ -467,12 +467,16 @@ export default {
       this.axes = vtkCubeAxesActor.newInstance();
       this.axes.setCamera(camera);
       this.axes.setAxisLabels(data.xLabel, data.yLabel, '');
+      this.axes.getGridActor().getProperty().setColor('black');
+      this.axes.getGridActor().getProperty().setLineWidth(0.1);
       this.renderer.addActor(this.axes);
 
       // Build color bar
       this.scalarBar = vtkScalarBarActor.newInstance();
       this.scalarBar.setScalarsToColors(lut);
       this.scalarBar.setAxisLabel(data.colorLabel);
+      this.scalarBar.setAxisTextStyle({fontColor: 'black'});
+      this.scalarBar.setTickTextStyle({fontColor: 'black'});
       this.scalarBar.setDrawNanAnnotation(false);
       this.renderer.addActor2D(this.scalarBar);
 
