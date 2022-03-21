@@ -48,6 +48,14 @@ export default {
 
   async created() {
     await this.setCurrentPath();
+
+    this.mathJaxOptions = {
+      tex2jax: {
+        inlineMath: [['$', '$'], ['(', ')']],
+        processEscapes: true,
+        processEnvironments: true
+      }
+    };
   },
 
   watch: {
