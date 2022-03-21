@@ -260,7 +260,7 @@ export default {
       }
       const firstAvailableStep = await this.callFastEndpoint(`variables/${this.itemId}/timesteps`)
         .then((response) => {
-          this.availableTimeSteps = response.sort();
+          this.availableTimeSteps = response.steps.sort();
           this.setMinTimeStep(
             Math.max(this.minTimeStep, Math.min(...this.availableTimeSteps)));
           // Make sure there is an image associated with this time step

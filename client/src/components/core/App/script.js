@@ -137,7 +137,7 @@ export default {
       const itemId = await this.girderRest.get(endpoint).then(result => result.data[0]?._id);
       if (itemId) {
         var timeSteps = await this.girderRest.get(`${this.fastRestUrl}/variables/${itemId}/timesteps`)
-                          .then(results => results.data);
+                          .then(results => results.data.steps);
         if (timeSteps.find(step => step === this.currentTimeStep)) {
           endpoint = `${this.fastRestUrl}/variables/${itemId}/timesteps/${this.currentTimeStep}/plot`;
           data = await this.girderRest.get(endpoint).then(response => response.data);
