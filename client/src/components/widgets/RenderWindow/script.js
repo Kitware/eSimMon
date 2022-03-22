@@ -24,7 +24,6 @@ export default {
     }),
     resize() {
       const { width, height } = this.$el.getBoundingClientRect();
-      this.rootContainer.style.width = `${width}px`;
       this.openglRenderWindow.setSize(width, height);
       this.renderWindow.getRenderers().forEach((renderer) => {
         this.$nextTick(renderer.updateViewPort);

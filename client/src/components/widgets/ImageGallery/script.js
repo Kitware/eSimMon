@@ -210,7 +210,7 @@ export default {
       Plotly.relayout(this.$refs.plotly, {
         'xaxis.autorange': true,
         'yaxis.autorange': true
-    });
+      });
     },
 
     preventDefault: function (event) {
