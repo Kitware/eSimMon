@@ -12,6 +12,7 @@ import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransf
 import vtkCubeAxesActor from '@kitware/vtk.js/Rendering/Core/CubeAxesActor';
 import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkPointPicker from '@kitware/vtk.js/Rendering/Core/PointPicker';
 import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
 import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
@@ -96,6 +97,8 @@ export default {
       scalarBar: null,
       availableTimeSteps: [],
       currentAvailableStep: 1,
+      times: null,
+      timeIndex: -1,
     };
   },
 
@@ -112,6 +115,7 @@ export default {
       timeStepSelectorMode: 'UI_TIME_STEP_SELECTOR',
       initialLoad: 'PLOT_INITIAL_LOAD',
       minTimeStep: 'PLOT_MIN_TIME_STEP',
+      interactor: 'UI_INTERACTOR',
     }),
 
     rows: {
@@ -199,6 +203,7 @@ export default {
       setItemId: 'PLOT_CURRENT_ITEM_ID_SET',
       setLoadedFromView: 'PLOT_LOADED_FROM_VIEW_SET',
       setInitialLoad: 'PLOT_INITIAL_LOAD_SET',
+      setPauseGallery: 'UI_PAUSE_GALLERY_SET',
     }),
 
     preventDefault: function (event) {
@@ -261,6 +266,7 @@ export default {
       const firstAvailableStep = await this.callFastEndpoint(`variables/${this.itemId}/timesteps`)
         .then((response) => {
           this.availableTimeSteps = response.steps.sort();
+          this.times = response.time;
           this.setMinTimeStep(
             Math.max(this.minTimeStep, Math.min(...this.availableTimeSteps)));
           // Make sure there is an image associated with this time step
@@ -393,11 +399,12 @@ export default {
         this.react();
       });
       this.$refs.plotly.on('plotly_click', (data) => {
-        this.selectedTimeStep = parseInt(data.points[0].x);
+        this.findClosestTime(parseFloat(data.points[0].x));
       });
       this.$refs.plotly.on('plotly_doubleclick', () => {
-        if (this.timeStepSelectorMode && this.xaxis.toLowerCase() === 'time') {
-          this.setTimeStep(this.selectedTimeStep);
+        const xAxis = this.xaxis.split(' ')[0].toLowerCase();
+        if (this.timeStepSelectorMode && xAxis === 'time') {
+          this.selectTimeStepFromPlot();
           return false;
         } else {
           this.zoom = null;
@@ -480,6 +487,9 @@ export default {
       this.scalarBar.setDrawNanAnnotation(false);
       this.renderer.addActor2D(this.scalarBar);
 
+      // Setup picker
+      this.setupPointPicker();
+
       this.$nextTick(this.updateViewPort);
       this.renderWindow.addRenderer(this.renderer);
     },
@@ -533,10 +543,51 @@ export default {
         this.renderer = null;
       }
     },
+    setupPointPicker() {
+      const picker = vtkPointPicker.newInstance();
+      picker.setPickFromList(1);
+      picker.initializePickList();
+      picker.addPickList(this.actor);
+      this.interactor.onLeftButtonPress((callData) => {
+        this.timeIndex = -1;
+        const xAxis = this.xaxis.split(' ')[0].toLowerCase();
+        if (!this.timeStepSelectorMode ||
+            this.renderer !== callData.pokedRenderer ||
+            xAxis !== 'time') {
+          return;
+        }
+        if (picker.getActors().length !== 0) {
+          const pickedPoints = picker.getPickedPositions();
+          this.findClosestTime(pickedPoints[0]);
+        }
+      })
+    },
+    selectTimeStepFromPlot() {
+      if (this.timeIndex) {
+        this.setTimeStep(this.availableTimeSteps[this.timeIndex]);
+        this.timeIndex = 0;
+        this.setPauseGallery(true);
+      }
+    },
+    findClosestTime(value) {
+      // Time is stored as seconds but plotted as milliseconds
+      const pickedPoint = value * 0.001;
+      var closestVal = Infinity;
+      this.times.forEach((time) => {
+        // Find the closest time at or before the selected time
+        const oldDiff = pickedPoint - time;
+        const newDiff = pickedPoint - closestVal;
+        if (newDiff >= 0 && newDiff < oldDiff) {
+          closestVal = time;
+        }
+      });
+      this.timeIndex = this.times.findIndex(time => time === closestVal);
+    }
   },
 
   mounted () {
     this.updateCellCount(1);
+    this.$el.addEventListener('dblclick', this.selectTimeStepFromPlot);
   },
 
   destroyed() {

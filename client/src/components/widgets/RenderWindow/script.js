@@ -3,6 +3,7 @@ import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
 import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow';
 import vtkOpenGLRenderWindow from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow';
+import vtkRenderWindowInteractor from '@kitware/vtk.js/Rendering/Core/RenderWindowInteractor';
 
 import { mapGetters, mapMutations } from 'vuex';
 
@@ -18,6 +19,7 @@ export default {
 
   methods: {
     ...mapMutations({
+      setInteractor: 'UI_INTERACTOR_SET',
       setRenderWindow: 'UI_RENDER_WINDOW_SET',
     }),
     resize() {
@@ -41,6 +43,9 @@ export default {
     this.openglRenderWindow = vtkOpenGLRenderWindow.newInstance();
     this.renderWindow.addView(this.openglRenderWindow);
 
+    // Create box selector for zooming
+    this.setInteractor(vtkRenderWindowInteractor.newInstance());
+
     this.rootContainer = this.$el;
     this.openglRenderWindow.setContainer(this.rootContainer);
   
@@ -51,6 +56,7 @@ export default {
 
   computed: {
     ...mapGetters({
+      interactor: 'UI_INTERACTOR',
       renderWindow: 'UI_RENDER_WINDOW',
     }),
   },
