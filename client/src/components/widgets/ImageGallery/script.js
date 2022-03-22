@@ -206,6 +206,13 @@ export default {
       setPauseGallery: 'UI_PAUSE_GALLERY_SET',
     }),
 
+    resize() {
+      Plotly.relayout(this.$refs.plotly, {
+        'xaxis.autorange': true,
+        'yaxis.autorange': true
+    });
+    },
+
     preventDefault: function (event) {
       event.preventDefault();
     },
@@ -588,6 +595,7 @@ export default {
   mounted () {
     this.updateCellCount(1);
     this.$el.addEventListener('dblclick', this.selectTimeStepFromPlot);
+    window.addEventListener('resize', this.resize);
   },
 
   destroyed() {
