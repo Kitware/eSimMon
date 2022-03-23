@@ -195,6 +195,14 @@ export default {
         this.react();
       }
     },
+    focalPoint(fp) {
+      if (!this.renderer || !fp) {
+        return;
+      }
+      this.camera.setFocalPoint(...fp);
+      this.camera.setParallelProjection(true);
+      this.camera.zoom(this.scale);
+    }
   },
 
   methods: {
@@ -628,8 +636,6 @@ export default {
           const yMid = ((pickedPoints[0][1] - this.startPoints[0][1]) / 2) + this.startPoints[0][1];
           const focalPoint = this.camera.getFocalPoint();
           this.setFocalPoint([xMid, yMid, focalPoint[2]]);
-          camera.setFocalPoint(xMid, yMid, focalPoint[2]);
-          camera.setParallelProjection(true);
         }
       });
       this.boxSelector.onBoxSelectChange((data) => {
@@ -660,7 +666,6 @@ export default {
           },
         });
         this.setScale(scale);
-        camera.zoom(scale);
       });
     },
     selectTimeStepFromPlot() {
