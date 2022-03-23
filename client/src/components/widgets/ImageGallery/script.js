@@ -103,6 +103,7 @@ export default {
       inThisRenderer: false,
       startPoints: null,
       cornerAnnotation: null,
+      camera: null
     };
   },
 
@@ -484,12 +485,12 @@ export default {
       this.renderer.addActor(this.actor);
 
       // Update renderer window
-      const camera = this.renderer.getActiveCamera();
-      camera.setParallelProjection(true);
+      this.camera = this.renderer.getActiveCamera();
+      this.camera.setParallelProjection(true);
 
       // Create axis
       this.axes = vtkCubeAxesActor.newInstance();
-      this.axes.setCamera(camera);
+      this.axes.setCamera(this.camera);
       this.axes.setAxisLabels(data.xLabel, data.yLabel, '');
       this.axes.getGridActor().getProperty().setColor('black');
       this.axes.getGridActor().getProperty().setLineWidth(0.1);
@@ -558,14 +559,13 @@ export default {
       this.scalarBar.setScalarsToColors(lut);
 
       // Update camera
-      const camera = this.renderer.getActiveCamera();
       if (this.focalPoint) {
-        camera.setFocalPoint(...this.focalPoint);
+        this.camera.setFocalPoint(...this.focalPoint);
       }
       if (this.scale) {
-        camera.zoom(this.scale);
+        this.camera.zoom(this.scale);
       }
-      camera.setParallelProjection(true);
+      this.camera.setParallelProjection(true);
 
       this.renderer.resetCamera();
     },
@@ -626,8 +626,7 @@ export default {
           }
           const xMid = ((pickedPoints[0][0] - this.startPoints[0][0]) / 2) + this.startPoints[0][0];
           const yMid = ((pickedPoints[0][1] - this.startPoints[0][1]) / 2) + this.startPoints[0][1];
-          const camera = this.renderer.getActiveCamera();
-          const focalPoint = camera.getFocalPoint();
+          const focalPoint = this.camera.getFocalPoint();
           this.setFocalPoint([xMid, yMid, focalPoint[2]]);
           camera.setFocalPoint(xMid, yMid, focalPoint[2]);
           camera.setParallelProjection(true);
@@ -640,7 +639,6 @@ export default {
         const { selection, view } = data;
         const [x1, y1, ] = view.displayToNormalizedDisplay(selection[0], selection[2], selection[4]);
         const [x2, y2, ] = view.displayToNormalizedDisplay(selection[1], selection[3], selection[5]);
-        const camera = this.renderer.getActiveCamera();
         const bounds = this.renderer.computeVisiblePropBounds();
         const x = (bounds[1] - bounds[0]) / 2;
         const y = (bounds[3] - bounds[2]) / 2;
