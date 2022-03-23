@@ -1,5 +1,5 @@
 import Plotly from 'plotly.js-basic-dist-min';
-import { isNil } from 'lodash';
+import { isNil, isEqual } from 'lodash';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
 import { decode } from '@msgpack/msgpack';
 
@@ -620,6 +620,10 @@ export default {
         picker.pick(point, this.renderer);
         if (picker.getActors().length !== 0 && this.startPoints) {
           const pickedPoints = picker.getPickedPositions();
+          if (isEqual(pickedPoints, this.startPoints)) {
+            // This was just a single click
+            return;
+          }
           const xMid = ((pickedPoints[0][0] - this.startPoints[0][0]) / 2) + this.startPoints[0][0];
           const yMid = ((pickedPoints[0][1] - this.startPoints[0][1]) / 2) + this.startPoints[0][1];
           const camera = this.renderer.getActiveCamera();
