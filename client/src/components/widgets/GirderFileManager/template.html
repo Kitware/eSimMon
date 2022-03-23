@@ -54,7 +54,7 @@
     </template>
     <template #row="props">
       <slot v-bind="props" name="row-widget" />
-      <vue-mathjax :formula="props.item.name"></vue-mathjax>
+      <vue-mathjax :formula="props.item.name" :options="mathJaxOptions"></vue-mathjax>
     </template>
   </girder-data-browser>
 </v-card>

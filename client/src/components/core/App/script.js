@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
 import _ from 'lodash';
+import RenderWindow from '../../widgets/RenderWindow';
 import ImageGallery from '../../widgets/ImageGallery';
 import { GirderAuthentication as GirderAuthentication } from '@girder/components/src';
 import GirderFileManager from '../../widgets/GirderFileManager';
@@ -16,6 +17,7 @@ export default {
   components: {
     GirderAuthentication,
     GirderFileManager,
+    RenderWindow,
     ImageGallery,
     Splitpanes,
     Pane,
@@ -30,7 +32,6 @@ export default {
       cellHeight: '100vh',
       dataLoaded: false,
       forgotPasswordUrl: '/#?dialog=resetpassword',
-      maxTimeStep: 0,
       numLoadedGalleries: 0,
       numReady: 0,
       runId: null,
@@ -69,6 +70,7 @@ export default {
       setRunId: 'VIEW_RUN_ID_SET',
       setShouldAutoSave: 'VIEW_AUTO_SAVE_RUN_SET',
       setSimulation: 'VIEW_SIMULATION_SET',
+      setMaxTimeStep: 'PLOT_MAX_TIME_STEP_SET',
     }),
 
     addColumn() {
@@ -104,7 +106,7 @@ export default {
               && node.textContent != parent.textContent)) {
           this.parameter = node.textContent.trim();
           this.cancel = false;
-          this.getRangeData(event);
+          // this.getRangeData(event);
         }
       }, 100),
 
@@ -126,23 +128,21 @@ export default {
       }
     },
 
-    callEndpoints(folderId) {
+    async callEndpoints(folderId) {
       if (!folderId)
         return;
 
-      var self = this;
+      var data = null;
       var endpoint = `item?folderId=${folderId}&name=${this.parameter}&limit=50&sort=lowerName&sortdir=1`;
-      const data = this.girderRest.get(endpoint)
-                    .then(function(result) {
-                      if (result && !self.cancel && result.data.length) {
-                        let timestep = self.currentTimeStep ? self.currentTimeStep-1 : 1;
-                        endpoint = `${self.fastRestUrl}/variables/${result.data[0]._id}/timesteps/${timestep}/plot`;
-
-                        return new Promise((resolve) => {
-                          const data = self.girderRest.get(endpoint);
-                          resolve(data);
-                        });}
-                    });
+      const itemId = await this.girderRest.get(endpoint).then(result => result.data[0]?._id);
+      if (itemId) {
+        var timeSteps = await this.girderRest.get(`${this.fastRestUrl}/variables/${itemId}/timesteps`)
+                          .then(results => results.data.steps);
+        if (timeSteps.find(step => step === this.currentTimeStep)) {
+          endpoint = `${this.fastRestUrl}/variables/${itemId}/timesteps/${this.currentTimeStep}/plot`;
+          data = await this.girderRest.get(endpoint).then(response => response.data);
+        }
+      }
       return data;
     },
 
@@ -162,28 +162,6 @@ export default {
         this.numReady = 0;
       }
       this.setPaused(should_pause);
-    },
-
-    initialDataLoaded(num_timesteps, itemId, loadedFromView) {
-      this.numLoadedGalleries += 1;
-      if (this.dataLoaded) {
-          return
-      }
-
-      this.setCurrentItemId(itemId);
-      this.dataLoaded = true;
-      this.maxTimeStep = num_timesteps;
-
-      // Setup polling to watch for new data.
-      this.poll();
-
-      // Setup polling to autosave view
-      this.autosave();
-
-      if (!loadedFromView) {
-        // Default to playing once a parameter has been selected
-        this.setPaused(false);
-      }
     },
 
     lookupRunId() {
@@ -211,7 +189,7 @@ export default {
           if ('meta' in data && 'currentTimestep' in data.meta) {
             var new_timestep = data.meta.currentTimestep;
             if (new_timestep > this.maxTimeStep) {
-              this.maxTimeStep = new_timestep;
+              this.setMaxTimeStep(new_timestep);
             }
           }
         } finally {
@@ -261,7 +239,7 @@ export default {
 
     incrementReady() {
       this.numReady += 1;
-      this.getRangeData(event);
+      // this.getRangeData();
     },
 
     contextMenu(data) {
@@ -312,7 +290,7 @@ export default {
     resetView() {
       this.setPaused(true);
       this.setCurrentTimeStep(1);
-      this.maxTimeStep = 0;
+      this.setMaxTimeStep(0);
       this.setColumns(1);
       this.setRows(1);
       this.setGridSize(1);
@@ -377,6 +355,10 @@ export default {
       shouldAutoSave: 'VIEW_AUTO_SAVE_RUN',
       simulation: 'VIEW_SIMULATION',
       step: 'VIEW_STEP',
+      maxTimeStep: 'PLOT_MAX_TIME_STEP',
+      loadedFromView: 'PLOT_LOADED_FROM_VIEW',
+      initialDataLoaded: 'PLOT_INITIAL_LOAD',
+      minTimeStep: 'PLOT_MIN_TIME_STEP',
     }),
 
     location: {
@@ -481,6 +463,29 @@ export default {
         // before progressing
         const wait_ms = this.currentTimeStep === 1 ? 2000 : 0;
         this.setTickWait(wait_ms);
+      }
+    },
+
+    initialDataLoaded(initialLoad) {
+      if (initialLoad) {
+        return;
+      }
+
+      this.numLoadedGalleries += 1;
+      if (this.dataLoaded) {
+          return
+      }
+      this.dataLoaded = true;
+
+      // Setup polling to watch for new data.
+      this.poll();
+
+      // Setup polling to autosave view
+      this.autosave();
+
+      if (!this.loadedFromView) {
+        // Default to playing once a parameter has been selected
+        this.setPaused(false);
       }
     },
   },

@@ -2,14 +2,20 @@ export default {
   state: {
     autoSavedViewDialog: false,
     galleryPaused: true,
+    interactor: null,
     showLoadDialog: false,
     showSaveDialog: false,
     timeStepSelection: false,
+    renderWindow: null,
     zoomSync: true,
+    rendererCount: 0,
   },
   getters: {
     UI_AUTO_SAVE_DIALOG(state) {
       return state.autoSavedViewDialog;
+    },
+    UI_INTERACTOR(state) {
+      return state.interactor;
     },
     UI_PAUSE_GALLERY(state) {
       return state.galleryPaused;
@@ -20,16 +26,25 @@ export default {
     UI_SHOW_SAVE_DIALOG(state) {
       return state.showSaveDialog;
     },
+    UI_RENDER_WINDOW(state) {
+      return state.renderWindow;
+    },
     UI_ZOOM_SYNC(state) {
       return state.zoomSync;
     },
     UI_TIME_STEP_SELECTOR(state) {
       return state.timeStepSelection;
     },
+    UI_RENDERER_COUNT(state) {
+      return state.rendererCount;
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {
       state.autoSavedViewDialog = val;
+    },
+    UI_INTERACTOR_SET(state, val) {
+      state.interactor = val;
     },
     UI_PAUSE_GALLERY_SET(state, val) {
       state.galleryPaused = val;
@@ -40,11 +55,17 @@ export default {
     UI_SHOW_SAVE_DIALOG_SET(state, val) {
       state.showSaveDialog = val;
     },
+    UI_RENDER_WINDOW_SET(state, val) {
+      state.renderWindow = val;
+    },
     UI_ZOOM_SYNC_SET(state, val) {
       state.zoomSync = val;
     },
     UI_TIME_STEP_SELECTOR_SET(state, val) {
       state.timeStepSelection = val;
+    },
+    UI_RENDERER_COUNT_SET(state, val) {
+      state.rendererCount = val;
     },
   },
   actions: {

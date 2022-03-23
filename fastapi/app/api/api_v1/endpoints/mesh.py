@@ -20,9 +20,9 @@ async def generate_mesh_response(plot_config: Dict, bp_file, variable: str):
     y_label = plot_config["ylabel"]
     title = plot_config["title"]
 
-    nodes = bp_file.read(nodes_variable).tolist()
-    connectivity = bp_file.read(connectivity_variable).tolist()
-    color = bp_file.read(color_variable).tolist()
+    nodes = bp_file.read(nodes_variable).data
+    connectivity = bp_file.read(connectivity_variable).data
+    color = bp_file.read(color_variable).data
 
     mesh_json = {
         "connectivity": connectivity,

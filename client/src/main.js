@@ -6,7 +6,7 @@ import VueMathjax from 'vue-mathjax';
 import store from './store';
 
 Vue.use(Girder);
-Vue.use(VueMathjax)
+Vue.use(VueMathjax);
 
 let apiRoot = `${window.location}api/v1`
 let authenticateWithCredentials = false;

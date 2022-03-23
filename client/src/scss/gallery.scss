@@ -8,15 +8,13 @@
 .plot {
   min-height: 100%;
   min-width: 100%;
+  display: flex;
+  justify-content: center;
+  height: inherit;
 }
 
 .text-xs-center {
   justify-content: center;
-  display: flex;
-}
-
-.text-xs-end {
-  justify-content: flex-end;
   display: flex;
 }
 
@@ -27,7 +25,9 @@
   padding: 0;
 }
 
-.main-content .container{
+.main-content {
+  position: relative;
+  .container{
   padding: 0;
   .row {
     margin: 0;
@@ -35,9 +35,11 @@
       padding: 0;
       .v-card {
         height: 100%;
+        background-color: transparent;
       }
     }
   }
+}
 }
 
 // Make text smaller in the data browser.
@@ -68,10 +70,9 @@
 .playback-controls {
   display: flex;
   flex-flow: column;
-  max-height: 20%;
-  min-height: 220px;
+  max-height: 240px;
+  min-height: 240px;
   overflow: auto;
-  padding: 5px;
   .row {
     justify-content: space-around;
     align-items: baseline;
@@ -169,4 +170,26 @@
 
 .selectedRow {
   background-color: #ababab;
+}
+
+.imageGallery {
+  padding: 0px;
+  max-width: 100%;
+  position: fixed;
+  right: 0;
+  top: 0;
+  pointer-events: none;
+  width: 77%;
+  z-index: 0;
+  height: 100%;
+}
+
+.v-data-footer {
+  display: none;
+}
+
+.CornerAnnotation-module_northWest__23pUR {
+  flex: auto !important;
+  color: darkslategrey !important;
+  padding: 0 3px !important;
 }

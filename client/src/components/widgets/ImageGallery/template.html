@@ -1,17 +1,11 @@
-<v-card vertical-center
+<div>
+  <v-card vertical-center
   v-on:drop="loadGallery($event)"
-  v-on:dragover="preventDefault($event)"
->
-  <v-card-text
-    v-bind:class="[!json ? 'text-xs-end' : 'text-xs-center']"
+    v-on:dragover="preventDefault($event)"
     @contextmenu.prevent="fetchMovie"
   >
-    <div v-show="!!itemId && json" ref="plotly" class="plot"/>
-    <img v-show="!!itemId && !json"
-      ref="img"
-      :src="!!image ? image.src : ''"
-      class="plot"
-    />
-    <v-icon v-if="!itemId" large> input </v-icon>
-  </v-card-text>
-</v-card>
+    <div ref="plotly" class="plot">
+      <v-icon v-if="!itemId" large> input </v-icon>
+    </div>
+  </v-card>
+</div>
