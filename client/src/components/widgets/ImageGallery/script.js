@@ -106,6 +106,7 @@ export default {
       camera: null,
       focalPoint: null,
       scale: 0,
+      position: null,
     };
   },
 
@@ -578,6 +579,9 @@ export default {
       this.camera.setParallelProjection(true);
       if (!this.focalPoint && !this.scale) {
         this.renderer.resetCamera();
+        if (!this.position) {
+          this.position = this.camera.getPosition();
+        }
       }
     },
     removeRenderer() {
@@ -585,6 +589,7 @@ export default {
         this.renderWindow.removeRenderer(this.renderer);
         this.renderer = null;
         this.updateRendererCount(this.renderWindow.getRenderers().length);
+        this.position = null;
       }
     },
     enterCurrentRenderer() {
@@ -693,6 +698,7 @@ export default {
       }
       this.cornerAnnotation.setContainer(null);
       this.camera.setParallelProjection(true);
+      this.camera.setPosition(...this.position);
       this.renderer.resetCamera();
     },
     findClosestTime(value) {
