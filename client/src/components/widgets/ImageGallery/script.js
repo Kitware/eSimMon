@@ -103,7 +103,9 @@ export default {
       inThisRenderer: false,
       startPoints: null,
       cornerAnnotation: null,
-      camera: null
+      camera: null,
+      focalPoint: null,
+      scale: 0,
     };
   },
 
@@ -122,8 +124,8 @@ export default {
       minTimeStep: 'PLOT_MIN_TIME_STEP',
       interactor: 'UI_INTERACTOR',
       boxSelector: 'PLOT_BOX_SELECTOR',
-      focalPoint: 'PLOT_FOCAL_POINT',
-      scale: 'PLOT_SCALE',
+      globalFocalPoint: 'PLOT_FOCAL_POINT',
+      globalScale: 'PLOT_SCALE',
     }),
 
     rows: {
@@ -202,6 +204,12 @@ export default {
       this.camera.setFocalPoint(...fp);
       this.camera.setParallelProjection(true);
       this.camera.zoom(this.scale);
+    },
+    globalFocalPoint(fp) {
+      this.focalPoint = fp;
+    },
+    globalScale(scale) {
+      this.scale = scale;
     }
   },
 
@@ -221,8 +229,8 @@ export default {
       setInitialLoad: 'PLOT_INITIAL_LOAD_SET',
       updateRendererCount: 'UI_RENDERER_COUNT_SET',
       setPauseGallery: 'UI_PAUSE_GALLERY_SET',
-      setFocalPoint: 'PLOT_FOCAL_POINT_SET',
-      setScale: 'PLOT_SCALE_SET',
+      setGlobalFocalPoint: 'PLOT_FOCAL_POINT_SET',
+      setGlobalScale: 'PLOT_SCALE_SET',
     }),
 
     resize() {
@@ -567,15 +575,10 @@ export default {
       this.scalarBar.setScalarsToColors(lut);
 
       // Update camera
-      if (this.focalPoint) {
-        this.camera.setFocalPoint(...this.focalPoint);
-      }
-      if (this.scale) {
-        this.camera.zoom(this.scale);
-      }
       this.camera.setParallelProjection(true);
-
-      this.renderer.resetCamera();
+      if (!this.focalPoint && !this.scale) {
+        this.renderer.resetCamera();
+      }
     },
     removeRenderer() {
       if (this.renderer) {
@@ -634,8 +637,11 @@ export default {
           }
           const xMid = ((pickedPoints[0][0] - this.startPoints[0][0]) / 2) + this.startPoints[0][0];
           const yMid = ((pickedPoints[0][1] - this.startPoints[0][1]) / 2) + this.startPoints[0][1];
-          const focalPoint = this.camera.getFocalPoint();
-          this.setFocalPoint([xMid, yMid, focalPoint[2]]);
+          if (this.syncZoom) {
+            this.setGlobalFocalPoint([xMid, yMid, 0.0]);
+          } else {
+            this.focalPoint = [xMid, yMid, 0.0]
+          }
         }
       });
       this.boxSelector.onBoxSelectChange((data) => {
@@ -651,11 +657,10 @@ export default {
         const w = (x2 - x1) / 2;
         const h = (y2 - y1) / 2;
         const r = w / h;
-        let scale;
         if (r >= x / y) {
-          scale = y + 1;
+          this.scale = y + 1;
         } else {
-          scale = x / r + 1;
+          this.scale = x / r + 1;
         }
         // Update corner annotation
         this.cornerAnnotation.setContainer(this.$refs.plotly);
@@ -665,7 +670,9 @@ export default {
             return `xRange: [${meta.range.slice(0,2)}] yRange: [${meta.range.slice(2,4)}]`;
           },
         });
-        this.setScale(scale);
+        if (this.syncZoom) {
+          this.setGlobalScale(this.scale);
+        }
       });
     },
     selectTimeStepFromPlot() {
@@ -678,9 +685,14 @@ export default {
       }
     },
     resetZoom() {
-      this.setFocalPoint(null);
-      this.setScale(0);
+      this.focalPoint = null;
+      this.scale = 0;
+      if (this.syncZoom) {
+        this.setGlobalFocalPoint(this.focalPoint);
+        this.setGlobalScale(this.scale);
+      }
       this.cornerAnnotation.setContainer(null);
+      this.camera.setParallelProjection(true);
       this.renderer.resetCamera();
     },
     findClosestTime(value) {
