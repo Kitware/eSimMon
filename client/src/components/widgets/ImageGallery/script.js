@@ -102,6 +102,7 @@ export default {
       timeIndex: -1,
       inThisRenderer: false,
       startPoints: null,
+      cornerAnnotation: null,
     };
   },
 
@@ -505,6 +506,9 @@ export default {
       // Setup picker
       this.setupPointPicker();
 
+      // Add corner annotation
+      this.cornerAnnotation = vtkCornerAnnotation.newInstance();
+
       this.$nextTick(this.updateViewPort);
       this.renderWindow.addRenderer(this.renderer);
       this.updateRendererCount(this.renderWindow.getRenderers().length);
@@ -643,12 +647,10 @@ export default {
         } else {
           scale = x / r + 1;
         }
-        // Add corner annotation
-        const cornerAnnotation = vtkCornerAnnotation.newInstance();
-        cornerAnnotation.setContainer(this.$refs.plotly);
-        cornerAnnotation.getAnnotationContainer().style.color = 'black';
-        cornerAnnotation.updateMetadata({range: this.actor.getBounds()});
-        cornerAnnotation.updateTemplates({
+        // Update corner annotation
+        this.cornerAnnotation.setContainer(this.$refs.plotly);
+        this.cornerAnnotation.updateMetadata({range: this.actor.getBounds()});
+        this.cornerAnnotation.updateTemplates({
           nw(meta) {
             return `xRange: [${meta.range.slice(0,2)}] yRange: [${meta.range.slice(2,4)}]`;
           },
@@ -658,16 +660,18 @@ export default {
       });
     },
     selectTimeStepFromPlot() {
-      if (this.timeIndex) {
+      if (this.timeIndex >= 0) {
         this.setTimeStep(this.availableTimeSteps[this.timeIndex]);
-        this.timeIndex = 0;
+        this.timeIndex = -1;
         this.setPauseGallery(true);
+      } else {
+        this.resetZoom();
       }
-      this.renderer.resetCamera();
     },
     resetZoom() {
       this.setFocalPoint(null);
       this.setScale(0);
+      this.cornerAnnotation.setContainer(null);
       this.renderer.resetCamera();
     },
     findClosestTime(value) {

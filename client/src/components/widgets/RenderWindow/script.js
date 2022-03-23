@@ -15,7 +15,7 @@ export default {
   data() {
     return {
       openglRenderWindow: null,
-      rootContainer: null,
+      container: null,
     };
   },
 
@@ -37,10 +37,13 @@ export default {
       this.renderWindow.render();
       window.requestAnimationFrame(this.animate);
     },
-    resetZoom() {
+    resetAllZoom() {
       if (this.syncZoom && !this.selectTimeStep) {
-        this.renderWindow.getRenderers().forEach((renderer) => {
-          renderer.resetCamera();
+        const allRenderers = this.$root.$children[0].$refs.imageGallery;
+        allRenderers.forEach((plotCell) => {
+          if (plotCell.renderer) {
+            plotCell.resetZoom()
+          }
         });
       }
     },
@@ -52,8 +55,7 @@ export default {
     this.openglRenderWindow = vtkOpenGLRenderWindow.newInstance();
     this.renderWindow.addView(this.openglRenderWindow);
 
-    this.rootContainer = this.$el;
-    this.openglRenderWindow.setContainer(this.rootContainer);
+    this.openglRenderWindow.setContainer(this.$el);
 
     // Create box selector for zooming
     this.setInteractor(vtkRenderWindowInteractor.newInstance());
@@ -66,11 +68,11 @@ export default {
     this.interactor.setInteractorStyle(iStyle);
     this.interactor.initialize();
     this.interactor.setView(this.openglRenderWindow);
-    let container = document.querySelector('.splitpanes__pane.main-content');
-    this.interactor.bindEvents(container);
+    this.container = document.querySelector('.splitpanes__pane.main-content');
+    this.interactor.bindEvents(this.container);
     this.interactor.disable();
 
-    window.addEventListener('dblclick', this.resetZoom);
+    window.addEventListener('dblclick', this.resetAllZoom);
     window.addEventListener('resize', this.resize);
     this.resize();
     window.requestAnimationFrame(this.animate);
