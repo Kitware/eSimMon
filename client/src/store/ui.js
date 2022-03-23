@@ -8,6 +8,7 @@ export default {
     timeStepSelection: false,
     renderWindow: null,
     zoomSync: true,
+    rendererCount: 0,
   },
   getters: {
     UI_AUTO_SAVE_DIALOG(state) {
@@ -34,6 +35,9 @@ export default {
     UI_TIME_STEP_SELECTOR(state) {
       return state.timeStepSelection;
     },
+    UI_RENDERER_COUNT(state) {
+      return state.rendererCount;
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {
@@ -59,6 +63,9 @@ export default {
     },
     UI_TIME_STEP_SELECTOR_SET(state, val) {
       state.timeStepSelection = val;
+    },
+    UI_RENDERER_COUNT_SET(state, val) {
+      state.rendererCount = val;
     },
   },
   actions: {

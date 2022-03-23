@@ -11,6 +11,9 @@ export default {
     loadedFromView: false,
     initialLoad: true,
     minTimeStep: 1,
+    boxSelector: null,
+    focalPoint: null,
+    scale: 0,
   },
   getters: {
     PLOT_ZOOM(state) {
@@ -46,6 +49,15 @@ export default {
     PLOT_MIN_TIME_STEP(state) {
       return state.minTimeStep;
     },
+    PLOT_BOX_SELECTOR(state) {
+      return state.boxSelector;
+    },
+    PLOT_FOCAL_POINT(state) {
+      return state.focalPoint;
+    },
+    PLOT_SCALE(state) {
+      return state.scale;
+    },
   },
   mutations: {
     PLOT_ZOOM_SET(state, val) {
@@ -80,6 +92,15 @@ export default {
     },
     PLOT_MIN_TIME_STEP_SET(state, val) {
       state.minTimeStep = val;
+    },
+    PLOT_BOX_SELECTOR_SET(state, val) {
+      state.boxSelector = val;
+    },
+    PLOT_FOCAL_POINT_SET(state, val) {
+      state.focalPoint = val;
+    },
+    PLOT_SCALE_SET(state, val) {
+      state.scale = val;
     },
   },
   actions: {

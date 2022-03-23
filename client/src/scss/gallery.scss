@@ -25,7 +25,9 @@
   padding: 0;
 }
 
-.main-content .container{
+.main-content {
+  position: relative;
+  .container{
   padding: 0;
   .row {
     margin: 0;
@@ -37,6 +39,7 @@
       }
     }
   }
+}
 }
 
 // Make text smaller in the data browser.

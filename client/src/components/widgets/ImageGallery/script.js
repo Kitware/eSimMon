@@ -16,6 +16,7 @@ import vtkPointPicker from '@kitware/vtk.js/Rendering/Core/PointPicker';
 import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
 import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
+import vtkCornerAnnotation from '@kitware/vtk.js/Interaction/UI/CornerAnnotation';
 
 //-----------------------------------------------------------------------------
 // Utility Functions
@@ -99,6 +100,8 @@ export default {
       currentAvailableStep: 1,
       times: null,
       timeIndex: -1,
+      inThisRenderer: false,
+      startPoints: null,
     };
   },
 
@@ -116,6 +119,9 @@ export default {
       initialLoad: 'PLOT_INITIAL_LOAD',
       minTimeStep: 'PLOT_MIN_TIME_STEP',
       interactor: 'UI_INTERACTOR',
+      boxSelector: 'PLOT_BOX_SELECTOR',
+      focalPoint: 'PLOT_FOCAL_POINT',
+      scale: 'PLOT_SCALE',
     }),
 
     rows: {
@@ -203,7 +209,10 @@ export default {
       setItemId: 'PLOT_CURRENT_ITEM_ID_SET',
       setLoadedFromView: 'PLOT_LOADED_FROM_VIEW_SET',
       setInitialLoad: 'PLOT_INITIAL_LOAD_SET',
+      updateRendererCount: 'UI_RENDERER_COUNT_SET',
       setPauseGallery: 'UI_PAUSE_GALLERY_SET',
+      setFocalPoint: 'PLOT_FOCAL_POINT_SET',
+      setScale: 'PLOT_SCALE_SET',
     }),
 
     resize() {
@@ -474,8 +483,7 @@ export default {
 
       // Update renderer window
       const camera = this.renderer.getActiveCamera();
-      camera.setPosition(0, 0, 1);
-      camera.setFocalPoint(0, 0, 0);
+      camera.setParallelProjection(true);
 
       // Create axis
       this.axes = vtkCubeAxesActor.newInstance();
@@ -499,6 +507,7 @@ export default {
 
       this.$nextTick(this.updateViewPort);
       this.renderWindow.addRenderer(this.renderer);
+      this.updateRendererCount(this.renderWindow.getRenderers().length);
     },
     updateRenderer(data) {
       // Load the point attributes
@@ -542,12 +551,33 @@ export default {
       // Update color bar
       this.scalarBar.setScalarsToColors(lut);
 
+      // Update camera
+      const camera = this.renderer.getActiveCamera();
+      if (this.focalPoint) {
+        camera.setFocalPoint(...this.focalPoint);
+      }
+      if (this.scale) {
+        camera.zoom(this.scale);
+      }
+      camera.setParallelProjection(true);
+
       this.renderer.resetCamera();
     },
     removeRenderer() {
       if (this.renderer) {
         this.renderWindow.removeRenderer(this.renderer);
         this.renderer = null;
+        this.updateRendererCount(this.renderWindow.getRenderers().length);
+      }
+    },
+    enterCurrentRenderer() {
+      if(this.renderer) {
+        this.interactor.setCurrentRenderer(this.renderer);
+      }
+    },
+    exitCurrentRenderer() {
+      if (this.renderer) {
+        this.interactor.setCurrentRenderer(null);
       }
     },
     setupPointPicker() {
@@ -558,11 +588,13 @@ export default {
       this.interactor.onLeftButtonPress((callData) => {
         this.timeIndex = -1;
         const xAxis = this.xaxis.split(' ')[0].toLowerCase();
-        if (!this.timeStepSelectorMode ||
-            this.renderer !== callData.pokedRenderer ||
-            xAxis !== 'time') {
+        this.inThisRenderer = this.renderer === callData.pokedRenderer;
+        if (!this.inThisRenderer) {
           return;
         }
+        const pos = callData.position;
+        const point = [pos.x, pos.y, 0.0];
+        picker.pick(point, this.renderer);
         if (picker.getActors().length !== 0) {
           const pickedPoints = picker.getPickedPositions();
           this.startPoints = pickedPoints;
@@ -573,27 +605,25 @@ export default {
       });
       this.interactor.onLeftButtonRelease((callData) => {
         this.timeIndex = -1;
-        const xAxis = this.xaxis.split(' ')[0].toLowerCase();
-        // FIXME: Need to check if x axis matches
+        this.inThisRenderer = this.renderer === callData.pokedRenderer;
         if (!this.inThisRenderer && !this.syncZoom) {
           return;
         }
         const pos = callData.position;
         const point = [pos.x, pos.y, 0.0];
         picker.pick(point, this.renderer);
-        if (picker.getActors().length !== 0) {
+        if (picker.getActors().length !== 0 && this.startPoints) {
           const pickedPoints = picker.getPickedPositions();
           const xMid = ((pickedPoints[0][0] - this.startPoints[0][0]) / 2) + this.startPoints[0][0];
           const yMid = ((pickedPoints[0][1] - this.startPoints[0][1]) / 2) + this.startPoints[0][1];
           const camera = this.renderer.getActiveCamera();
           const focalPoint = camera.getFocalPoint();
+          this.setFocalPoint([xMid, yMid, focalPoint[2]]);
           camera.setFocalPoint(xMid, yMid, focalPoint[2]);
           camera.setParallelProjection(true);
         }
       });
       this.boxSelector.onBoxSelectChange((data) => {
-        const xAxis = this.xaxis.split(' ')[0].toLowerCase();
-        // FIXME: Need to check if x axis matches
         if (!this.inThisRenderer && !this.syncZoom) {
           return;
         }
@@ -613,6 +643,17 @@ export default {
         } else {
           scale = x / r + 1;
         }
+        // Add corner annotation
+        const cornerAnnotation = vtkCornerAnnotation.newInstance();
+        cornerAnnotation.setContainer(this.$refs.plotly);
+        cornerAnnotation.getAnnotationContainer().style.color = 'black';
+        cornerAnnotation.updateMetadata({range: this.actor.getBounds()});
+        cornerAnnotation.updateTemplates({
+          nw(meta) {
+            return `xRange: [${meta.range.slice(0,2)}] yRange: [${meta.range.slice(2,4)}]`;
+          },
+        });
+        this.setScale(scale);
         camera.zoom(scale);
       });
     },
@@ -622,15 +663,21 @@ export default {
         this.timeIndex = 0;
         this.setPauseGallery(true);
       }
+      this.renderer.resetCamera();
+    },
+    resetZoom() {
+      this.setFocalPoint(null);
+      this.setScale(0);
+      this.renderer.resetCamera();
     },
     findClosestTime(value) {
       // Time is stored as seconds but plotted as milliseconds
       const pickedPoint = value * 0.001;
-      var closestVal = Infinity;
+      var closestVal = -Infinity;
       this.times.forEach((time) => {
         // Find the closest time at or before the selected time
-        const oldDiff = pickedPoint - time;
-        const newDiff = pickedPoint - closestVal;
+        const newDiff = pickedPoint - time;
+        const oldDiff = pickedPoint - closestVal;
         if (newDiff >= 0 && newDiff < oldDiff) {
           closestVal = time;
         }
@@ -641,6 +688,8 @@ export default {
 
   mounted () {
     this.updateCellCount(1);
+    this.$el.addEventListener('mouseenter', this.enterCurrentRenderer);
+    this.$el.addEventListener('mouseleave', this.exitCurrentRenderer);
     this.$el.addEventListener('dblclick', this.selectTimeStepFromPlot);
     window.addEventListener('resize', this.resize);
   },
@@ -649,6 +698,7 @@ export default {
     this.updateCellCount(-1);
     if (this.renderer) {
       this.renderWindow.removeRenderer(this.renderer);
+      this.updateRendererCount(this.renderWindow.getRenderers().length);
     }
   }
 };
