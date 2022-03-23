@@ -401,7 +401,7 @@ export default {
           this.setZoomOrigin(this.itemId);
         }
         if (this.syncZoom && this.itemId !== this.zoomOrigin) {
-          this.setZoomDetails(this.zoom, this.xaxis);
+          this.setZoomDetails({zoom: this.zoom, xAxis: this.xaxis});
         }
         this.react();
       });
@@ -416,7 +416,7 @@ export default {
         } else {
           this.zoom = null;
           if (this.syncZoom) {
-            this.setZoomDetails(null, null);
+            this.setZoomDetails({zoom: null, xAxis: null});
           }
         }
       });
@@ -565,9 +565,56 @@ export default {
         }
         if (picker.getActors().length !== 0) {
           const pickedPoints = picker.getPickedPositions();
-          this.findClosestTime(pickedPoints[0]);
+          this.startPoints = pickedPoints;
+          if (this.timeStepSelectorMode && xAxis === 'time') {
+            this.findClosestTime(pickedPoints[0]);
+          }
         }
-      })
+      });
+      this.interactor.onLeftButtonRelease((callData) => {
+        this.timeIndex = -1;
+        const xAxis = this.xaxis.split(' ')[0].toLowerCase();
+        // FIXME: Need to check if x axis matches
+        if (!this.inThisRenderer && !this.syncZoom) {
+          return;
+        }
+        const pos = callData.position;
+        const point = [pos.x, pos.y, 0.0];
+        picker.pick(point, this.renderer);
+        if (picker.getActors().length !== 0) {
+          const pickedPoints = picker.getPickedPositions();
+          const xMid = ((pickedPoints[0][0] - this.startPoints[0][0]) / 2) + this.startPoints[0][0];
+          const yMid = ((pickedPoints[0][1] - this.startPoints[0][1]) / 2) + this.startPoints[0][1];
+          const camera = this.renderer.getActiveCamera();
+          const focalPoint = camera.getFocalPoint();
+          camera.setFocalPoint(xMid, yMid, focalPoint[2]);
+          camera.setParallelProjection(true);
+        }
+      });
+      this.boxSelector.onBoxSelectChange((data) => {
+        const xAxis = this.xaxis.split(' ')[0].toLowerCase();
+        // FIXME: Need to check if x axis matches
+        if (!this.inThisRenderer && !this.syncZoom) {
+          return;
+        }
+        const { selection, view } = data;
+        const [x1, y1, ] = view.displayToNormalizedDisplay(selection[0], selection[2], selection[4]);
+        const [x2, y2, ] = view.displayToNormalizedDisplay(selection[1], selection[3], selection[5]);
+        const camera = this.renderer.getActiveCamera();
+        const bounds = this.renderer.computeVisiblePropBounds();
+        const x = (bounds[1] - bounds[0]) / 2;
+        const y = (bounds[3] - bounds[2]) / 2;
+        const w = (x2 - x1) / 2;
+        const h = (y2 - y1) / 2;
+        const r = w / h;
+        let scale;
+        if (r >= x / y) {
+          scale = y + 1;
+        } else {
+          scale = x / r + 1;
+        }
+        camera.zoom(scale);
+      });
     },
     selectTimeStepFromPlot() {
       if (this.timeIndex) {

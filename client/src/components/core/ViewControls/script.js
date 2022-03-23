@@ -62,7 +62,6 @@ export default {
 
   watch: {
     zoomSync(selected) {
-      this.toggleSyncZoom();
       if(!selected) {
         this.setZoomOrigin(null);
       }

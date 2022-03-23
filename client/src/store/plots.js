@@ -86,7 +86,8 @@ export default {
     PLOT_GLOBAL_RANGES_UPDATED({state}, range) {
       state.globalRanges = {...state.globalRanges, [`${state.itemId}`]: range};
     },
-    PLOT_ZOOM_DETAILS({commit}, zoom, xAxis) {
+    PLOT_ZOOM_DETAILS({commit}, details) {
+      const {zoom, xAxis} = details;
       commit('PLOT_ZOOM_SET', zoom);
       commit('PLOT_ZOOM_X_AXIS_SET', xAxis);
     },
