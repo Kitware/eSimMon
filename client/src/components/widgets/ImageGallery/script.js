@@ -458,7 +458,8 @@ export default {
       // Load the cell attributes
       // Create a view of the data
       const connectivityView = new DataView(data.connectivity.buffer, data.connectivity.byteOffset,  data.connectivity.byteLength);
-      this.cells = new Int32Array(data.connectivity.length * 4);
+      const numberOfNodes = data.connectivity.length / Int32Array.BYTES_PER_ELEMENT / 3;
+      this.cells = new Int32Array(numberOfNodes * 4);
       var idx = 0;
       const rowSize = 3 * Int32Array.BYTES_PER_ELEMENT; // 3 => columns
       for (let i = 0; i < data.connectivity.length; i+=rowSize) {
@@ -517,7 +518,8 @@ export default {
       // Load the point attributes
       // Create a view of the data
       const pointsView = new DataView(data.nodes.buffer, data.nodes.byteOffset,  data.nodes.byteLength);
-      const points = new Float64Array(data.nodes.length * 3);
+      const numberOfPoints = data.nodes.length / Float64Array.BYTES_PER_ELEMENT / 2;
+      const points = new Float64Array(numberOfPoints * 3);
       var idx = 0;
       const rowSize = 2 * Float64Array.BYTES_PER_ELEMENT; // 3 => columns
       for (let i = 0; i < data.nodes.length; i+=rowSize) {
