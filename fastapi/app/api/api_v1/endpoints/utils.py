@@ -1,7 +1,10 @@
+from typing import Any
+
+import msgpack
 from girder_client import GirderClient
 
 from app.core.config import settings
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 
 cache_settings = {
     "directory": "/tmp/cache",
@@ -24,3 +27,10 @@ def get_girder_client(girder_token):
     _gc.setToken(girder_token)
 
     return _gc
+
+
+class MsgpackResponse(Response):
+    media_type = "application/msgpack"
+
+    def render(self, content: Any) -> bytes:
+        return msgpack.packb(content)
