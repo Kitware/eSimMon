@@ -707,9 +707,10 @@ export default {
         return;
       }
       if (!isEqual(this.focalPoint, this.camera.getFocalPoint())) {
-        this.camera.setFocalPoint(...this.focalPoint);
-        this.camera.setParallelProjection(true);
-        this.camera.zoom(this.scale);
+        if (this.scale) {
+          this.camera.setFocalPoint(...this.focalPoint);
+          this.camera.zoom(this.scale);
+        }
       }
     }
   },
