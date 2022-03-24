@@ -199,10 +199,10 @@ export default {
       }
     },
     focalPoint() {
-      this.updateZoom();
+      this.updateZoomedView();
     },
     scale() {
-      this.updateZoom();
+      this.updateZoomedView();
     },
     globalFocalPoint(fp) {
       this.focalPoint = fp;
@@ -574,7 +574,6 @@ export default {
       this.scalarBar.setScalarsToColors(lut);
 
       // Update camera
-      this.camera.setParallelProjection(true);
       if (!this.focalPoint && !this.scale) {
         this.renderer.resetCamera();
         if (!this.position) {
@@ -653,11 +652,10 @@ export default {
           }
           const xMid = ((finalX - startX) / 2) + startX;
           const yMid = ((finalY - startY) / 2) + startY;
+          this.focalPoint = [xMid, yMid, 0.0];
           if (this.syncZoom) {
             this.setGlobalScale(this.scale);
-            this.setGlobalFocalPoint([xMid, yMid, 0.0]);
-          } else {
-            this.focalPoint = [xMid, yMid, 0.0]
+            this.setGlobalFocalPoint([...this.focalPoint]);
           }
           // Update corner annotation
           this.cornerAnnotation.setContainer(this.$refs.plotly);
@@ -687,7 +685,6 @@ export default {
         this.setGlobalScale(this.scale);
       }
       this.cornerAnnotation.setContainer(null);
-      this.camera.setParallelProjection(true);
       this.camera.setPosition(...this.position);
       this.renderer.resetCamera();
     },
@@ -705,13 +702,15 @@ export default {
       });
       this.timeIndex = this.times.findIndex(time => time === closestVal);
     },
-    updateZoom() {
+    updateZoomedView() {
       if (!this.renderer || !this.focalPoint || !this.scale) {
         return;
       }
-      this.camera.setFocalPoint(...this.focalPoint);
-      this.camera.setParallelProjection(true);
-      this.camera.zoom(this.scale);
+      if (!isEqual(this.focalPoint, this.camera.getFocalPoint())) {
+        this.camera.setFocalPoint(...this.focalPoint);
+        this.camera.setParallelProjection(true);
+        this.camera.zoom(this.scale);
+      }
     }
   },
 
