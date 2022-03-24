@@ -2,6 +2,7 @@ import Plotly from 'plotly.js-basic-dist-min';
 import { isNil, isEqual } from 'lodash';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
 import { decode } from '@msgpack/msgpack';
+import {setAxesStyling} from '../../../utils/vtkPlotStyling';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
@@ -571,6 +572,8 @@ export default {
 
       // Update axes
       this.axes.setDataBounds(this.actor.getBounds());
+      const { faces, edges, ticks, labels } = setAxesStyling(this.axes);
+      this.axes.updateTextData(faces, edges, ticks, labels);
 
       // Update color bar
       this.scalarBar.setScalarsToColors(lut);
