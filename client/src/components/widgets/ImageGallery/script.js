@@ -2,7 +2,7 @@ import Plotly from 'plotly.js-basic-dist-min';
 import { isNil, isEqual } from 'lodash';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
 import { decode } from '@msgpack/msgpack';
-import {setAxesStyling} from '../../../utils/vtkPlotStyling';
+import { setAxesStyling, scalarBarAutoLayout } from '../../../utils/vtkPlotStyling';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
@@ -577,6 +577,7 @@ export default {
 
       // Update color bar
       this.scalarBar.setScalarsToColors(lut);
+      this.scalarBar.setAutoLayout(scalarBarAutoLayout(this.scalarBar));
 
       // Update camera
       this.camera.setParallelProjection(true);
