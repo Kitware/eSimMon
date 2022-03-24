@@ -175,14 +175,15 @@ export default {
       immediate: true,
       handler() {
         this.react();
-        this.$nextTick(this.updateViewPort);
+        this.$nextTick(this.updateLayout());
       }
     },
     numcols: {
       immediate: true,
       handler() {
         this.react();
-        this.$nextTick(this.updateViewPort);
+        this.$nextTick(this.updateLayout());
+
       }
     },
     globalRanges: {
@@ -233,12 +234,18 @@ export default {
       setGlobalFocalPoint: 'PLOT_FOCAL_POINT_SET',
       setGlobalScale: 'PLOT_SCALE_SET',
     }),
-
-    resize() {
+    relayoutPlotly() {
       Plotly.relayout(this.$refs.plotly, {
         'xaxis.autorange': true,
         'yaxis.autorange': true
       });
+    },
+    updateLayout() {
+      this.updateViewPort();
+      this.relayoutPlotly();
+    },
+    resize() {
+      this.relayoutPlotly();
     },
 
     preventDefault: function (event) {
