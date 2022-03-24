@@ -8,6 +8,7 @@ import adios2
 from app.schemas.format import PlotFormat
 from fastapi import APIRouter, Header, HTTPException
 
+from .colormap import generate_colormap_response
 from .mesh import generate_mesh_response
 from .plotly import generate_plotly_response
 from .utils import get_girder_client
@@ -88,6 +89,8 @@ async def generate_plot_response(bp, variable: str):
         return await generate_plotly_response(plot_config, bp, variable)
     elif plot_type == PlotFormat.mesh:
         return await generate_mesh_response(plot_config, bp, variable)
+    elif plot_type == PlotFormat.colormap:
+        return await generate_colormap_response(plot_config, bp, variable)
 
     raise HTTPException(status_code=400, detail="Unsupported plot type.")
 
@@ -99,10 +102,7 @@ async def get_timesteps(variable_id: str, girder_token: str = Header(None)):
     item = gc.getItem(variable_id)
     meta = item["meta"]
 
-    return {
-        "steps": meta["timesteps"],
-        "time": meta["time"]
-    }
+    return {"steps": meta["timesteps"], "time": meta["time"]}
 
 
 # variable_id => Girder item id for item used to represent the variable.
