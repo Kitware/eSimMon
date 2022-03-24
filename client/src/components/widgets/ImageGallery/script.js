@@ -474,121 +474,146 @@ export default {
     addRenderer(data) {
       if (this.renderer)
         return
-      // Create the building blocks we will need for the polydata
-      this.renderer = vtkRenderer.newInstance({background: [1, 1, 1]});
-      this.mesh = vtkPolyData.newInstance();
-      this.actor = vtkActor.newInstance();
-      this.mapper = vtkMapper.newInstance();
 
-      // Load the cell attributes
-      // Create a view of the data
-      const connectivityView = new DataView(data.connectivity.buffer, data.connectivity.byteOffset,  data.connectivity.byteLength);
-      const numberOfNodes = data.connectivity.length / Int32Array.BYTES_PER_ELEMENT / 3;
-      this.cells = new Int32Array(numberOfNodes * 4);
-      var idx = 0;
-      const rowSize = 3 * Int32Array.BYTES_PER_ELEMENT; // 3 => columns
-      for (let i = 0; i < data.connectivity.length; i+=rowSize) {
-        this.cells[idx++] = 3;
-        let index = i
-        this.cells[idx++] = connectivityView.getInt32(index, true);
-        index += 4
-        this.cells[idx++] = connectivityView.getInt32(index, true);
-        index += 4
-        this.cells[idx++] = connectivityView.getInt32(index, true);
+      if ('connectivity' in data) {
+
+        // Create the building blocks we will need for the polydata
+        this.renderer = vtkRenderer.newInstance({background: [1, 1, 1]});
+        this.mesh = vtkPolyData.newInstance();
+        this.actor = vtkActor.newInstance();
+        this.mapper = vtkMapper.newInstance();
+
+        // Load the cell attributes
+        // Create a view of the data
+        const connectivityView = new DataView(data.connectivity.buffer, data.connectivity.byteOffset,  data.connectivity.byteLength);
+        const numberOfNodes = data.connectivity.length / Int32Array.BYTES_PER_ELEMENT / 3;
+        this.cells = new Int32Array(numberOfNodes * 4);
+        var idx = 0;
+        const rowSize = 3 * Int32Array.BYTES_PER_ELEMENT; // 3 => columns
+        for (let i = 0; i < data.connectivity.length; i+=rowSize) {
+          this.cells[idx++] = 3;
+          let index = i
+          this.cells[idx++] = connectivityView.getInt32(index, true);
+          index += 4
+          this.cells[idx++] = connectivityView.getInt32(index, true);
+          index += 4
+          this.cells[idx++] = connectivityView.getInt32(index, true);
+        }
+        this.mesh.getPolys().setData(this.cells);
+
+        // Setup colormap
+        const lut = vtkColorTransferFunction.newInstance();
+        lut.applyColorMap(vtkColorMaps.getPresetByName('jet'));
+
+        // Setup mapper and actor
+        this.mapper.setInputData(this.mesh);
+        this.mapper.setLookupTable(lut);
+        this.actor.setMapper(this.mapper);
+        this.renderer.addActor(this.actor);
+
+        // Update renderer window
+        this.camera = this.renderer.getActiveCamera();
+        this.camera.setParallelProjection(true);
+
+        // Create axis
+        this.axes = vtkCubeAxesActor.newInstance();
+        this.axes.setCamera(this.camera);
+        this.axes.setAxisLabels(data.xLabel, data.yLabel, '');
+        this.axes.getGridActor().getProperty().setColor('black');
+        this.axes.getGridActor().getProperty().setLineWidth(0.1);
+        this.renderer.addActor(this.axes);
+
+        // Build color bar
+        this.scalarBar = vtkScalarBarActor.newInstance();
+        this.scalarBar.setScalarsToColors(lut);
+        this.scalarBar.setAxisLabel(data.colorLabel);
+        this.scalarBar.setAxisTextStyle({fontColor: 'black'});
+        this.scalarBar.setTickTextStyle({fontColor: 'black'});
+        this.scalarBar.setDrawNanAnnotation(false);
+        this.renderer.addActor2D(this.scalarBar);
+
+        // Setup picker
+        this.setupPointPicker();
+
+        // Add corner annotation
+        this.cornerAnnotation = vtkCornerAnnotation.newInstance();
+
+        this.$nextTick(this.updateViewPort);
+        this.renderWindow.addRenderer(this.renderer);
+        this.updateRendererCount(this.renderWindow.getRenderers().length);
       }
-      this.mesh.getPolys().setData(this.cells);
+      // colormap
+      else {
+        const xBuffer = data.x.buffer.slice(data.x.byteOffset, data.x.byteOffset + data.x.byteLength);
+        const x = new Float64Array(xBuffer, 0, xBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT);
+        const yBuffer = data.y.buffer.slice(data.y.byteOffset, data.y.byteOffset + data.y.byteLength);
+        const y = new Float64Array(yBuffer, 0, yBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT);
 
-      // Setup colormap
-      const lut = vtkColorTransferFunction.newInstance();
-      lut.applyColorMap(vtkColorMaps.getPresetByName('jet'));
+        const colorBuffer = data.color.buffer.slice(data.color.byteOffset, data.color.byteOffset + data.color.byteLength);
+        const numberOfColors =  x.length * y.length;
+        const color = new Float64Array(colorBuffer, 0, numberOfColors);
 
-      // Setup mapper and actor
-      this.mapper.setInputData(this.mesh);
-      this.mapper.setLookupTable(lut);
-      this.actor.setMapper(this.mapper);
-      this.renderer.addActor(this.actor);
+        console.log(x);
+        console.log(y);
+        console.log(color);
 
-      // Update renderer window
-      this.camera = this.renderer.getActiveCamera();
-      this.camera.setParallelProjection(true);
-
-      // Create axis
-      this.axes = vtkCubeAxesActor.newInstance();
-      this.axes.setCamera(this.camera);
-      this.axes.setAxisLabels(data.xLabel, data.yLabel, '');
-      this.axes.getGridActor().getProperty().setColor('black');
-      this.axes.getGridActor().getProperty().setLineWidth(0.1);
-      this.renderer.addActor(this.axes);
-
-      // Build color bar
-      this.scalarBar = vtkScalarBarActor.newInstance();
-      this.scalarBar.setScalarsToColors(lut);
-      this.scalarBar.setAxisLabel(data.colorLabel);
-      this.scalarBar.setAxisTextStyle({fontColor: 'black'});
-      this.scalarBar.setTickTextStyle({fontColor: 'black'});
-      this.scalarBar.setDrawNanAnnotation(false);
-      this.renderer.addActor2D(this.scalarBar);
-
-      // Setup picker
-      this.setupPointPicker();
-
-      // Add corner annotation
-      this.cornerAnnotation = vtkCornerAnnotation.newInstance();
-
-      this.$nextTick(this.updateViewPort);
-      this.renderWindow.addRenderer(this.renderer);
-      this.updateRendererCount(this.renderWindow.getRenderers().length);
+      }
     },
     updateRenderer(data) {
-      // Load the point attributes
-      // Create a view of the data
-      const pointsView = new DataView(data.nodes.buffer, data.nodes.byteOffset,  data.nodes.byteLength);
-      const numberOfPoints = data.nodes.length / Float64Array.BYTES_PER_ELEMENT / 2;
-      const points = new Float64Array(numberOfPoints * 3);
-      var idx = 0;
-      const rowSize = 2 * Float64Array.BYTES_PER_ELEMENT; // 3 => columns
-      for (let i = 0; i < data.nodes.length; i+=rowSize) {
-        points[idx++] = pointsView.getFloat64(i, true);
-        points[idx++] = pointsView.getFloat64(i + 8, true);
-        points[idx++] = 0.0;
-      }
-
-      // Set the scalars
-      // As we need a typed array we have to copy the data as its unaligned, so we have an aligned buffer to
-      // use to create the typed array
-      const buffer = data.color.buffer.slice(data.color.byteOffset, data.color.byteOffset + data.color.byteLength)
-      const color = new Float64Array(buffer, 0, buffer.byteLength / Float64Array.BYTES_PER_ELEMENT)
-      const scalars = vtkDataArray.newInstance({
-        name: 'scalars',
-        values: color,
-      });
-
-      // Build the polydata
-      this.mesh.getPoints().setData(points, 3);
-      this.mesh.getPointData().setScalars(scalars);
-
-      // Setup colormap
-      const lut = this.mapper.getLookupTable();
-      lut.setMappingRange(...scalars.getRange());
-      lut.updateRange();
-
-      // Setup mapper and actor
-      this.mapper.setInputData(this.mesh);
-      this.mapper.setScalarRange(...scalars.getRange());
-
-      // Update axes
-      this.axes.setDataBounds(this.actor.getBounds());
-
-      // Update color bar
-      this.scalarBar.setScalarsToColors(lut);
-
-      // Update camera
-      this.camera.setParallelProjection(true);
-      if (!this.focalPoint && !this.scale) {
-        this.renderer.resetCamera();
-        if (!this.position) {
-          this.position = this.camera.getPosition();
+      if ('connectivity' in data) {
+        // Load the point attributes
+        // Create a view of the data
+        const pointsView = new DataView(data.nodes.buffer, data.nodes.byteOffset,  data.nodes.byteLength);
+        const numberOfPoints = data.nodes.length / Float64Array.BYTES_PER_ELEMENT / 2;
+        const points = new Float64Array(numberOfPoints * 3);
+        var idx = 0;
+        const rowSize = 2 * Float64Array.BYTES_PER_ELEMENT; // 3 => columns
+        for (let i = 0; i < data.nodes.length; i+=rowSize) {
+          points[idx++] = pointsView.getFloat64(i, true);
+          points[idx++] = pointsView.getFloat64(i + 8, true);
+          points[idx++] = 0.0;
         }
+
+        // Set the scalars
+        // As we need a typed array we have to copy the data as its unaligned, so we have an aligned buffer to
+        // use to create the typed array
+        const buffer = data.color.buffer.slice(data.color.byteOffset, data.color.byteOffset + data.color.byteLength)
+        const color = new Float64Array(buffer, 0, buffer.byteLength / Float64Array.BYTES_PER_ELEMENT)
+        const scalars = vtkDataArray.newInstance({
+          name: 'scalars',
+          values: color,
+        });
+
+        // Build the polydata
+        this.mesh.getPoints().setData(points, 3);
+        this.mesh.getPointData().setScalars(scalars);
+
+        // Setup colormap
+        const lut = this.mapper.getLookupTable();
+        lut.setMappingRange(...scalars.getRange());
+        lut.updateRange();
+
+        // Setup mapper and actor
+        this.mapper.setInputData(this.mesh);
+        this.mapper.setScalarRange(...scalars.getRange());
+
+        // Update axes
+        this.axes.setDataBounds(this.actor.getBounds());
+
+        // Update color bar
+        this.scalarBar.setScalarsToColors(lut);
+
+        // Update camera
+        this.camera.setParallelProjection(true);
+        if (!this.focalPoint && !this.scale) {
+          this.renderer.resetCamera();
+          if (!this.position) {
+            this.position = this.camera.getPosition();
+          }
+        }
+      }
+      else {
+        // colormap ...
       }
     },
     removeRenderer() {
