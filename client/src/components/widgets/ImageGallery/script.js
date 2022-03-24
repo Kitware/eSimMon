@@ -107,7 +107,6 @@ export default {
       focalPoint: null,
       scale: 0,
       position: null,
-      finalPoints: null,
     };
   },
 
@@ -199,13 +198,11 @@ export default {
         this.react();
       }
     },
-    focalPoint(fp) {
-      if (!this.renderer || !fp) {
-        return;
-      }
-      // this.camera.setFocalPoint(...fp);
-      // this.camera.setParallelProjection(true);
-      // this.camera.zoom(this.scale);
+    focalPoint() {
+      this.updateZoom();
+    },
+    scale() {
+      this.updateZoom();
     },
     globalFocalPoint(fp) {
       this.focalPoint = fp;
@@ -637,37 +634,31 @@ export default {
         picker.pick(point, this.renderer);
         if (picker.getActors().length !== 0 && this.startPoints) {
           const pickedPoints = picker.getPickedPositions();
-          this.finalPoints = [...pickedPoints[0]];
-          if (isEqual(pickedPoints, this.startPoints)) {
+          if (isEqual(pickedPoints[0], this.startPoints)) {
             // This was just a single click
             return;
           }
-          const bounds = this.renderer.computeVisiblePropBounds();
-          const width = Math.abs(bounds[1] - bounds[0]);
-          const height = Math.abs(bounds[3] - bounds[2]);
-          const cellRatio = width / height;
-          const regionWidth = Math.abs(this.finalPoints[0] - this.startPoints[0]);
-          const regionHeight = Math.abs(this.finalPoints[1] - this.startPoints[1]);
+          const [x1, x2, y1, y2, ] = this.renderer.computeVisiblePropBounds();
+          const width = Math.abs(x2 - x1);
+          const height = Math.abs(y2 - y1);
+          const [startX, startY, ] = this.startPoints;
+          const [finalX, finalY, ] = pickedPoints[0];
+          const regionWidth = Math.abs(finalX - startX);
+          const regionHeight = Math.abs(finalY - startY);
           const regionRatio = regionWidth / regionHeight;
-          console.log('ratios: ', cellRatio, regionRatio);
-          if (regionRatio >= cellRatio) {
+          if (regionRatio >= width / height) {
             this.scale = height / regionHeight + 1;
           } else {
-            this.scale = width / regionWidth + 1;
+            this.scale = width / regionWidth;
           }
-          console.log('scale: ', this.scale);
-          const xMid = ((this.finalPoints[0] - this.startPoints[0]) / 2) + this.startPoints[0];
-          const yMid = ((this.finalPoints[1] - this.startPoints[1]) / 2) + this.startPoints[1];
-          console.log('focal point: ', [xMid, yMid, 0.0])
-          // if (this.syncZoom) {
-          //   this.setGlobalScale(this.scale);
-          //   this.setGlobalFocalPoint([xMid, yMid, 0.0]);
-          // } else {
-          //   this.focalPoint = [xMid, yMid, 0.0]
-          // }
-          this.camera.setFocalPoint(xMid, yMid, 0.0);
-          this.camera.setParallelProjection(true);
-          this.camera.zoom(this.scale);
+          const xMid = ((finalX - startX) / 2) + startX;
+          const yMid = ((finalY - startY) / 2) + startY;
+          if (this.syncZoom) {
+            this.setGlobalScale(this.scale);
+            this.setGlobalFocalPoint([xMid, yMid, 0.0]);
+          } else {
+            this.focalPoint = [xMid, yMid, 0.0]
+          }
           // Update corner annotation
           this.cornerAnnotation.setContainer(this.$refs.plotly);
           this.cornerAnnotation.updateMetadata({range: this.actor.getBounds()});
@@ -713,6 +704,14 @@ export default {
         }
       });
       this.timeIndex = this.times.findIndex(time => time === closestVal);
+    },
+    updateZoom() {
+      if (!this.renderer || !this.focalPoint || !this.scale) {
+        return;
+      }
+      this.camera.setFocalPoint(...this.focalPoint);
+      this.camera.setParallelProjection(true);
+      this.camera.zoom(this.scale);
     }
   },
 
