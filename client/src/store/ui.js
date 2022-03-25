@@ -40,8 +40,8 @@ export default {
     },
   },
   mutations: {
-    UI_AUTO_SAVE_DIALOG_SET(state, val) {
-      state.autoSavedViewDialog = val;
+    UI_AUTO_SAVE_DIALOG_SET(state/*, val*/) {
+      state.autoSavedViewDialog = false;
     },
     UI_INTERACTOR_SET(state, val) {
       state.interactor = val;
