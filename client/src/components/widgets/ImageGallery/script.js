@@ -361,8 +361,8 @@ export default {
         // We have not selected an item, do not attempt to load the images
         return;
       }
-      // Load the next three images.
-      for (var i = 0; i < 3; i++) {
+      // Load the previous and next three images.
+      for (var i = -1; i < 3; i++) {
         this.currentAvailableStep += i;
         if (i > this.maxTimeStep || this.currentAvailableStep >= numTimeSteps) {
           // There are no more images to load
