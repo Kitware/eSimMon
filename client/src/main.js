@@ -8,13 +8,10 @@ import store from './store';
 Vue.use(Girder);
 Vue.use(VueMathjax);
 
-let dev_mode = true;
-
 let apiRoot = `${window.location}api/v1`
 let authenticateWithCredentials = false;
 if (!isNil(process.env.VUE_APP_API_URL)) {
-  if (!dev_mode)
-    apiRoot = process.env.VUE_APP_API_URL;
+  apiRoot = process.env.VUE_APP_API_URL;
   authenticateWithCredentials = true;
 }
 
@@ -25,7 +22,7 @@ if (!isNil(process.env.VUE_APP_FASTAPI_API_URL)) {
 
 let folderId = null;
 if (!isNil(process.env.VUE_APP_FOLDER_ID)) {
-  folderId = '6231f0708b7a2b0831983366';
+  folderId = process.env.VUE_APP_FOLDER_ID;
 }
 
 const girderRest = new RestClient({ apiRoot, authenticateWithCredentials });
