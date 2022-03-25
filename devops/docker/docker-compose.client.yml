@@ -4,9 +4,6 @@ services:
     image: kitware/esimmon-client
     depends_on:
       - girder
-    build:
-      context: ../../
-      dockerfile: devops/docker/nginx/Dockerfile
       args:
         VUE_APP_FOLDER_ID: $VUE_APP_FOLDER_ID
     ports:
