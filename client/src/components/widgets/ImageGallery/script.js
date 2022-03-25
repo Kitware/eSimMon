@@ -380,8 +380,12 @@ export default {
     },
     react: function () {
       let nextImage = this.loadedImages.find(img => img.timestep == this.currentTimeStep);
-      if (isNil(nextImage) && this.loadedImages.length == 1)
-        nextImage = this.loadedImages[0];
+      if (isNil(nextImage) && this.loadedImages.length >= 1) {
+        let idx = this.availableTimeSteps.findIndex(step => step >= this.currentTimeStep);
+        idx = Math.max(idx -= 1, 0);
+        let prevTimeStep = this.availableTimeSteps[idx];
+        nextImage = this.loadedImages.find(img => img.timestep === prevTimeStep);
+      }
 
       if (!isNil(nextImage)) {
         if (nextImage.type === 'plotly') {
