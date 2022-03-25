@@ -637,19 +637,21 @@ export default {
             // This was just a single click
             return;
           }
-          const [x1, x2, y1, y2, ] = this.renderer.computeVisiblePropBounds();
-          const width = Math.abs(x2 - x1);
-          const height = Math.abs(y2 - y1);
+
+          const bounds = this.$el.getBoundingClientRect();
+          const r = bounds.width / bounds.height;
+
           const [startX, startY, ] = this.startPoints;
           const [finalX, finalY, ] = pickedPoints[0];
           const regionWidth = Math.abs(finalX - startX);
           const regionHeight = Math.abs(finalY - startY);
-          const regionRatio = regionWidth / regionHeight;
-          if (regionRatio >= width / height) {
-            this.scale = height / regionHeight + 1;
+
+          if (r >= regionWidth / regionHeight) {
+            this.scale = regionHeight / 2;
           } else {
-            this.scale = width / regionWidth;
+            this.scale = regionWidth / r / 2;
           }
+
           const xMid = ((finalX - startX) / 2) + startX;
           const yMid = ((finalY - startY) / 2) + startY;
           this.focalPoint = [xMid, yMid, 0.0];
@@ -709,7 +711,7 @@ export default {
       if (!isEqual(this.focalPoint, this.camera.getFocalPoint())) {
         if (this.scale) {
           this.camera.setFocalPoint(...this.focalPoint);
-          this.camera.zoom(this.scale);
+          this.camera.setParallelScale(this.scale);
         }
       }
     }
