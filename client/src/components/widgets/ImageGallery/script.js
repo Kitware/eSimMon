@@ -200,13 +200,11 @@ export default {
         this.react();
       }
     },
-    focalPoint(fp) {
-      if (!this.renderer || !fp) {
-        return;
-      }
-      this.camera.setFocalPoint(...fp);
-      this.camera.setParallelProjection(true);
-      this.camera.zoom(this.scale);
+    focalPoint() {
+      this.updateZoomedView();
+    },
+    scale() {
+      this.updateZoomedView();
     },
     globalFocalPoint(fp) {
       this.focalPoint = fp;
@@ -587,7 +585,6 @@ export default {
       this.scalarBar.setAutoLayout(scalarBarAutoLayout(this.scalarBar));
 
       // Update camera
-      this.camera.setParallelProjection(true);
       if (!this.focalPoint && !this.scale) {
         this.renderer.resetCamera();
         if (!this.position) {
@@ -630,7 +627,7 @@ export default {
         picker.pick(point, this.renderer);
         if (picker.getActors().length !== 0) {
           const pickedPoints = picker.getPickedPositions();
-          this.startPoints = pickedPoints;
+          this.startPoints = [...pickedPoints[0]];
           if (this.timeStepSelectorMode && xAxis === 'time') {
             this.findClosestTime(pickedPoints[0]);
           }
@@ -647,47 +644,40 @@ export default {
         picker.pick(point, this.renderer);
         if (picker.getActors().length !== 0 && this.startPoints) {
           const pickedPoints = picker.getPickedPositions();
-          if (isEqual(pickedPoints, this.startPoints)) {
+          if (isEqual(pickedPoints[0], this.startPoints)) {
             // This was just a single click
             return;
           }
-          const xMid = ((pickedPoints[0][0] - this.startPoints[0][0]) / 2) + this.startPoints[0][0];
-          const yMid = ((pickedPoints[0][1] - this.startPoints[0][1]) / 2) + this.startPoints[0][1];
-          if (this.syncZoom) {
-            this.setGlobalFocalPoint([xMid, yMid, 0.0]);
+
+          const bounds = this.$el.getBoundingClientRect();
+          const r = bounds.width / bounds.height;
+
+          const [startX, startY, ] = this.startPoints;
+          const [finalX, finalY, ] = pickedPoints[0];
+          const regionWidth = Math.abs(finalX - startX);
+          const regionHeight = Math.abs(finalY - startY);
+
+          if (r >= regionWidth / regionHeight) {
+            this.scale = regionHeight / 2;
           } else {
-            this.focalPoint = [xMid, yMid, 0.0]
+            this.scale = regionWidth / r / 2;
           }
-        }
-      });
-      this.boxSelector.onBoxSelectChange((data) => {
-        if (!this.inThisRenderer && !this.syncZoom) {
-          return;
-        }
-        const { selection, view } = data;
-        const [x1, y1, ] = view.displayToNormalizedDisplay(selection[0], selection[2], selection[4]);
-        const [x2, y2, ] = view.displayToNormalizedDisplay(selection[1], selection[3], selection[5]);
-        const bounds = this.renderer.computeVisiblePropBounds();
-        const x = (bounds[1] - bounds[0]) / 2;
-        const y = (bounds[3] - bounds[2]) / 2;
-        const w = (x2 - x1) / 2;
-        const h = (y2 - y1) / 2;
-        const r = w / h;
-        if (r >= x / y) {
-          this.scale = y + 1;
-        } else {
-          this.scale = x / r + 1;
-        }
-        // Update corner annotation
-        this.cornerAnnotation.setContainer(this.$refs.plotly);
-        this.cornerAnnotation.updateMetadata({range: this.actor.getBounds()});
-        this.cornerAnnotation.updateTemplates({
-          nw(meta) {
-            return `xRange: [${meta.range.slice(0,2)}] yRange: [${meta.range.slice(2,4)}]`;
-          },
-        });
-        if (this.syncZoom) {
-          this.setGlobalScale(this.scale);
+
+          const xMid = ((finalX - startX) / 2) + startX;
+          const yMid = ((finalY - startY) / 2) + startY;
+          this.focalPoint = [xMid, yMid, 0.0];
+          if (this.syncZoom) {
+            this.setGlobalScale(this.scale);
+            this.setGlobalFocalPoint([...this.focalPoint]);
+          }
+          // Update corner annotation
+          this.cornerAnnotation.setContainer(this.$refs.plotly);
+          this.cornerAnnotation.updateMetadata({range: this.actor.getBounds()});
+          this.cornerAnnotation.updateTemplates({
+            nw(meta) {
+              return `xRange: [${meta.range.slice(0,2)}] yRange: [${meta.range.slice(2,4)}]`;
+            },
+          });
         }
       });
     },
@@ -708,7 +698,6 @@ export default {
         this.setGlobalScale(this.scale);
       }
       this.cornerAnnotation.setContainer(null);
-      this.camera.setParallelProjection(true);
       this.camera.setPosition(...this.position);
       this.renderer.resetCamera();
     },
@@ -725,6 +714,17 @@ export default {
         }
       });
       this.timeIndex = this.times.findIndex(time => time === closestVal);
+    },
+    updateZoomedView() {
+      if (!this.renderer || !this.focalPoint || !this.scale) {
+        return;
+      }
+      if (!isEqual(this.focalPoint, this.camera.getFocalPoint())) {
+        if (this.scale) {
+          this.camera.setFocalPoint(...this.focalPoint);
+          this.camera.setParallelScale(this.scale);
+        }
+      }
     }
   },
 
