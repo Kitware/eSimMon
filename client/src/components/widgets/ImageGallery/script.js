@@ -234,10 +234,15 @@ export default {
       setGlobalScale: 'PLOT_SCALE_SET',
     }),
     relayoutPlotly() {
-      Plotly.relayout(this.$refs.plotly, {
-        'xaxis.autorange': true,
-        'yaxis.autorange': true
-      });
+      const node =  this.$refs.plotly;
+      if (node !== undefined &&
+          node.childElementCount !== 0 &&
+          node.firstChild.tagName != 'I') {
+        Plotly.relayout(this.$refs.plotly, {
+          'xaxis.autorange': true,
+          'yaxis.autorange': true
+        });
+      }
     },
     updateLayout() {
       this.updateViewPort();
