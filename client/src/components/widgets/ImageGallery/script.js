@@ -364,7 +364,9 @@ export default {
       // Load the previous and next three images.
       for (var i = -1; i < 3; i++) {
         this.currentAvailableStep += i;
-        if (i > this.maxTimeStep || this.currentAvailableStep >= numTimeSteps) {
+        if (i > this.maxTimeStep ||
+              this.currentAvailableStep >= numTimeSteps ||
+              this.currentAvailableStep < 0) {
           // There are no more images to load
           break;
         }
