@@ -365,7 +365,7 @@ export default {
       let j = this.currentAvailableStep - 1;
       if (j > 0 && j < numTimeSteps) {
         // Only load this image we haven't done so already.
-        let nextStep = this.availableTimeSteps[this.currentAvailableStep];
+        let nextStep = this.availableTimeSteps[j];
         let idx = this.rows.findIndex(image => image.step === nextStep);
         if (idx < 0) {
           const {plotType, img} = await this.fetchImage(nextStep);
