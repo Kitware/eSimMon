@@ -361,12 +361,21 @@ export default {
         // We have not selected an item, do not attempt to load the images
         return;
       }
-      // Load the previous and next three images.
-      for (var i = -1; i < 3; i++) {
+      // Load the previous image.
+      let j = this.currentAvailableStep - 1;
+      if (j > 0 && j < numTimeSteps) {
+        // Only load this image we haven't done so already.
+        let nextStep = this.availableTimeSteps[this.currentAvailableStep];
+        let idx = this.rows.findIndex(image => image.step === nextStep);
+        if (idx < 0) {
+          const {plotType, img} = await this.fetchImage(nextStep);
+          this.rows.push({'img': img, 'step': nextStep, 'type': plotType});
+        }
+      }
+      // Load the next three images.
+      for (var i = 0; i < 3; i++) {
         this.currentAvailableStep += i;
-        if (i > this.maxTimeStep ||
-              this.currentAvailableStep >= numTimeSteps ||
-              this.currentAvailableStep < 0) {
+        if (i > this.maxTimeStep || this.currentAvailableStep >= numTimeSteps) {
           // There are no more images to load
           break;
         }
