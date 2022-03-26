@@ -108,6 +108,7 @@ export default {
       focalPoint: null,
       scale: 0,
       position: null,
+      selectedTime: -1,
     };
   },
 
@@ -360,6 +361,17 @@ export default {
         // We have not selected an item, do not attempt to load the images
         return;
       }
+      // Load the previous image.
+      let j = this.currentAvailableStep - 1;
+      if (j > 0 && j < numTimeSteps) {
+        // Only load this image we haven't done so already.
+        let nextStep = this.availableTimeSteps[j];
+        let idx = this.rows.findIndex(image => image.step === nextStep);
+        if (idx < 0) {
+          const {plotType, img} = await this.fetchImage(nextStep);
+          this.rows.push({'img': img, 'step': nextStep, 'type': plotType});
+        }
+      }
       // Load the next three images.
       for (var i = 0; i < 3; i++) {
         this.currentAvailableStep += i;
@@ -379,8 +391,12 @@ export default {
     },
     react: function () {
       let nextImage = this.loadedImages.find(img => img.timestep == this.currentTimeStep);
-      if (isNil(nextImage) && this.loadedImages.length == 1)
-        nextImage = this.loadedImages[0];
+      if (isNil(nextImage) && this.loadedImages.length >= 1) {
+        let idx = this.availableTimeSteps.findIndex(step => step >= this.currentTimeStep);
+        idx = Math.max(idx -= 1, 0);
+        let prevTimeStep = this.availableTimeSteps[idx];
+        nextImage = this.loadedImages.find(img => img.timestep === prevTimeStep);
+      }
 
       if (!isNil(nextImage)) {
         if (nextImage.type === 'plotly') {
@@ -445,12 +461,18 @@ export default {
         this.react();
       });
       this.$refs.plotly.on('plotly_click', (data) => {
-        this.findClosestTime(parseFloat(data.points[0].x));
+        const xAxis = this.xaxis.split(' ')[0].toLowerCase();
+        if (this.timeStepSelectorMode && xAxis === 'time') {
+          if (this.selectedTime !== parseFloat(data.points[0].x)) {
+            this.selectedTime = parseFloat(data.points[0].x);
+            this.findClosestTime();
+            this.selectTimeStepFromPlot();
+          }
+        }
       });
       this.$refs.plotly.on('plotly_doubleclick', () => {
         const xAxis = this.xaxis.split(' ')[0].toLowerCase();
         if (this.timeStepSelectorMode && xAxis === 'time') {
-          this.selectTimeStepFromPlot();
           return false;
         } else {
           this.zoom = null;
@@ -634,7 +656,10 @@ export default {
           const pickedPoints = picker.getPickedPositions();
           this.startPoints = [...pickedPoints[0]];
           if (this.timeStepSelectorMode && xAxis === 'time') {
-            this.findClosestTime(pickedPoints[0]);
+            if (this.selectedTime !== pickedPoints[0][0]) {
+              this.selectedTime = pickedPoints[0][0];
+              this.findClosestTime();
+            }
           }
         }
       });
@@ -706,9 +731,9 @@ export default {
       this.camera.setPosition(...this.position);
       this.renderer.resetCamera();
     },
-    findClosestTime(value) {
+    findClosestTime() {
       // Time is stored as seconds but plotted as milliseconds
-      const pickedPoint = value * 0.001;
+      const pickedPoint = this.selectedTime * 0.001;
       var closestVal = -Infinity;
       this.times.forEach((time) => {
         // Find the closest time at or before the selected time
@@ -737,7 +762,6 @@ export default {
     this.updateCellCount(1);
     this.$el.addEventListener('mouseenter', this.enterCurrentRenderer);
     this.$el.addEventListener('mouseleave', this.exitCurrentRenderer);
-    this.$el.addEventListener('dblclick', this.selectTimeStepFromPlot);
     window.addEventListener('resize', this.resize);
   },
 
