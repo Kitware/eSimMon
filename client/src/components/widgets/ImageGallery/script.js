@@ -82,7 +82,6 @@ export default {
       itemId: null,
       loadedImages: [],
       pendingImages: 0,
-      rows: [],
       json: true,
       image: null,
       eventHandlersSet: false,
@@ -131,17 +130,17 @@ export default {
       globalScale: 'PLOT_SCALE',
     }),
 
-    rows: {
+    loadedImages: {
       default: [],
       async get() {
         if (!this.itemId) {
           return [];
         }
 
-        if (this.rows.length == 0) {
+        if (this.loadedImages.length == 0) {
           this.loadImage();
         }
-        return this.rows;
+        return this.loadedImages;
       },
     },
 
@@ -163,7 +162,6 @@ export default {
     itemId: {
       immediate: true,
       handler () {
-        this.rows = [];
         this.loadedImages = [];
       }
     },
@@ -329,8 +327,7 @@ export default {
           }
           return step;
         });
-      const {plotType, img} = await this.fetchImage(firstAvailableStep);
-      this.rows[0] = {'img': img, 'step': firstAvailableStep, 'type': plotType};
+      await this.fetchImage(firstAvailableStep);
 
       this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...this.availableTimeSteps)));
       this.setItemId(this.itemId);
@@ -366,10 +363,9 @@ export default {
       if (j > 0 && j < numTimeSteps) {
         // Only load this image we haven't done so already.
         let nextStep = this.availableTimeSteps[j];
-        let idx = this.rows.findIndex(image => image.step === nextStep);
+        let idx = this.loadedImages.findIndex(image => image.timestep === nextStep);
         if (idx < 0) {
-          const {plotType, img} = await this.fetchImage(nextStep);
-          this.rows.push({'img': img, 'step': nextStep, 'type': plotType});
+          await this.fetchImage(nextStep);
         }
       }
       // Load the next three images.
@@ -381,10 +377,9 @@ export default {
         }
         // Only load this image we haven't done so already.
         let nextStep = this.availableTimeSteps[this.currentAvailableStep];
-        let idx = this.rows.findIndex(image => image.step === nextStep);
+        let idx = this.loadedImages.findIndex(image => image.timestep === nextStep);
         if (idx < 0) {
-          const {plotType, img} = await this.fetchImage(nextStep);
-          this.rows.push({'img': img, 'step': nextStep, 'type': plotType});
+          await this.fetchImage(nextStep);
         }
       }
       this.react()
