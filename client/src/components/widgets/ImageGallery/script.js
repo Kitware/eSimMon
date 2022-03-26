@@ -138,7 +138,7 @@ export default {
         }
 
         if (this.loadedImages.length == 0) {
-          this.loadImage();
+          this.loadVariable();
         }
         return this.loadedImages;
       },
@@ -168,7 +168,7 @@ export default {
     maxTimeStep: {
       immediate: true,
       handler () {
-        this.loadImage();
+        this.loadVariable();
       }
     },
     numrows: {
@@ -304,7 +304,7 @@ export default {
         });
       return {plotType, img};
     },
-    loadImage: async function() {
+    loadVariable: async function() {
       if (!this.itemId) {
         return;
       }
