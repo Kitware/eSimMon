@@ -1,5 +1,5 @@
 import Plotly from 'plotly.js-basic-dist-min';
-import { isNil, isEqual } from 'lodash';
+import { isNil, isEqual, isNull } from 'lodash';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
 import { decode } from '@msgpack/msgpack';
 import { setAxesStyling, scalarBarAutoLayout } from '../../../utils/vtkPlotStyling';
@@ -18,6 +18,9 @@ import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
 import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
 import vtkCornerAnnotation from '@kitware/vtk.js/Interaction/UI/CornerAnnotation';
+
+// Number of timesteps to prefetch data for.
+const TIMESTEPS_TO_PREFETCH = 3;
 
 //-----------------------------------------------------------------------------
 // Utility Functions
@@ -80,7 +83,8 @@ export default {
   data() {
     return {
       itemId: null,
-      loadedImages: [],
+      // Stores the fetched timestep data for the variable.
+      loadedTimestepData: [],
       pendingImages: 0,
       json: true,
       image: null,
@@ -108,6 +112,9 @@ export default {
       scale: 0,
       position: null,
       selectedTime: -1,
+      // Set of the current timesteps we are fetching data for, used to prevent
+      // duplicate prefetching.
+      prefetchRequested: new Set()
     };
   },
 
@@ -130,17 +137,17 @@ export default {
       globalScale: 'PLOT_SCALE',
     }),
 
-    loadedImages: {
+    loadedTimestepData: {
       default: [],
       async get() {
         if (!this.itemId) {
           return [];
         }
 
-        if (this.loadedImages.length == 0) {
+        if (this.loadedTimestepData.length == 0) {
           this.loadVariable();
         }
-        return this.loadedImages;
+        return this.loadedTimestepData;
       },
     },
 
@@ -156,18 +163,23 @@ export default {
     currentTimeStep: {
       immediate: true,
       handler () {
-        this.preCacheImages();
+        // First display the updated timestep
+        this.displayCurrentTimestep();
+        // Then ensure we have the next few timesteps
+        this.preCacheTimestepData();
       }
     },
     itemId: {
       immediate: true,
       handler () {
-        this.loadedImages = [];
+        this.loadedTimestepData = [];
+        this.prefetchRequested.clear();
       }
     },
     maxTimeStep: {
       immediate: true,
       handler () {
+        this.prefetchRequested.clear();
         this.loadVariable();
       }
     },
@@ -265,10 +277,12 @@ export default {
         `${this.fastRestUrl}/${endpoint}`, options ? options : {});
       return data;
     },
-
-    fetchImage: async function(timeStep) {
+    /**
+     * Fetch the data for give timestep. The data is added to this.loadedTimestepData
+     */
+    fetchTimestepData: async function(timeStep) {
       var plotType = 'vtk';
-      let img = await this.callFastEndpoint(`variables/${this.itemId}/timesteps/${timeStep}/plot`, {responseType: 'blob'})
+      await this.callFastEndpoint(`variables/${this.itemId}/timesteps/${timeStep}/plot`, {responseType: 'blob'})
         .then((response) => {
           const reader = new FileReader();
           if (response.type === 'application/msgpack') {
@@ -283,7 +297,7 @@ export default {
                 const img = decode(reader.result);
                 Plotly.purge(this.$refs.plotly);
                 this.addRenderer(img);
-                this.loadedImages.push({
+                this.loadedTimestepData.push({
                   timestep: timeStep,
                   data: img,
                   type: plotType
@@ -291,7 +305,7 @@ export default {
                 return resolve(img);
               } else {
                 const img = JSON.parse(reader.result);
-                this.loadedImages.push({
+                this.loadedTimestepData.push({
                   timestep: timeStep,
                   data: img.data,
                   layout: img.layout,
@@ -302,8 +316,11 @@ export default {
             };
           });
         });
-      return {plotType, img};
     },
+    /**
+     * Fetch the available timestep for the variable and display the current
+     * timestep ( or closes available ).
+     */
     loadVariable: async function() {
       if (!this.itemId) {
         return;
@@ -327,15 +344,13 @@ export default {
           }
           return step;
         });
-      await this.fetchImage(firstAvailableStep);
+      await this.fetchTimestepData(firstAvailableStep);
 
       this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...this.availableTimeSteps)));
       this.setItemId(this.itemId);
       this.setInitialLoad(false);
-
       this.react();
-
-      this.preCacheImages();
+      this.preCacheTimestepData();
     },
     loadGallery: function (event) {
       event.preventDefault();
@@ -352,45 +367,125 @@ export default {
       this.setLoadedFromView(true);
       this.removeRenderer();
     },
-    preCacheImages: async function () {
+
+    /**
+     * Returns the previous valid timestep, null if no timestep exists.
+     */
+    previousTimestep: function (timestep) {
+      // find previous available timestep
+      const previousTimestep = this.availableTimeSteps.findIndex(
+        step => step < timestep);
+
+      return previousTimestep !== -1 ? this.availableTimeSteps[previousTimestep] : null;
+    },
+    /**
+     * Return the next valid timestep, null if no timestep exists.
+     *
+     */
+    nextTimestep: function (timestep) {
+      const nextTimestep = this.availableTimeSteps.findIndex(
+        step => step > timestep);
+
+      return nextTimestep !== -1 ? this.availableTimeSteps[nextTimestep] : null;
+    },
+    /**
+     * Return true if data for this timestep has already been fetch, false otherwise.
+     */
+    isTimestepLoaded: function (timestep) {
+      return this.loadedTimestepData.findIndex(image => image.timestep === timestep) !== -1;
+    },
+    /**
+     * Return true if this is valid timestep for this variable ( as in data is
+     * available ), false otherwise.
+     */
+    isValidTimestep: function (timestep) {
+      return this.availableTimeSteps.findIndex(step => step === timestep) !== -1;
+    },
+    /**
+     * Display the given timestep, if the timestep is not valid then the
+     * previous timestep ( if available ) will be displayed.
+     */
+    displayTimestep: async function (timestep) {
+      // If this is not a valid timestep for the variable use the previous
+      if (!this.isValidTimestep(timestep)) {
+        timestep = this.previousTimestep(timestep)
+      }
+
+      if (isNull(timestep)) {
+        return;
+      }
+
+      // Check if the timestep data has been fetched
+      if (!this.isTimestepLoaded(timestep)) {
+        // Fetch the data
+        await this.fetchTimestepData(timestep);
+      }
+
+      // Update this plot
+      this.react();
+    },
+    /**
+     * Display the the current timestep, if the current timestep is not valid
+     * then the previous timestep will be displayed.
+     */
+    displayCurrentTimestep: async function() {
+      if (!isNil(this.currentTimeStep)) {
+        this.displayTimestep(this.currentTimeStep);
+      }
+    },
+    /**
+     * Precache timestep data.
+     */
+    preCacheTimestepData: async function () {
       const numTimeSteps = this.availableTimeSteps.length;
       if (!numTimeSteps) {
         // We have not selected an item, do not attempt to load the images
         return;
       }
-      // Load the previous image.
-      let j = this.currentAvailableStep - 1;
-      if (j > 0 && j < numTimeSteps) {
-        // Only load this image we haven't done so already.
-        let nextStep = this.availableTimeSteps[j];
-        let idx = this.loadedImages.findIndex(image => image.timestep === nextStep);
-        if (idx < 0) {
-          await this.fetchImage(nextStep);
+
+      // First find the index of the current timestep
+      let startIndex = this.availableTimeSteps.findIndex(step => step === this.currentTimeStep);
+      // If the current timestep can't be found start at the next available one.
+      if (startIndex === -1) {
+        startIndex = this.nextTimestep(this.currentTimeStep)
+        // If there isn't one we are done.
+        if (startIndex === -1) {
+          return;
         }
       }
-      // Load the next three images.
-      for (var i = 0; i < 3; i++) {
-        this.currentAvailableStep += i;
-        if (i > this.maxTimeStep || this.currentAvailableStep >= numTimeSteps) {
-          // There are no more images to load
+      else {
+        // We want the next one
+        startIndex += 1;
+      }
+
+      // We have reached the end.
+      if (startIndex >= numTimeSteps) {
+        return;
+      }
+
+      // Load the next TIMESTEPS_TO_PREFETCH timesteps.
+      for (let i = 0; i < TIMESTEPS_TO_PREFETCH; i++) {
+        const stepIndex = startIndex + i;
+        if (stepIndex >= numTimeSteps) {
+          // There are no more timesteps to load
           break;
         }
-        // Only load this image we haven't done so already.
-        let nextStep = this.availableTimeSteps[this.currentAvailableStep];
-        let idx = this.loadedImages.findIndex(image => image.timestep === nextStep);
-        if (idx < 0) {
-          await this.fetchImage(nextStep);
+        // Only load this timestep we haven't done so already.
+        let nextStep = this.availableTimeSteps[stepIndex];
+        if (!this.isTimestepLoaded(nextStep) && !this.prefetchRequested.has(nextStep)) {
+          this.prefetchRequested.add(nextStep);
+          await this.fetchTimestepData(nextStep);
+          this.prefetchRequested.delete(nextStep);
         }
       }
-      this.react()
     },
     react: function () {
-      let nextImage = this.loadedImages.find(img => img.timestep == this.currentTimeStep);
-      if (isNil(nextImage) && this.loadedImages.length >= 1) {
+      let nextImage = this.loadedTimestepData.find(img => img.timestep == this.currentTimeStep);
+      if (isNil(nextImage) && this.loadedTimestepData.length >= 1) {
         let idx = this.availableTimeSteps.findIndex(step => step >= this.currentTimeStep);
         idx = Math.max(idx -= 1, 0);
         let prevTimeStep = this.availableTimeSteps[idx];
-        nextImage = this.loadedImages.find(img => img.timestep === prevTimeStep);
+        nextImage = this.loadedTimestepData.find(img => img.timestep === prevTimeStep);
       }
 
       if (!isNil(nextImage)) {
