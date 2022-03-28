@@ -40,34 +40,6 @@ function parseZoomValues(data, globalY) {
   return zoomLevel;
 }
 
-function addAnnotations(data, zoom, yRange) {
-  if (!zoom) {
-    return
-  }
-
-  const xRange = [data.x[0], data.x[data.x.length-1]];
-  if (!yRange)
-    yRange = [Math.min(...data.y), Math.max(...data.y)];
-  const rangeText = (
-    `<b>
-      X: [${xRange[0].toPrecision(4)}, ${xRange[1].toPrecision(4)}]
-      Y: [${yRange[0].toPrecision(4)}, ${yRange[1].toPrecision(4)}]
-    </b>`
-  )
-
-  const annotations = [{
-    xref: 'paper',
-    yref: 'paper',
-    x: 0,
-    xanchor: 'left',
-    y: 1,
-    yanchor: 'bottom',
-    text: rangeText,
-    showarrow: false
-  }]
-  return annotations;
-}
-
 export default {
   name: "plotly",
 
@@ -114,7 +86,8 @@ export default {
       selectedTime: -1,
       // Set of the current timesteps we are fetching data for, used to prevent
       // duplicate prefetching.
-      prefetchRequested: new Set()
+      prefetchRequested: new Set(),
+      rangeText: [],
     };
   },
 
@@ -246,9 +219,7 @@ export default {
     }),
     relayoutPlotly() {
       const node =  this.$refs.plotly;
-      if (node !== undefined &&
-          node.childElementCount !== 0 &&
-          node.firstChild.tagName != 'I') {
+      if (node !== undefined && node.getElementsByClassName('plot-container') > 0) {
         Plotly.relayout(this.$refs.plotly, {
           'xaxis.autorange': true,
           'yaxis.autorange': true
@@ -508,7 +479,7 @@ export default {
               nextImage.layout.yaxis.autorange = false;
             }
           }
-          nextImage.layout['annotations'] = addAnnotations(nextImage.data[0], this.zoomLevels, range);
+          this.setAnnotations(nextImage.data[0], this.zoomLevels, range);
           Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {autosize: true});
           if (!this.eventHandlersSet)
             this.setEventHandlers();
@@ -566,6 +537,7 @@ export default {
           return false;
         } else {
           this.zoom = null;
+          this.rangeText = [];
           if (this.syncZoom) {
             this.setZoomDetails({zoom: null, xAxis: null});
           }
@@ -845,6 +817,21 @@ export default {
           this.camera.setParallelScale(this.scale);
         }
       }
+    },
+    setAnnotations(data, zoom, yRange) {
+      if (!zoom) {
+        return
+      }
+
+      const xRange = [data.x[0], data.x[data.x.length-1]];
+      if (!yRange)
+        yRange = [Math.min(...data.y), Math.max(...data.y)];
+      this.rangeText = [
+        xRange[0].toPrecision(4),
+        xRange[1].toPrecision(4),
+        yRange[0].toPrecision(4),
+        yRange[1].toPrecision(4)
+      ]
     }
   },
 
