@@ -193,3 +193,13 @@
   color: darkslategrey !important;
   padding: 0 3px !important;
 }
+
+.plotlyAnnotations {
+  position: absolute;
+  left: 0;
+  top: 25px;
+  z-index: 1;
+  background-color: white;
+  font-size: smaller;
+  padding-left: 5px;
+}
