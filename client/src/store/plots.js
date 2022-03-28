@@ -14,6 +14,7 @@ export default {
     boxSelector: null,
     focalPoint: null,
     scale: 0,
+    viewTimeStep: 1,
   },
   getters: {
     PLOT_ZOOM(state) {
@@ -58,6 +59,9 @@ export default {
     PLOT_SCALE(state) {
       return state.scale;
     },
+    PLOT_VIEW_TIME_STEP(state) {
+      return state.viewTimeStep;
+    },
   },
   mutations: {
     PLOT_ZOOM_SET(state, val) {
@@ -101,6 +105,9 @@ export default {
     },
     PLOT_SCALE_SET(state, val) {
       state.scale = val;
+    },
+    PLOT_VIEW_TIME_STEP_SET(state, val) {
+      state.viewTimeStep = val;
     },
   },
   actions: {

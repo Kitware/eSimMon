@@ -285,6 +285,7 @@ export default {
         }
       });
       this.setGridSize(0);
+      this.setCurrentTimeStep(this.viewTimeStep);
     },
 
     resetView() {
@@ -359,6 +360,7 @@ export default {
       loadedFromView: 'PLOT_LOADED_FROM_VIEW',
       initialDataLoaded: 'PLOT_INITIAL_LOAD',
       minTimeStep: 'PLOT_MIN_TIME_STEP',
+      viewTimeStep: 'PLOT_VIEW_TIME_STEP',
     }),
 
     location: {
