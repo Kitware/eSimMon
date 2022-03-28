@@ -219,9 +219,7 @@ export default {
     }),
     relayoutPlotly() {
       const node =  this.$refs.plotly;
-      if (node !== undefined &&
-          node.childElementCount !== 0 &&
-          node.firstChild.tagName != 'I') {
+      if (node !== undefined && node.getElementsByClassName('plot-container') > 0) {
         Plotly.relayout(this.$refs.plotly, {
           'xaxis.autorange': true,
           'yaxis.autorange': true
