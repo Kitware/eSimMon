@@ -232,7 +232,7 @@ export default {
       commit('VIEW_LAST_LOADED_ID_SET', view._id);
       // commit('VIEW_ZOOM_LEVELS', view.zoomLevels);
 
-      commit('PLOT_TIME_STEP_SET', parseInt(view.step));
+      commit('PLOT_VIEW_TIME_STEP_SET', parseInt(view.step));
       commit('UI_PAUSE_GALLERY_SET', true);
     },
     VIEW_UPDATE_EXISTING({state, dispatch}, name) {

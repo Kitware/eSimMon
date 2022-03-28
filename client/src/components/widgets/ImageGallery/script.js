@@ -219,7 +219,8 @@ export default {
     }),
     relayoutPlotly() {
       const node =  this.$refs.plotly;
-      if (node !== undefined && node.getElementsByClassName('plot-container') > 0) {
+      const elems = node?.getElementsByClassName('plot-container');
+      if (node !== undefined && elems.length > 0) {
         Plotly.relayout(this.$refs.plotly, {
           'xaxis.autorange': true,
           'yaxis.autorange': true
@@ -266,7 +267,6 @@ export default {
             reader.onload = () => {
               if (plotType === 'vtk') {
                 const img = decode(reader.result);
-                Plotly.purge(this.$refs.plotly);
                 this.addRenderer(img);
                 this.loadedTimestepData.push({
                   timestep: timeStep,
@@ -329,14 +329,12 @@ export default {
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
       this.itemId = items[0]._id;
       this.setLoadedFromView(false);
-      this.removeRenderer();
       this.$root.$children[0].$emit('item-added', this.itemId);
     },
     loadTemplateGallery: function (item) {
       this.itemId = item.id;
       this.zoom = item.zoom;
       this.setLoadedFromView(true);
-      this.removeRenderer();
     },
 
     /**
@@ -461,6 +459,7 @@ export default {
 
       if (!isNil(nextImage)) {
         if (nextImage.type === 'plotly') {
+          this.removeRenderer();
           if (!this.xaxis) {
             this.xaxis = nextImage.layout.xaxis.title.text;
           }
@@ -485,6 +484,7 @@ export default {
             this.setEventHandlers();
           this.json = true;
         } else {
+          this.removePlotly();
           if (!this.xaxis) {
             this.xaxis = nextImage.data.xLabel;
           }
@@ -682,11 +682,21 @@ export default {
       }
     },
     removeRenderer() {
+      // Remove the renderer if it exists, we're about to load a Plotly plot
       if (this.renderer) {
         this.renderWindow.removeRenderer(this.renderer);
         this.renderer = null;
         this.updateRendererCount(this.renderWindow.getRenderers().length);
         this.position = null;
+      }
+    },
+    removePlotly() {
+      // Remove the Plotly plot if it exists, we're about to load a VTK plot
+      const node =  this.$refs.plotly;
+      const elems = node?.getElementsByClassName('plot-container');
+      if (node !== undefined && elems.length > 0) {
+        Plotly.purge(this.$refs.plotly);
+        this.rangeText = [];
       }
     },
     enterCurrentRenderer() {
@@ -844,9 +854,5 @@ export default {
 
   destroyed() {
     this.updateCellCount(-1);
-    if (this.renderer) {
-      this.renderWindow.removeRenderer(this.renderer);
-      this.updateRendererCount(this.renderWindow.getRenderers().length);
-    }
   }
 };
