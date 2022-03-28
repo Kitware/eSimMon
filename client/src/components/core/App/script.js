@@ -392,6 +392,14 @@ export default {
       }
       return loggedOut;
     },
+
+    sliderValue() {
+      if (this.minTimeStep <= this.currentTimeStep <= this.maxTimeStep) {
+        return this.currentTimeStep;
+      } else {
+        return this.minTimeStep;
+      }
+    }
   },
 
   watch: {
@@ -487,6 +495,10 @@ export default {
         // Default to playing once a parameter has been selected
         this.setPaused(false);
       }
+    },
+
+    currentTimeStep(step) {
+      console.log(this.minTimeStep, this.maxTimeStep, this.step)
     },
   },
 };
