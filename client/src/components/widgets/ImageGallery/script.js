@@ -325,6 +325,7 @@ export default {
     },
     loadGallery: function (event) {
       event.preventDefault();
+      this.removeRenderer();
       this.zoom = null
       var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
       this.itemId = items[0]._id;
@@ -332,6 +333,7 @@ export default {
       this.$root.$children[0].$emit('item-added', this.itemId);
     },
     loadTemplateGallery: function (item) {
+      this.removeRenderer();
       this.itemId = item.id;
       this.zoom = item.zoom;
       this.setLoadedFromView(true);
