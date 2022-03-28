@@ -496,9 +496,5 @@ export default {
         this.setPaused(false);
       }
     },
-
-    currentTimeStep(step) {
-      console.log(this.minTimeStep, this.maxTimeStep, this.step)
-    },
   },
 };
