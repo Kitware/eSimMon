@@ -392,6 +392,14 @@ export default {
       }
       return loggedOut;
     },
+
+    sliderValue() {
+      if (this.minTimeStep <= this.currentTimeStep <= this.maxTimeStep) {
+        return this.currentTimeStep;
+      } else {
+        return this.minTimeStep;
+      }
+    }
   },
 
   watch: {
