@@ -568,6 +568,9 @@ export default {
       this.actor = vtkActor.newInstance();
       this.mapper = vtkMapper.newInstance();
 
+      this.renderWindow.addRenderer(this.renderer);
+      this.updateRendererCount(this.renderWindow.getRenderers().length);
+
       // Load the cell attributes
       // Create a view of the data
       const connectivityView = new DataView(data.connectivity.buffer, data.connectivity.byteOffset,  data.connectivity.byteLength);
@@ -624,8 +627,6 @@ export default {
       this.cornerAnnotation = vtkCornerAnnotation.newInstance();
 
       this.$nextTick(this.updateViewPort);
-      this.renderWindow.addRenderer(this.renderer);
-      this.updateRendererCount(this.renderWindow.getRenderers().length);
     },
     updateRenderer(data) {
       // Load the point attributes
@@ -684,9 +685,11 @@ export default {
     removeRenderer() {
       if (this.renderer) {
         this.renderWindow.removeRenderer(this.renderer);
+        this.renderer.delete();
         this.renderer = null;
         this.updateRendererCount(this.renderWindow.getRenderers().length);
         this.position = null;
+        this.renderWindow.render();
       }
     },
     enterCurrentRenderer() {
@@ -840,6 +843,10 @@ export default {
     this.$el.addEventListener('mouseenter', this.enterCurrentRenderer);
     this.$el.addEventListener('mouseleave', this.exitCurrentRenderer);
     window.addEventListener('resize', this.resize);
+  },
+
+  beforeDestroy() {
+    this.removeRenderer();
   },
 
   destroyed() {
