@@ -728,7 +728,7 @@ export default {
       this.interactor.onLeftButtonRelease((callData) => {
         this.timeIndex = -1;
         this.inThisRenderer = this.renderer === callData.pokedRenderer;
-        if (!this.inThisRenderer && !this.syncZoom) {
+        if (!this.inThisRenderer) {
           return;
         }
         const pos = callData.position;
