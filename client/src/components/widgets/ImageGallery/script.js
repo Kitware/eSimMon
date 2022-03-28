@@ -849,6 +849,11 @@ export default {
     this.updateCellCount(1);
     this.$el.addEventListener('mouseenter', this.enterCurrentRenderer);
     this.$el.addEventListener('mouseleave', this.exitCurrentRenderer);
+    this.$el.addEventListener('dblclick', () => {
+      if (this.renderer) {
+        this.resetZoom();
+      }
+    });
     window.addEventListener('resize', this.resize);
   },
 
