@@ -55,7 +55,6 @@ export default {
     this.openglRenderWindow = vtkOpenGLRenderWindow.newInstance();
     this.renderWindow.addView(this.openglRenderWindow);
 
-    console.log(this.$el)
     this.openglRenderWindow.setContainer(this.$el);
 
     // Create box selector for zooming
@@ -92,8 +91,10 @@ export default {
   watch: {
     renderersCount(count) {
       if (count) {
+        this.openglRenderWindow.setContainer(this.$el);
         this.interactor.enable();
       } else {
+        this.openglRenderWindow.setContainer(null);
         this.interactor.disable();
       }
     },
