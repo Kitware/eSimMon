@@ -845,6 +845,7 @@ export default {
     },
     setAnnotations(data, zoom, yRange) {
       if (!zoom) {
+        this.rangeText = [];
         return
       }
 
