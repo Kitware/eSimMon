@@ -21,6 +21,7 @@ import vtkCornerAnnotation from '@kitware/vtk.js/Interaction/UI/CornerAnnotation
 
 // Number of timesteps to prefetch data for.
 const TIMESTEPS_TO_PREFETCH = 3;
+const AXES_LABEL_BOUNDS_ADJUSTMENT = 0.3;
 
 //-----------------------------------------------------------------------------
 // Utility Functions
@@ -672,13 +673,18 @@ export default {
       const { faces, edges, ticks, labels } = setAxesStyling(this.axes);
       this.axes.updateTextData(faces, edges, ticks, labels);
 
+      // Hack to adjust the bounds to include the x label
+      // This can be removed when vtk.js include the text labels in its bounds.
+      const bounds = [...this.actor.getBounds()];
+      bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT
+
       // Update color bar
       this.scalarBar.setScalarsToColors(lut);
       this.scalarBar.setAutoLayout(scalarBarAutoLayout(this.scalarBar));
 
       // Update camera
       if (!this.focalPoint && !this.scale) {
-        this.renderer.resetCamera();
+        this.renderer.resetCamera(bounds);
         if (!this.position) {
           this.position = this.camera.getPosition();
         }
@@ -806,7 +812,11 @@ export default {
       }
       this.cornerAnnotation.setContainer(null);
       this.camera.setPosition(...this.position);
-      this.renderer.resetCamera();
+      const bounds = [...this.actor.getBounds()];
+      // Hack to adjust the bounds to include the x label
+      // This can be removed when vtk.js include the text labels in its bounds.
+      bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT
+      this.renderer.resetCamera(bounds);
     },
     findClosestTime() {
       // Time is stored as seconds but plotted as milliseconds
