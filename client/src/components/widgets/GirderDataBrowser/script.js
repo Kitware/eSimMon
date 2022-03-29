@@ -51,7 +51,8 @@ export default {
       if (this.query.length) {
         const { options: { page, itemsPerPage } } = this;
         const itemOffset = itemsPerPage === -1 ? 0 : ((page - 1) * itemsPerPage);
-        const limit = itemsPerPage + itemOffset;
+
+        const limit = (itemsPerPage === -1 ? this.query.length : itemsPerPage) + itemOffset;
         return this.query.slice(itemOffset, limit);
       }
       const { location, counts } = this;
