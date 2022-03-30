@@ -334,6 +334,7 @@ export default {
       this.$root.$children[0].$emit('item-added', this.itemId);
     },
     loadTemplateGallery: function (item) {
+      this.loadedTimestepData = [];
       this.removeRenderer();
       this.itemId = item.id;
       this.zoom = item.zoom;
