@@ -1,6 +1,10 @@
-from typing import List, Literal, Union
+from typing import List
+from typing import Literal
+from typing import Union
 
-from pydantic import AnyHttpUrl, BaseSettings, validator
+from pydantic import AnyHttpUrl
+from pydantic import BaseSettings
+from pydantic import validator
 
 
 class Settings(BaseSettings):

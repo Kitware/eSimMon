@@ -1,10 +1,10 @@
-import sys
 import logging
+import sys
 
+import click
 import coloredlogs
 from click_plugins import with_plugins
 from pkg_resources import iter_entry_points
-import click
 
 
 @with_plugins(iter_entry_points("adash.cli_plugins"))

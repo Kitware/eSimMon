@@ -1,14 +1,17 @@
-import click
-from girder_client import GirderClient
-import requests
-import re
-import types
-import sys
-import os
 import io
+import os
+import re
+import sys
+import types
 from pathlib import Path
 from urllib.parse import urlparse
-from flask import Flask, send_from_directory, jsonify
+
+import click
+import requests
+from flask import Flask
+from flask import jsonify
+from flask import send_from_directory
+from girder_client import GirderClient
 
 
 class GC(GirderClient):

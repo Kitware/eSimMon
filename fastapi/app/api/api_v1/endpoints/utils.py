@@ -1,10 +1,11 @@
 from typing import Any
 
 import msgpack
+from app.core.config import settings
 from girder_client import GirderClient
 
-from app.core.config import settings
-from fastapi import HTTPException, Response
+from fastapi import HTTPException
+from fastapi import Response
 
 cache_settings = {
     "directory": "/tmp/cache",

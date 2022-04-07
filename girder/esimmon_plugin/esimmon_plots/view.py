@@ -1,7 +1,9 @@
 from girder.api import access
-from girder.api.describe import Description, autoDescribeRoute
+from girder.api.describe import Description
+from girder.api.describe import autoDescribeRoute
 from girder.api.rest import Resource
 from girder.constants import AccessType
+
 from .models.view import View as ViewModel
 
 

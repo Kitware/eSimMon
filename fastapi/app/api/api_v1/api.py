@@ -1,4 +1,7 @@
-from app.api.api_v1.endpoints import health, movie, variables
+from app.api.api_v1.endpoints import health
+from app.api.api_v1.endpoints import movie
+from app.api.api_v1.endpoints import variables
+
 from fastapi import APIRouter
 
 api_router = APIRouter()

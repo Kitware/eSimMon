@@ -1,14 +1,12 @@
 from girder.api import access
-from girder.api.describe import Description, autoDescribeRoute
+from girder.api.describe import Description
+from girder.api.describe import autoDescribeRoute
 from girder.api.rest import getCurrentUser
-
-from girder.utility.path import getResourcePath
-
+from girder.constants import AccessType
+from girder.exceptions import RestException
 from girder.models.collection import Collection
 from girder.models.folder import Folder
-
-from girder.exceptions import RestException
-from girder.constants import AccessType
+from girder.utility.path import getResourcePath
 
 
 def _filter_items(folders, user, query, matches, parent):
