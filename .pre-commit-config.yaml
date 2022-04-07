@@ -4,11 +4,6 @@ repos:
   hooks:
   - id: detect-secrets
     args: ["--baseline", ".secrets.baseline"]
-- repo: https://github.com/Yelp/detect-secrets
-  rev: v1.2.0
-  hooks:
-  - id: detect-secrets
-    args: ["--baseline", ".secrets.baseline"]
 - repo: https://github.com/psf/black
   rev: 22.3.0
   hooks:
@@ -18,3 +13,8 @@ repos:
   hooks:
   - id: isort
     args: ["--force-single-line-imports"]
+- repo: https://github.com/myint/autoflake
+  rev: v1.4
+  hooks:
+  - id: autoflake
+    args: ["--recursive", "--remove-all-unused-imports", "--remove-unused-variables", "--in-place"]
