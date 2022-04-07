@@ -254,9 +254,6 @@ async def upload_image(
 async def create_variable_item(
     gc, folder, shot_name, run_name, group_name, variable_name, timestep, time
 ):
-    logging.getLogger("adash")
-    Path(variable_name)
-
     image_folders = [shot_name, run_name, group_name]
     parent_folder = await ensure_folders(gc, folder, image_folders)
 
@@ -389,7 +386,6 @@ async def fetch_images(
 
             # First ensure will be all variable items created
             for v in variables:
-                v["file_name"]
                 variable_name = v["attribute_name"]
                 try:
                     group_name = v["group_name"]
