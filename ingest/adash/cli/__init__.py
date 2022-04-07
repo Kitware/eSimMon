@@ -7,7 +7,7 @@ from pkg_resources import iter_entry_points
 import click
 
 
-@with_plugins(iter_entry_points('adash.cli_plugins'))
+@with_plugins(iter_entry_points("adash.cli_plugins"))
 @click.group()
 def main():
     root = logging.getLogger()
@@ -15,6 +15,8 @@ def main():
 
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.DEBUG)
-    formatter = coloredlogs.ColoredFormatter('%(asctime)s,%(msecs)03d - %(name)s - %(levelname)s - %(message)s')
+    formatter = coloredlogs.ColoredFormatter(
+        "%(asctime)s,%(msecs)03d - %(name)s - %(levelname)s - %(message)s"
+    )
     handler.setFormatter(formatter)
     root.addHandler(handler)
