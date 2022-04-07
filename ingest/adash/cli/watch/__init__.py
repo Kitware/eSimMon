@@ -1,27 +1,16 @@
 import asyncio
-import functools
-import io
 import logging
 import mimetypes
-import os
 import re
 import ssl
-import sys
 import tarfile
-import tempfile
-import types
 from io import BytesIO
 from pathlib import Path
-from urllib.parse import urlparse
 
 import aiohttp
 import click
 import tenacity
 from async_lru import alru_cache
-from flask import Flask
-from flask import jsonify
-from flask import send_from_directory
-from girder_client import GirderClient
 
 
 class AsyncGirderClient(object):
@@ -265,8 +254,8 @@ async def upload_image(
 async def create_variable_item(
     gc, folder, shot_name, run_name, group_name, variable_name, timestep, time
 ):
-    log = logging.getLogger("adash")
-    image_path = Path(variable_name)
+    logging.getLogger("adash")
+    Path(variable_name)
 
     image_folders = [shot_name, run_name, group_name]
     parent_folder = await ensure_folders(gc, folder, image_folders)
@@ -396,12 +385,11 @@ async def fetch_images(
         )
 
         with tarfile.open(fileobj=buffer) as images_tgz:
-            bp_files_added = set()
             bp_files_to_upload = set([v["file_name"] for v in variables])
 
             # First ensure will be all variable items created
             for v in variables:
-                bp_file_name = v["file_name"]
+                v["file_name"]
                 variable_name = v["attribute_name"]
                 try:
                     group_name = v["group_name"]
@@ -418,8 +406,6 @@ async def fetch_images(
                         f"Unable to extract time for '{variable_name}' in {shot_name}, skipping."
                     )
                     return
-
-                info = None
 
                 # Ensure we have the variable item created
                 await create_variable_item(

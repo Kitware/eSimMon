@@ -1,16 +1,11 @@
 import io
 import os
 import re
-import sys
-import types
 from pathlib import Path
 from urllib.parse import urlparse
 
 import click
 import requests
-from flask import Flask
-from flask import jsonify
-from flask import send_from_directory
 from girder_client import GirderClient
 
 
