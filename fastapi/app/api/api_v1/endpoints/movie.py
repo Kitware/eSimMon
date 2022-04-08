@@ -4,7 +4,8 @@ import tempfile
 
 from fastapi.responses import FileResponse
 
-from fastapi import APIRouter, Header
+from fastapi import APIRouter
+from fastapi import Header
 
 from .utils import get_girder_client
 
