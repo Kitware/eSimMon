@@ -128,22 +128,9 @@ export default {
         this.$refs.query.blur();
       }
     },
-    async fetchMovie(e) {
-      let name = e.target.textContent.trim();
-      var item = await this.girderRest.get(
-        `/item?folderId=${this.location._id}&name=${name}`
-      );
-      let files = await this.girderRest.get(`/item/${item.data[0]._id}/files`);
-      if (files.data[0]["exts"] == "json") return;
-      this.$parent.$parent.$parent.$parent.$emit(
-        "param-selected",
-        item.data[0]._id,
-        name,
-        e
-      );
-    },
-    getFilteredResults: _.throttle(async function () {
-      if (this.outsideOfRoot) return;
+    getFilteredResults:  _.throttle(async function() {
+      if (this.outsideOfRoot)
+        return;
 
       try {
         let input = this.input ? this.input : "";

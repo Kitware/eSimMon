@@ -3,7 +3,7 @@
     vertical-center
     v-on:drop="loadGallery($event)"
     v-on:dragover="preventDefault($event)"
-    @contextmenu.prevent="fetchMovie"
+    @contextmenu.prevent="requestContextMenu"
   >
     <div ref="plotly" class="plot">
       <span v-if="rangeText.length" class="plotlyAnnotations">

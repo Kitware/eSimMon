@@ -9,6 +9,8 @@ export default {
     renderWindow: null,
     zoomSync: true,
     rendererCount: 0,
+    contextMenu: false,
+    contextMenuItemData: null,
   },
   getters: {
     UI_AUTO_SAVE_DIALOG(state) {
@@ -37,6 +39,12 @@ export default {
     },
     UI_RENDERER_COUNT(state) {
       return state.rendererCount;
+    },
+    UI_SHOW_CONTEXT_MENU(state) {
+      return state.contextMenu;
+    },
+    UI_CONTEXT_MENU_ITEM_DATA(state) {
+      return state.contextMenuItemData;
     },
   },
   mutations: {
@@ -67,6 +75,12 @@ export default {
     UI_RENDERER_COUNT_SET(state, val) {
       state.rendererCount = val;
     },
+    UI_SHOW_CONTEXT_MENU_SET(state, val) {
+      state.contextMenu = val;
+    },
+    UI_CONTEXT_MENU_ITEM_DATA_SET(state, val) {
+      state.contextMenuItemData = val;
+    }
   },
   actions: {
     UI_TOGGLE_PLAY_PAUSE({ state }) {

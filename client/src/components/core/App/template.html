@@ -6,62 +6,7 @@
       :forgot-password-url="forgotPasswordUrl"
     />
   </v-dialog>
-  <v-menu v-model="showMenu"
-          :position-x="pos[0]"
-          :position-y="pos[1]"
-          absolute
-          offset-y>
-    <v-card style="padding: 5px">
-      <v-list>
-        <v-list-item dense @click="showRangeDialog=true">
-          <v-list-item-title v-if="paramIsJson">
-            Set global range
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-      <v-divider/>
-      <v-list>
-        <v-list-item dense>
-          <v-list-item-title>
-            Save Image as PNG
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-      <v-list>
-        <v-list-item dense>
-          <v-list-item-title>
-            Save Image as SVG
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-      <v-list>
-        <v-list-item>
-          <v-list-item-title>
-            Save Image as PDF
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-      <v-list>
-        <v-list-item>
-          <v-list-item-title>
-            Download Movie as MP4
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-      <v-list>
-        <v-list-item>
-          <v-list-item-title>
-            Download Movie as MPG
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-card>
-  </v-menu>
-  <range-dialog
-    :visible="showRangeDialog"
-    :param="parameter"
-    @close="showRangeDialog=false"
-  />
+  <context-menu />
   <splitpanes>
     <pane min-size="15" :size="25">
       <v-row v-bind:style="{height: '100vh'}">

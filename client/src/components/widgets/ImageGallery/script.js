@@ -209,17 +209,20 @@ export default {
       setMinTimeStep: "PLOT_MIN_TIME_STEP_CHANGED",
     }),
     ...mapMutations({
-      setTimeStep: "PLOT_TIME_STEP_SET",
-      setZoomOrigin: "PLOT_ZOOM_ORIGIN_SET",
-      updateCellCount: "PLOT_VISIBLE_CELL_COUNT_SET",
-      setMaxTimeStep: "PLOT_MAX_TIME_STEP_SET",
-      setItemId: "PLOT_CURRENT_ITEM_ID_SET",
-      setLoadedFromView: "PLOT_LOADED_FROM_VIEW_SET",
-      setInitialLoad: "PLOT_INITIAL_LOAD_SET",
-      updateRendererCount: "UI_RENDERER_COUNT_SET",
-      setPauseGallery: "UI_PAUSE_GALLERY_SET",
-      setGlobalFocalPoint: "PLOT_FOCAL_POINT_SET",
-      setGlobalScale: "PLOT_SCALE_SET",
+      setTimeStep: 'PLOT_TIME_STEP_SET',
+      setZoomOrigin: 'PLOT_ZOOM_ORIGIN_SET',
+      updateCellCount: 'PLOT_VISIBLE_CELL_COUNT_SET',
+      setMaxTimeStep: 'PLOT_MAX_TIME_STEP_SET',
+      setItemId: 'PLOT_CURRENT_ITEM_ID_SET',
+      setLoadedFromView: 'PLOT_LOADED_FROM_VIEW_SET',
+      setInitialLoad: 'PLOT_INITIAL_LOAD_SET',
+      updateRendererCount: 'UI_RENDERER_COUNT_SET',
+      setPauseGallery: 'UI_PAUSE_GALLERY_SET',
+      setGlobalFocalPoint: 'PLOT_FOCAL_POINT_SET',
+      setGlobalScale: 'PLOT_SCALE_SET',
+      showContextMenu: 'UI_SHOW_CONTEXT_MENU_SET',
+      setContextMenuItemData: 'UI_CONTEXT_MENU_ITEM_DATA_SET',
+      setCurrentItemId: 'PLOT_CURRENT_ITEM_ID_SET',
     }),
     relayoutPlotly() {
       const node = this.$refs.plotly;
@@ -540,15 +543,18 @@ export default {
       }
       this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
     },
-    async fetchMovie(e) {
+    async requestContextMenu(e) {
       const response = await this.callEndpoint(`item/${this.itemId}`);
       const data = {
         id: this.itemId,
         name: response.name,
         event: e,
-        isJson: this.json,
-      };
-      this.$parent.$parent.$parent.$parent.$emit("param-selected", data);
+        // isJson: this.json,
+        step: this.currentTimeStep,
+      }
+      this.setCurrentItemId(this.itemId);
+      this.setContextMenuItemData(data);
+      this.showContextMenu(true);
     },
     clearGallery() {
       this.itemId = null;

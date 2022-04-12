@@ -1,14 +1,13 @@
-import axios from "axios";
-import { Splitpanes, Pane } from "splitpanes";
-import "splitpanes/dist/splitpanes.css";
-import _ from "lodash";
-import RenderWindow from "../../widgets/RenderWindow";
-import ImageGallery from "../../widgets/ImageGallery";
-import { GirderAuthentication as GirderAuthentication } from "@girder/components/src";
-import GirderFileManager from "../../widgets/GirderFileManager";
-import ViewControls from "../ViewControls";
-import RangeDialog from "../../widgets/RangeDialog";
-import { mapActions, mapGetters, mapMutations } from "vuex";
+import { Splitpanes, Pane } from 'splitpanes';
+import 'splitpanes/dist/splitpanes.css';
+import _ from 'lodash';
+import RenderWindow from '../../widgets/RenderWindow';
+import ImageGallery from '../../widgets/ImageGallery';
+import { GirderAuthentication as GirderAuthentication } from '@girder/components/src';
+import GirderFileManager from '../../widgets/GirderFileManager';
+import ViewControls from '../ViewControls';
+import ContextMenu from '../../widgets/ContextMenu';
+import { mapActions, mapGetters, mapMutations } from 'vuex';
 
 export default {
   name: "App",
@@ -22,7 +21,7 @@ export default {
     Splitpanes,
     Pane,
     ViewControls,
-    RangeDialog,
+    ContextMenu,
   },
 
   data() {
@@ -43,7 +42,6 @@ export default {
       movieRequested: false,
       generationFailed: false,
       paramIsJson: false,
-      showRangeDialog: false,
     };
   },
 
@@ -57,20 +55,19 @@ export default {
     }),
 
     ...mapMutations({
-      setAutoSaveName: "VIEW_AUTO_SAVE_NAME_SET",
-      setAutoSavedViewDialog: "UI_AUTO_SAVE_DIALOG_SET",
-      setColumns: "VIEW_COLUMNS_SET",
-      setCreator: "VIEW_CREATOR_SET",
-      setCurrentTimeStep: "PLOT_TIME_STEP_SET",
-      setCurrentItemId: "PLOT_CURRENT_ITEM_ID_SET",
-      setGridSize: "VIEW_GRID_SIZE_SET",
-      setPaused: "UI_PAUSE_GALLERY_SET",
-      setPublic: "VIEW_PUBLIC_SET",
-      setRows: "VIEW_ROWS_SET",
-      setRunId: "VIEW_RUN_ID_SET",
-      setShouldAutoSave: "VIEW_AUTO_SAVE_RUN_SET",
-      setSimulation: "VIEW_SIMULATION_SET",
-      setMaxTimeStep: "PLOT_MAX_TIME_STEP_SET",
+      setAutoSaveName: 'VIEW_AUTO_SAVE_NAME_SET',
+      setAutoSavedViewDialog: 'UI_AUTO_SAVE_DIALOG_SET',
+      setColumns: 'VIEW_COLUMNS_SET',
+      setCreator: 'VIEW_CREATOR_SET',
+      setCurrentTimeStep: 'PLOT_TIME_STEP_SET',
+      setGridSize: 'VIEW_GRID_SIZE_SET',
+      setPaused: 'UI_PAUSE_GALLERY_SET',
+      setPublic: 'VIEW_PUBLIC_SET',
+      setRows: 'VIEW_ROWS_SET',
+      setRunId: 'VIEW_RUN_ID_SET',
+      setShouldAutoSave: 'VIEW_AUTO_SAVE_RUN_SET',
+      setSimulation: 'VIEW_SIMULATION_SET',
+      setMaxTimeStep: 'PLOT_MAX_TIME_STEP_SET',
     }),
 
     addColumn() {
@@ -254,40 +251,6 @@ export default {
       // this.getRangeData();
     },
 
-    contextMenu(data) {
-      const { id, name, event, isJson } = data;
-      this.parameter = name;
-      this.setCurrentItemId(id);
-      this.showMenu = false;
-      this.pos = [event.clientX, event.clientY];
-      this.paramIsJson = isJson;
-      this.$nextTick(() => {
-        this.showMenu = true;
-      });
-    },
-
-    fetchMovie() {
-      let name = this.parameter;
-      this.movieRequested = true;
-      axios({
-        url: `${this.fastRestUrl}/movie/${this.itemId}`,
-        method: "GET",
-        headers: { girderToken: this.girderRest.token },
-        responseType: "blob",
-      })
-        .then((response) => {
-          const url = window.URL.createObjectURL(new Blob([response.data]));
-          const link = document.createElement("a");
-          link.href = url;
-          link.setAttribute("download", `${name}.mp4`);
-          document.body.appendChild(link);
-          link.click();
-        })
-        .catch(() => {
-          this.generationFailed = true;
-        });
-    },
-
     applyView() {
       this.$refs.imageGallery.forEach((cell) => {
         const { row, col } = cell.$attrs;
@@ -347,10 +310,9 @@ export default {
   },
 
   created: async function () {
-    this.$on("data-loaded", this.initialDataLoaded);
-    this.$on("gallery-ready", this.incrementReady);
-    this.$on("param-selected", this.contextMenu);
-    this.$on("item-added", this.setRun);
+    this.$on('data-loaded', this.initialDataLoaded);
+    this.$on('gallery-ready', this.incrementReady);
+    this.$on('item-added', this.setRun);
   },
 
   asyncComputed: {
