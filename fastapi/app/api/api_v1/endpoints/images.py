@@ -6,7 +6,6 @@ from urllib.parse import unquote
 
 import numpy as np
 import plotly.graph_objects as go
-from PIL import Image
 
 # noinspection PyUnresolvedReferences
 import vtkmodules.vtkInteractionStyle  # noqa
@@ -48,6 +47,7 @@ def create_plotly_image(plot_data: dict, format: str, zoom: dict):
     plot_data["layout"]["autosize"] = True
     plot_data["layout"]["xaxis"]["automargin"] = True
     plot_data["layout"]["yaxis"]["automargin"] = True
+    plot_data["layout"]["title"]["x"] = 0.5
     plot_data["layout"].pop("name", None)
     plot_data["layout"].pop("frames", None)
     if zoom:
