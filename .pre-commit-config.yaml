@@ -12,7 +12,7 @@ repos:
   rev: 5.10.1
   hooks:
   - id: isort
-    args: ["--force-single-line-imports"]
+    args: ["--profile", "black", "--force-single-line-imports"]
 - repo: https://github.com/myint/autoflake
   rev: v1.4
   hooks:
