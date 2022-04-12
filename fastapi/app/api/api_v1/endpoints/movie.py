@@ -44,7 +44,7 @@ async def create_movie(
         try:
             (
                 ffmpeg.input(path_name, pattern_type="glob", framerate=10)
-                .output(output_file.name)
+                .output(output_file.name, **{"r": 30})
                 .overwrite_output()
                 .run()
             )
