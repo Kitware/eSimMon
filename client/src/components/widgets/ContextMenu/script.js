@@ -1,4 +1,3 @@
-import axios from 'axios';
 import RangeDialog from '../RangeDialog';
 import { mapGetters, mapMutations } from 'vuex';
 
@@ -58,15 +57,13 @@ export default {
         link.click();
       });
     },
-    fetchMovie() {
+    fetchMovie(format) {
       let name = this.parameter;
       this.movieRequested = true;
-      axios({
-        url: `${this.fastRestUrl}/movie/${this.itemId}`,
-        method: 'GET',
-        headers: { 'girderToken': this.girderRest.token },
-        responseType: 'blob'
-      }).then((response) => {
+      const endpoint = `movie/${this.itemInfo.id}/format/${format}`;
+      this.girderRest.get(
+        `${this.fastRestUrl}/${endpoint}`, {responseType: 'blob'}
+      ).then((response) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
