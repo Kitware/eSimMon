@@ -26,3 +26,7 @@ async def generate_colormap_response(plot_config: Dict, bp_file, variable: str):
     }
 
     return MsgpackResponse(content=mesh_json)
+
+
+async def generate_colormap_data(plot_config: Dict, bp_file, variable: str):
+    return
