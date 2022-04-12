@@ -1,6 +1,12 @@
 import io
+import json
+import tempfile
+from typing import Optional
+from urllib.parse import unquote
 
+import numpy as np
 import plotly.graph_objects as go
+from PIL import Image
 
 # noinspection PyUnresolvedReferences
 import vtkmodules.vtkInteractionStyle  # noqa
@@ -35,7 +41,7 @@ from .variables import get_timestep_plot
 router = APIRouter()
 
 
-def create_plotly_image(plot_data: dict, format: str):
+def create_plotly_image(plot_data: dict, format: str, zoom: dict):
     # The json contains Javascript syntax. Update values for Python
     for data in plot_data["data"]:
         data["mode"] = "lines"
@@ -44,6 +50,9 @@ def create_plotly_image(plot_data: dict, format: str):
     plot_data["layout"]["yaxis"]["automargin"] = True
     plot_data["layout"].pop("name", None)
     plot_data["layout"].pop("frames", None)
+    if zoom:
+        plot_data["layout"]["xaxis"]["range"] = zoom["xAxis"]
+        plot_data["layout"]["yaxis"]["range"] = zoom["yAxis"]
 
     # Get image as bytes
     fig = go.Figure(plot_data["data"], plot_data["layout"])
@@ -202,19 +211,23 @@ def create_mesh_image(plot_data: dict, format: str):
     return _convert_image(output_file, format)
 
 
-async def get_timestep_image_data(plot: dict, format: str):
+async def get_timestep_image_data(plot: dict, format: str, zoom: dict):
     if plot["type"] == "plotly":
-        image = create_plotly_image(plot, format)
+        image = create_plotly_image(plot, format, zoom)
     elif plot["type"] == "mesh":
-        image = create_mesh_image(plot, format)
+        image = create_mesh_image(plot, format, zoom)
     elif plot["type"] == "colormap":
-        image = create_colormap_image(plot, format)
+        image = create_colormap_image(plot, format, zoom)
     return image
 
 
 @router.get("/{variable_id}/timesteps/{timestep}/format/{image_type}")
 async def get_timestep_image(
-    variable_id: str, timestep: int, image_type: str, girder_token: str = Header(None)
+    variable_id: str,
+    timestep: int,
+    image_type: str,
+    zoom: Optional[str] = None,
+    girder_token: str = Header(None),
 ):
     # Make sure time step exists
     gc = get_girder_client(girder_token)
@@ -222,7 +235,9 @@ async def get_timestep_image(
     timesteps = item["meta"]["timesteps"]
     if timestep not in timesteps:
         timestep = max([s for s in timesteps if s < timestep])
+    # Check if there are zoom settings to apply
+    zoom = json.loads(unquote(zoom)) if zoom else {}
     # call generate plot response and get plot
     plot = await get_timestep_plot(variable_id, timestep, girder_token, as_image=True)
-    img_bytes = await get_timestep_image_data(plot, image_type)
+    img_bytes = await get_timestep_image_data(plot, image_type, zoom)
     return StreamingResponse(io.BytesIO(img_bytes), media_type=f"image/{format}")

@@ -1,6 +1,9 @@
 import io
+import json
 import os
 import tempfile
+from typing import Optional
+from urllib.parse import unquote
 
 import ffmpeg
 from fastapi.responses import FileResponse
@@ -17,17 +20,20 @@ router = APIRouter()
 
 
 @router.get("/{id}/format/{format}", response_class=FileResponse)
-async def create_movie(id: str, format: str, girder_token: str = Header(None)):
+async def create_movie(
+    id: str, format: str, zoom: Optional[str] = None, girder_token: str = Header(None)
+):
     # Get all timesteps
     gc = get_girder_client(girder_token)
     item = gc.getItem(id)
     timesteps = item["meta"]["timesteps"]
-
+    # Check if there are zoom settings to apply
+    zoom = json.loads(unquote(zoom)) if zoom else {}
     with tempfile.TemporaryDirectory() as tmpdir:
         for step in timesteps:
             # call generate plot response and get plot
             plot = await get_timestep_plot(id, step, girder_token, as_image=True)
-            image = await get_timestep_image_data(plot, "png")
+            image = get_timestep_image_data(plot, "png", zoom)
             im = Image.open(io.BytesIO(image), "r", ["PNG"])
             f = tempfile.NamedTemporaryFile(
                 dir=tmpdir, prefix=f"{step}_", suffix=".png", delete=False

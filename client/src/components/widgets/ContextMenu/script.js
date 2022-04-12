@@ -19,6 +19,7 @@ export default {
     ...mapGetters({
       visible: 'UI_SHOW_CONTEXT_MENU',
       itemInfo: 'UI_CONTEXT_MENU_ITEM_DATA',
+      zoom: 'PLOT_ZOOM',
     }),
     showMenu: {
       get() {
@@ -43,35 +44,29 @@ export default {
     ...mapMutations({
       showContextMenu: 'UI_SHOW_CONTEXT_MENU_SET',
     }),
-    downloadImage(format) {
-      const endpoint = `images/${this.itemInfo.id}/timesteps/${this.itemInfo.step}/format/${format}`;
-      console.log(this.itemInfo.id, this.itemInfo.step, format)
-      this.girderRest.get(
-        `${this.fastRestUrl}/${endpoint}`, {responseType: 'blob'}
-      ).then((response) => {
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `${this.itemInfo.name}.${format}`);
-        document.body.appendChild(link);
-        link.click();
-      });
+    fetchImage(format) {
+      const { id, step } = this.itemInfo;
+      const endpoint = `images/${id}/timesteps/${step}/format/${format}`;
+      this.downloadData(endpoint, format);
     },
     fetchMovie(format) {
-      let name = this.parameter;
       this.movieRequested = true;
-      const endpoint = `movie/${this.itemInfo.id}/format/${format}`;
+      const { id } = this.itemInfo;
+      const endpoint = `movie/${id}/format/${format}`;
+      this.downloadData(endpoint, format);
+    },
+    downloadData(endpoint, format) {
+      const { name } = this.itemInfo;
+      const zoom = this.zoom ? `?zoom=${JSON.stringify(this.zoom)}` : '';
       this.girderRest.get(
-        `${this.fastRestUrl}/${endpoint}`, {responseType: 'blob'}
+        `${this.fastRestUrl}/${endpoint}${zoom}`, {responseType: 'blob'}
       ).then((response) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `${name}.mp4`);
+        link.setAttribute('download', `${name}.${format}`);
         document.body.appendChild(link);
         link.click();
-      }).catch(() => {
-        this.generationFailed = true;
       });
     },
   },
