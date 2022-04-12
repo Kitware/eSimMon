@@ -29,6 +29,7 @@ from vtkmodules.vtkRenderingCore import vtkColorTransferFunction
 from vtkmodules.vtkRenderingCore import vtkPolyDataMapper
 from vtkmodules.vtkRenderingCore import vtkRenderer
 from vtkmodules.vtkRenderingCore import vtkRenderWindow
+from vtkmodules.vtkRenderingCore import vtkTextActor
 from vtkmodules.vtkRenderingCore import vtkWindowToImageFilter
 
 from fastapi import APIRouter
@@ -87,7 +88,7 @@ def create_mesh_image(plot_data: dict, format: str):
     xLabel = plot_data["xLabel"]
     yLabel = plot_data["yLabel"]
     colorLabel = plot_data["colorLabel"]
-    # title = plot_data["title"]
+    title = plot_data["title"]
 
     # We"ll create the building blocks of polydata including data attributes.
     mesh = vtkPolyData()
@@ -150,13 +151,23 @@ def create_mesh_image(plot_data: dict, format: str):
 
     renderer.AddActor(mesh_actor)
     renderer.SetActiveCamera(camera)
-    bounds = list(mesh_actor.GetBounds())
-    bounds[2] -= 0.3
-    renderer.ResetCamera(bounds)
-    renderer.SetBackground([1, 1, 1])
+
+    # Set the title
+    title_text = vtkTextActor()
+    title_text.SetInput(title)
+    title_text.SetAlignmentPoint(7)
+    title_text_prop = title_text.GetTextProperty()
+    title_text_prop.SetFontFamilyToArial()
+    title_text_prop.SetFontSize(18)
+    title_text_prop.SetColor([0, 0, 0])
+    title_text_prop.SetJustificationToCentered()
+    title_text_prop.SetVerticalJustificationToTop()
+    title_text.SetPosition(250, 480)
+    renderer.AddActor2D(title_text)
 
     # Create the axis
     axes = vtkCubeAxesActor()
+    axes.SetUse2DMode(0)
     axes.SetCamera(renderer.GetActiveCamera())
     axes.SetXTitle(xLabel)
     axes.SetYTitle(yLabel)
@@ -171,9 +182,15 @@ def create_mesh_image(plot_data: dict, format: str):
     axes.GetYAxesGridlinesProperty().SetColor(0, 0, 0)
     axes.YAxisMinorTickVisibilityOff()
     axes.DrawYGridlinesOn()
-    axes.SetGridLineLocation(axes.VTK_GRID_LINES_FURTHEST)
     renderer.AddActor(axes)
 
+    # Hack to manipulate the camera bounds
+    # This ensures axes labels and title are not cut off
+    bounds = list(mesh_actor.GetBounds())
+    bounds[2] -= 0.5
+    bounds[3] += 0.3
+    renderer.ResetCamera(bounds)
+    renderer.SetBackground([1, 1, 1])
     ren_win.SetSize(500, 500)
     ren_win.Render()
 
