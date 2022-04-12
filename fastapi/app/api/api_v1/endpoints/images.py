@@ -25,7 +25,6 @@ from vtkmodules.vtkRenderingAnnotation import vtkCubeAxesActor
 from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
 from vtkmodules.vtkRenderingCore import vtkActor
 from vtkmodules.vtkRenderingCore import vtkCamera
-from vtkmodules.vtkRenderingCore import vtkColorTransferFunction
 from vtkmodules.vtkRenderingCore import vtkPolyDataMapper
 from vtkmodules.vtkRenderingCore import vtkRenderer
 from vtkmodules.vtkRenderingCore import vtkRenderWindow
@@ -116,29 +115,9 @@ def create_mesh_image(plot_data: dict, format: str):
     mesh_actor = vtkActor()
     mesh_actor.SetMapper(mesh_mapper)
 
-    # Create a lookup table ad set the colormap
-    ctf = vtkColorTransferFunction()
-    # Build the Jet colormap
-    ctf.SetColorSpaceToRGB()
-    ctf.AddRGBPoint(-1, 0, 0, 0.5625)
-    ctf.AddRGBPoint(-0.777778, 0, 0, 1)
-    ctf.AddRGBPoint(-0.269841, 0, 1, 1)
-    ctf.AddRGBPoint(-0.015873, 0.5, 1, 0.5)
-    ctf.AddRGBPoint(0.238095, 1, 1, 0)
-    ctf.AddRGBPoint(0.746032, 1, 0, 0)
-    ctf.AddRGBPoint(1, 0.5, 0, 0)
-
     # Add the colormap to the lookup table
     lut = vtkLookupTable()
-    # lut.SetHueRange(0.667, 0.0)
-    lut.SetNumberOfColors(256)
-    num_colors = lut.GetNumberOfColors()
-    for i in range(num_colors):
-        r, g, b = list(ctf.GetColor(float(i) / num_colors))
-        lut.SetTableValue(i, r, g, b, 1.0)
-    lut.SetTableRange(scalars.GetRange())
-    lut.SetRampToLinear()
-    lut.Build()
+    lut.SetHueRange(0.667, 0.0)
     mesh_mapper.SetLookupTable(lut)
 
     # The usual rendering stuff.
