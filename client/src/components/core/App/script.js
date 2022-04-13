@@ -39,8 +39,6 @@ export default {
       parameter: "",
       cancel: false,
       showMenu: false,
-      movieRequested: false,
-      generationFailed: false,
       paramIsJson: false,
     };
   },
@@ -382,22 +380,6 @@ export default {
   },
 
   watch: {
-    movieRequested(val) {
-      if (!val) {
-        setTimeout(() => {
-          this.movieRequested = false;
-        }, 5000);
-      }
-    },
-
-    generationFailed(val) {
-      if (!val) {
-        setTimeout(() => {
-          this.generationFailed = false;
-        }, 5000);
-      }
-    },
-
     async location(current) {
       if (current._modelType !== "folder") {
         return;

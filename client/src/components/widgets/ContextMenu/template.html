@@ -51,4 +51,30 @@
     :param="parameter"
     @close="showRangeDialog=false"
   />
+  <div class="notification">
+    <v-sheet
+      v-for="r in requested"
+      :key="r.id"
+      :elevation="12"
+      color="blue"
+    >
+      {{ r.type }} Download Requested for {{ r.name }}
+    </v-sheet>
+    <v-sheet
+      v-for="f in failed"
+      :key="f.id"
+      :elevation="12"
+      color="red"
+    >
+      {{ f.type }} Download Failed for {{ f.name }}
+    </v-sheet>
+    <v-sheet
+      v-for="c in completed"
+      :key="c.id"
+      :elevation="12"
+      color="green"
+    >
+      {{ c.type }} Download Completed for {{ c.name }}
+    </v-sheet>
+  </div>
 </div>

@@ -163,26 +163,6 @@
       </v-container>
     </pane>
   </splitpanes>
-  <div>
-    <v-snackbar
-      v-model="movieRequested"
-      :timeout="5000"
-      bottom
-      right
-      v-bind:style="{color: 'green'}"
-    >
-      Movie Download Requested
-    </v-snackbar>
-    <v-snackbar
-      v-model="generationFailed"
-      :timeout="5000"
-      bottom
-      right
-      v-bind:style="{color: 'red'}"
-    >
-      Movie Generation Failed
-    </v-snackbar>
-  </div>
   <v-dialog v-model="autoSavedViewDialog" persistent max-width="300">
     <v-card>
       <v-card-title class="headline">Load auto-saved view?</v-card-title>

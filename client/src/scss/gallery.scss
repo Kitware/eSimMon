@@ -206,3 +206,18 @@
   font-size: smaller;
   padding-left: 5px;
 }
+
+.notification {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  z-index: 1;
+  bottom: 0;
+  right: 0;
+  .v-sheet{
+    padding: 10px;
+    border-radius: 10px;
+    margin: 3px;
+    opacity: 0.9;
+  }
+}
