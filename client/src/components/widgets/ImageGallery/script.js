@@ -239,6 +239,9 @@ export default {
       this.relayoutPlotly();
     },
     resize() {
+      if (this.zoom) {
+        return;
+      }
       this.relayoutPlotly();
     },
 
