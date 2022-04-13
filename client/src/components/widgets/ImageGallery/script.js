@@ -8,19 +8,18 @@ import {
 } from "../../../utils/vtkPlotStyling";
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import "@kitware/vtk.js/Rendering/Profiles/Geometry";
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import vtkActor from "@kitware/vtk.js/Rendering/Core/Actor";
-import vtkColorMaps from "@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps";
-import vtkColorTransferFunction from "@kitware/vtk.js/Rendering/Core/ColorTransferFunction";
-import vtkCubeAxesActor from "@kitware/vtk.js/Rendering/Core/CubeAxesActor";
-import vtkDataArray from "@kitware/vtk.js/Common/Core/DataArray";
-import vtkMapper from "@kitware/vtk.js/Rendering/Core/Mapper";
-import vtkPointPicker from "@kitware/vtk.js/Rendering/Core/PointPicker";
-import vtkPolyData from "@kitware/vtk.js/Common/DataModel/PolyData";
-import vtkRenderer from "@kitware/vtk.js/Rendering/Core/Renderer";
-import vtkScalarBarActor from "@kitware/vtk.js/Rendering/Core/ScalarBarActor";
-import vtkCornerAnnotation from "@kitware/vtk.js/Interaction/UI/CornerAnnotation";
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkCubeAxesActor from '@kitware/vtk.js/Rendering/Core/CubeAxesActor';
+import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkPointPicker from '@kitware/vtk.js/Rendering/Core/PointPicker';
+import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
+import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
+import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
 
 // Number of timesteps to prefetch data for.
 const TIMESTEPS_TO_PREFETCH = 3;
@@ -82,7 +81,6 @@ export default {
       timeIndex: -1,
       inThisRenderer: false,
       startPoints: null,
-      cornerAnnotation: null,
       camera: null,
       focalPoint: null,
       scale: 0,
@@ -685,9 +683,6 @@ export default {
       // Setup picker
       this.setupPointPicker();
 
-      // Add corner annotation
-      this.cornerAnnotation = vtkCornerAnnotation.newInstance();
-
       this.$nextTick(this.updateViewPort);
     },
     updateRenderer(data) {
@@ -770,6 +765,7 @@ export default {
         this.updateRendererCount(this.renderWindow.getRenderers().length);
         this.position = null;
         this.renderWindow.render();
+        this.rangeText = [];
       }
     },
     removePlotly() {
@@ -856,19 +852,13 @@ export default {
             this.setGlobalScale(this.scale);
             this.setGlobalFocalPoint([...this.focalPoint]);
           }
-          // Update corner annotation
-          this.cornerAnnotation.setContainer(this.$refs.plotly);
-          this.cornerAnnotation.updateMetadata({
-            range: this.actor.getBounds(),
-          });
-          this.cornerAnnotation.updateTemplates({
-            nw(meta) {
-              return `xRange: [${meta.range.slice(
-                0,
-                2
-              )}] yRange: [${meta.range.slice(2, 4)}]`;
-            },
-          });
+          const range = this.actor.getBounds();
+          this.rangeText = [
+            range[0].toPrecision(4),
+            range[1].toPrecision(4),
+            range[2].toPrecision(4),
+            range[3].toPrecision(4)
+          ]
         }
       });
     },
@@ -888,7 +878,6 @@ export default {
         this.setGlobalFocalPoint(this.focalPoint);
         this.setGlobalScale(this.scale);
       }
-      this.cornerAnnotation.setContainer(null);
       this.camera.setPosition(...this.position);
       const bounds = [...this.actor.getBounds()];
       // Hack to adjust the bounds to include the x label
@@ -897,6 +886,7 @@ export default {
       this.renderer.resetCamera(bounds);
       this.setZoomDetails({vtkZoom: null, xAxis: null});
       this.zoom = null;
+      this.rangeText = [];
     },
     findClosestTime() {
       // Time is stored as seconds but plotted as milliseconds
