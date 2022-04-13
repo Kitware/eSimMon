@@ -1,15 +1,15 @@
-import { mapActions, mapGetters, mapMutations } from 'vuex';
+import { mapActions, mapGetters, mapMutations } from "vuex";
 
 export default {
-  inject: ['girderRest'],
+  inject: ["girderRest"],
 
-  data () {
+  data() {
     return {
       activeTab: 0,
       clicks: 0,
       dialogDelete: false,
       disableLoad: true,
-      search: '',
+      search: "",
       selection: null,
       dialogTogglePublic: false,
     };
@@ -17,9 +17,9 @@ export default {
 
   computed: {
     ...mapGetters({
-      visible: 'UI_SHOW_LOAD_DIALOG',
-      meta: 'VIEW_META',
-      views: 'VIEW_LIST_ALL',
+      visible: "UI_SHOW_LOAD_DIALOG",
+      meta: "VIEW_META",
+      views: "VIEW_LIST_ALL",
     }),
     loadDialog: {
       get() {
@@ -28,18 +28,18 @@ export default {
       set(value) {
         this.setShowLoadDialog(value);
         if (!value) {
-          this.$emit('close');
+          this.$emit("close");
         }
       },
     },
     headers() {
       return [
-        {text: 'View Name', value: 'name'},
-        {text: 'First Name', value: 'creatorFirst'},
-        {text: 'Last Name', value: 'creatorLast'},
-        {text: 'Date Created', value: 'created'},
-        {text: 'Actions', value: 'actions', sortable: false}
-      ]
+        { text: "View Name", value: "name" },
+        { text: "First Name", value: "creatorFirst" },
+        { text: "Last Name", value: "creatorLast" },
+        { text: "Date Created", value: "created" },
+        { text: "Actions", value: "actions", sortable: false },
+      ];
     },
     filteredViews() {
       return this.views.filter((item) => {
@@ -51,17 +51,17 @@ export default {
         } else {
           return notAutoSave && createdByUser;
         }
-      })
+      });
     },
   },
 
   methods: {
     ...mapActions({
-      fetchAllViews: 'VIEW_FETCH_ALL_AVAILABLE',
-      loadView: 'VIEW_LOADED',
+      fetchAllViews: "VIEW_FETCH_ALL_AVAILABLE",
+      loadView: "VIEW_LOADED",
     }),
     ...mapMutations({
-      setShowLoadDialog: 'UI_SHOW_LOAD_DIALOG_SET',
+      setShowLoadDialog: "UI_SHOW_LOAD_DIALOG_SET",
     }),
     clearSelection() {
       this.selection = null;
@@ -71,12 +71,15 @@ export default {
     },
     async deleteView() {
       this.dialogDelete = false;
-      await this.girderRest.delete(`/view/${this.selection._id}`)
+      await this.girderRest
+        .delete(`/view/${this.selection._id}`)
         .then(() => {
           this.fetchAllViews();
           this.selection = null;
         })
-        .catch((error) => { console.log('error: ', error) });
+        .catch((error) => {
+          console.log("error: ", error);
+        });
     },
     load() {
       this.loadView(this.selection);
@@ -89,8 +92,8 @@ export default {
         columns: this.selection.columns,
         items: {},
         step: 1,
-        meta: {...this.meta},
-      }
+        meta: { ...this.meta },
+      };
 
       async function asyncForEach(keys, values, callback) {
         for (let index = 0; index < values.length; index++) {
@@ -101,7 +104,7 @@ export default {
 
       const keys = Object.keys(this.selection.items);
       const values = Object.values(this.selection.items);
-      await asyncForEach(keys, values, async(value) => {
+      await asyncForEach(keys, values, async (value) => {
         const response = await this.girderRest.get(`/item/${value}`);
         const run = this.meta.run;
         const name = response.data.name;
@@ -134,9 +137,9 @@ export default {
     },
     rowClass(item) {
       if (this.selection && this.selection._id === item._id) {
-        return 'selectedRow';
-      } else  {
-        return '';
+        return "selectedRow";
+      } else {
+        return "";
       }
     },
     viewCreatedByUser(item) {
@@ -158,10 +161,15 @@ export default {
     async toggleViewStatus() {
       this.dialogTogglePublic = false;
       var formData = new FormData();
-      formData.set('public', !this.selection.public);
-      await this.girderRest.put(`/view/${this.selection._id}`, formData)
-        .then(() => { this.fetchAllViews(); })
-        .catch((error) => { console.log('error: ', error) });
+      formData.set("public", !this.selection.public);
+      await this.girderRest
+        .put(`/view/${this.selection._id}`, formData)
+        .then(() => {
+          this.fetchAllViews();
+        })
+        .catch((error) => {
+          console.log("error: ", error);
+        });
     },
     canBeTemplate() {
       if (this.selection && this.meta) {
@@ -171,4 +179,4 @@ export default {
       return false;
     },
   },
-}
+};

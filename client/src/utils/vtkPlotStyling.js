@@ -8,8 +8,8 @@ export function setAxesStyling(axes) {
     // We only want x and y values for 2D plots, hence i < 2
     let numLabels = tickCounts[i] + 1;
     labels[i] = textValues.slice(start + 1, start + numLabels);
-    ticks[i] = textValues.slice(start + 1, start += numLabels).map(v => {
-      if (v.startsWith('−')) {
+    ticks[i] = textValues.slice(start + 1, (start += numLabels)).map((v) => {
+      if (v.startsWith("−")) {
         // The negative values are stored with an em dash rather than a dash
         return parseFloat(v.slice(1)) * -1;
       }
@@ -17,14 +17,13 @@ export function setAxesStyling(axes) {
     });
   }
   // Hardcode the z values that we're not using
-  labels[2] = ['0'];
+  labels[2] = ["0"];
   ticks[2] = [0];
   const faces = [false, false, false, false, false, true];
   // Only place labels on the left and bottom of the axes
   const edges = [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0];
-  return {faces, edges, ticks, labels}
+  return { faces, edges, ticks, labels };
 }
-
 
 /*
 This function is a modified version of the defaultAutoLayout found at 
@@ -74,15 +73,22 @@ export function scalarBarAutoLayout(model) {
     }
 
     helper.setTickLabelPixelOffset(0.4 * tickTextStyle.fontSize);
-    const tickWidth = (2.0 * (textSizes.tickWidth + helper.getTickLabelPixelOffset())) / lastSize[0];
+    const tickWidth =
+      (2.0 * (textSizes.tickWidth + helper.getTickLabelPixelOffset())) /
+      lastSize[0];
     helper.setAxisTitlePixelOffset(0.8 * axisTextStyle.fontSize);
     // width required if the title is vertical
-    const titleWidth = (2.0 * (textSizes.titleHeight + helper.getAxisTitlePixelOffset())) / lastSize[0];
+    const titleWidth =
+      (2.0 * (textSizes.titleHeight + helper.getAxisTitlePixelOffset())) /
+      lastSize[0];
 
     // if the title will fit within the width of the bar then that looks
     // nicer to put it at the top (helper.topTitle), otherwise rotate it
     // and place it sideways
-    if (tickWidth + 0.4 * titleWidth > (2.0 * textSizes.titleWidth) / lastSize[0]) {
+    if (
+      tickWidth + 0.4 * titleWidth >
+      (2.0 * textSizes.titleWidth) / lastSize[0]
+    ) {
       helper.setTopTitle(true);
       boxSize[0] = tickWidth + 0.4 * titleWidth;
       helper.setBoxPosition([0.98 - boxSize[0], -0.92]);

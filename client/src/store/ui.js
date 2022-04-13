@@ -69,14 +69,14 @@ export default {
     },
   },
   actions: {
-    UI_TOGGLE_PLAY_PAUSE({state}) {
+    UI_TOGGLE_PLAY_PAUSE({ state }) {
       state.galleryPaused = !state.galleryPaused;
     },
-    UI_TOGGLE_ZOOM_SYNC({state}) {
+    UI_TOGGLE_ZOOM_SYNC({ state }) {
       state.zoomSync = !state.zoomSync;
     },
-    UI_TOGGLE_TIME_STEP({state}) {
+    UI_TOGGLE_TIME_STEP({ state }) {
       state.timeStepSelection = !state.timeStepSelection;
-    }
+    },
   },
-}
+};

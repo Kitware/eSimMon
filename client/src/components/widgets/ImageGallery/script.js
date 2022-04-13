@@ -1,23 +1,26 @@
-import Plotly from 'plotly.js-basic-dist-min';
-import { isNil, isEqual, isNull } from 'lodash';
-import { mapGetters, mapActions, mapMutations } from 'vuex';
-import { decode } from '@msgpack/msgpack';
-import { setAxesStyling, scalarBarAutoLayout } from '../../../utils/vtkPlotStyling';
+import Plotly from "plotly.js-basic-dist-min";
+import { isNil, isEqual, isNull } from "lodash";
+import { mapGetters, mapActions, mapMutations } from "vuex";
+import { decode } from "@msgpack/msgpack";
+import {
+  setAxesStyling,
+  scalarBarAutoLayout,
+} from "../../../utils/vtkPlotStyling";
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import "@kitware/vtk.js/Rendering/Profiles/Geometry";
 
-import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
-import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
-import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
-import vtkCubeAxesActor from '@kitware/vtk.js/Rendering/Core/CubeAxesActor';
-import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
-import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
-import vtkPointPicker from '@kitware/vtk.js/Rendering/Core/PointPicker';
-import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
-import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
-import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
-import vtkCornerAnnotation from '@kitware/vtk.js/Interaction/UI/CornerAnnotation';
+import vtkActor from "@kitware/vtk.js/Rendering/Core/Actor";
+import vtkColorMaps from "@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps";
+import vtkColorTransferFunction from "@kitware/vtk.js/Rendering/Core/ColorTransferFunction";
+import vtkCubeAxesActor from "@kitware/vtk.js/Rendering/Core/CubeAxesActor";
+import vtkDataArray from "@kitware/vtk.js/Common/Core/DataArray";
+import vtkMapper from "@kitware/vtk.js/Rendering/Core/Mapper";
+import vtkPointPicker from "@kitware/vtk.js/Rendering/Core/PointPicker";
+import vtkPolyData from "@kitware/vtk.js/Common/DataModel/PolyData";
+import vtkRenderer from "@kitware/vtk.js/Rendering/Core/Renderer";
+import vtkScalarBarActor from "@kitware/vtk.js/Rendering/Core/ScalarBarActor";
+import vtkCornerAnnotation from "@kitware/vtk.js/Interaction/UI/CornerAnnotation";
 
 // Number of timesteps to prefetch data for.
 const TIMESTEPS_TO_PREFETCH = 3;
@@ -27,14 +30,14 @@ const AXES_LABEL_BOUNDS_ADJUSTMENT = 0.3;
 // Utility Functions
 //-----------------------------------------------------------------------------
 function parseZoomValues(data, globalY) {
-  if (data['xaxis.autorange'] || data['yaxis.autorange']) {
-    return
+  if (data["xaxis.autorange"] || data["yaxis.autorange"]) {
+    return;
   }
 
   const zoomLevel = {
-    xAxis: [data['xaxis.range[0]'], data['xaxis.range[1]']],
-    yAxis: [data['yaxis.range[0]'], data['yaxis.range[1]']]
-  }
+    xAxis: [data["xaxis.range[0]"], data["xaxis.range[1]"]],
+    yAxis: [data["yaxis.range[0]"], data["yaxis.range[1]"]],
+  };
   if (globalY) {
     zoomLevel.yAxis = globalY;
   }
@@ -47,11 +50,11 @@ export default {
   props: {
     maxTimeStep: {
       type: Number,
-      required: true
+      required: true,
     },
   },
 
-  inject: ['girderRest', 'fastRestUrl'],
+  inject: ["girderRest", "fastRestUrl"],
 
   data() {
     return {
@@ -94,21 +97,21 @@ export default {
 
   asyncComputed: {
     ...mapGetters({
-      currentTimeStep: 'PLOT_TIME_STEP',
-      globalRanges: 'PLOT_GLOBAL_RANGES',
-      globalZoom: 'PLOT_ZOOM',
-      numcols: 'VIEW_COLUMNS',
-      numrows: 'VIEW_ROWS',
-      renderWindow: 'UI_RENDER_WINDOW',
-      syncZoom: 'UI_ZOOM_SYNC',
-      zoomAxis: 'PLOT_ZOOM_X_AXIS',
-      timeStepSelectorMode: 'UI_TIME_STEP_SELECTOR',
-      initialLoad: 'PLOT_INITIAL_LOAD',
-      minTimeStep: 'PLOT_MIN_TIME_STEP',
-      interactor: 'UI_INTERACTOR',
-      boxSelector: 'PLOT_BOX_SELECTOR',
-      globalFocalPoint: 'PLOT_FOCAL_POINT',
-      globalScale: 'PLOT_SCALE',
+      currentTimeStep: "PLOT_TIME_STEP",
+      globalRanges: "PLOT_GLOBAL_RANGES",
+      globalZoom: "PLOT_ZOOM",
+      numcols: "VIEW_COLUMNS",
+      numrows: "VIEW_ROWS",
+      renderWindow: "UI_RENDER_WINDOW",
+      syncZoom: "UI_ZOOM_SYNC",
+      zoomAxis: "PLOT_ZOOM_X_AXIS",
+      timeStepSelectorMode: "UI_TIME_STEP_SELECTOR",
+      initialLoad: "PLOT_INITIAL_LOAD",
+      minTimeStep: "PLOT_MIN_TIME_STEP",
+      interactor: "UI_INTERACTOR",
+      boxSelector: "PLOT_BOX_SELECTOR",
+      globalFocalPoint: "PLOT_FOCAL_POINT",
+      globalScale: "PLOT_SCALE",
     }),
 
     loadedTimestepData: {
@@ -130,47 +133,46 @@ export default {
       if (this.syncZoom && this.globalZoom && this.xaxis === this.zoomAxis)
         zoom = this.globalZoom;
       return zoom;
-    }
+    },
   },
 
   watch: {
     currentTimeStep: {
       immediate: true,
-      handler () {
+      handler() {
         // First display the updated timestep
         this.displayCurrentTimestep();
         // Then ensure we have the next few timesteps
         this.preCacheTimestepData();
-      }
+      },
     },
     itemId: {
       immediate: true,
-      handler () {
+      handler() {
         this.loadedTimestepData = [];
         this.prefetchRequested.clear();
-      }
+      },
     },
     maxTimeStep: {
       immediate: true,
-      handler () {
+      handler() {
         this.prefetchRequested.clear();
         this.loadVariable();
-      }
+      },
     },
     numrows: {
       immediate: true,
       handler() {
         this.react();
         this.$nextTick(this.updateLayout());
-      }
+      },
     },
     numcols: {
       immediate: true,
       handler() {
         this.react();
         this.$nextTick(this.updateLayout());
-
-      }
+      },
     },
     globalRanges: {
       handler() {
@@ -183,7 +185,7 @@ export default {
       immediate: true,
       handler() {
         this.react();
-      }
+      },
     },
     focalPoint() {
       this.updateZoomedView();
@@ -196,35 +198,35 @@ export default {
     },
     globalScale(scale) {
       this.scale = scale;
-    }
+    },
   },
 
   methods: {
     ...mapActions({
-      setZoomDetails: 'PLOT_ZOOM_DETAILS',
-      updateZoom: 'PLOT_ZOOM_VALUES_UPDATED',
-      setMinTimeStep: 'PLOT_MIN_TIME_STEP_CHANGED',
+      setZoomDetails: "PLOT_ZOOM_DETAILS",
+      updateZoom: "PLOT_ZOOM_VALUES_UPDATED",
+      setMinTimeStep: "PLOT_MIN_TIME_STEP_CHANGED",
     }),
     ...mapMutations({
-      setTimeStep: 'PLOT_TIME_STEP_SET',
-      setZoomOrigin: 'PLOT_ZOOM_ORIGIN_SET',
-      updateCellCount: 'PLOT_VISIBLE_CELL_COUNT_SET',
-      setMaxTimeStep: 'PLOT_MAX_TIME_STEP_SET',
-      setItemId: 'PLOT_CURRENT_ITEM_ID_SET',
-      setLoadedFromView: 'PLOT_LOADED_FROM_VIEW_SET',
-      setInitialLoad: 'PLOT_INITIAL_LOAD_SET',
-      updateRendererCount: 'UI_RENDERER_COUNT_SET',
-      setPauseGallery: 'UI_PAUSE_GALLERY_SET',
-      setGlobalFocalPoint: 'PLOT_FOCAL_POINT_SET',
-      setGlobalScale: 'PLOT_SCALE_SET',
+      setTimeStep: "PLOT_TIME_STEP_SET",
+      setZoomOrigin: "PLOT_ZOOM_ORIGIN_SET",
+      updateCellCount: "PLOT_VISIBLE_CELL_COUNT_SET",
+      setMaxTimeStep: "PLOT_MAX_TIME_STEP_SET",
+      setItemId: "PLOT_CURRENT_ITEM_ID_SET",
+      setLoadedFromView: "PLOT_LOADED_FROM_VIEW_SET",
+      setInitialLoad: "PLOT_INITIAL_LOAD_SET",
+      updateRendererCount: "UI_RENDERER_COUNT_SET",
+      setPauseGallery: "UI_PAUSE_GALLERY_SET",
+      setGlobalFocalPoint: "PLOT_FOCAL_POINT_SET",
+      setGlobalScale: "PLOT_SCALE_SET",
     }),
     relayoutPlotly() {
-      const node =  this.$refs.plotly;
-      const elems = node?.getElementsByClassName('plot-container');
+      const node = this.$refs.plotly;
+      const elems = node?.getElementsByClassName("plot-container");
       if (node !== undefined && elems.length > 0) {
         Plotly.relayout(this.$refs.plotly, {
-          'xaxis.autorange': true,
-          'yaxis.autorange': true
+          "xaxis.autorange": true,
+          "yaxis.autorange": true,
         });
       }
     },
@@ -245,80 +247,90 @@ export default {
       return data;
     },
 
-    callFastEndpoint: async function (endpoint, options=null) {
+    callFastEndpoint: async function (endpoint, options = null) {
       const { data } = await this.girderRest.get(
-        `${this.fastRestUrl}/${endpoint}`, options ? options : {});
+        `${this.fastRestUrl}/${endpoint}`,
+        options ? options : {}
+      );
       return data;
     },
     /**
      * Fetch the data for give timestep. The data is added to this.loadedTimestepData
      */
-    fetchTimestepData: async function(timeStep) {
-      var plotType = 'vtk';
-      await this.callFastEndpoint(`variables/${this.itemId}/timesteps/${timeStep}/plot`, {responseType: 'blob'})
-        .then((response) => {
-          const reader = new FileReader();
-          if (response.type === 'application/msgpack') {
-            reader.readAsArrayBuffer(response);
-          } else {
-            reader.readAsText(response);
-            plotType = 'plotly';
-          }
-          return new Promise(resolve => {
-            reader.onload = () => {
-              if (plotType === 'vtk') {
-                const img = decode(reader.result);
-                this.addRenderer(img);
-                this.loadedTimestepData.push({
-                  timestep: timeStep,
-                  data: img,
-                  type: plotType
-                });
-                return resolve(img);
-              } else {
-                const img = JSON.parse(reader.result);
-                this.loadedTimestepData.push({
-                  timestep: timeStep,
-                  data: img.data,
-                  layout: img.layout,
-                  type: plotType,
-                });
-                return resolve(img);
-              }
-            };
-          });
+    fetchTimestepData: async function (timeStep) {
+      var plotType = "vtk";
+      await this.callFastEndpoint(
+        `variables/${this.itemId}/timesteps/${timeStep}/plot`,
+        { responseType: "blob" }
+      ).then((response) => {
+        const reader = new FileReader();
+        if (response.type === "application/msgpack") {
+          reader.readAsArrayBuffer(response);
+        } else {
+          reader.readAsText(response);
+          plotType = "plotly";
+        }
+        return new Promise((resolve) => {
+          reader.onload = () => {
+            if (plotType === "vtk") {
+              const img = decode(reader.result);
+              this.addRenderer(img);
+              this.loadedTimestepData.push({
+                timestep: timeStep,
+                data: img,
+                type: plotType,
+              });
+              return resolve(img);
+            } else {
+              const img = JSON.parse(reader.result);
+              this.loadedTimestepData.push({
+                timestep: timeStep,
+                data: img.data,
+                layout: img.layout,
+                type: plotType,
+              });
+              return resolve(img);
+            }
+          };
         });
+      });
     },
     /**
      * Fetch the available timestep for the variable and display the current
      * timestep ( or closes available ).
      */
-    loadVariable: async function() {
+    loadVariable: async function () {
       if (!this.itemId) {
         return;
       }
-      const firstAvailableStep = await this.callFastEndpoint(`variables/${this.itemId}/timesteps`)
-        .then((response) => {
-          this.availableTimeSteps = response.steps.sort();
-          this.times = response.time;
-          this.setMinTimeStep(
-            Math.max(this.minTimeStep, Math.min(...this.availableTimeSteps)));
-          // Make sure there is an image associated with this time step
-          let step = this.availableTimeSteps.find(
-            step => step === this.currentTimeStep);
-          if (isNil(step)) {
-            // If not, display the previous available image
-            // If no previous image display first available
-            let idx = this.availableTimeSteps.findIndex(
-              step => step > this.currentTimeStep);
-            idx = Math.max(idx-1, 0);
-            step = this.availableTimeSteps[idx];
-          }
-          return step;
-        });
+      const firstAvailableStep = await this.callFastEndpoint(
+        `variables/${this.itemId}/timesteps`
+      ).then((response) => {
+        this.availableTimeSteps = response.steps.sort();
+        this.times = response.time;
+        this.setMinTimeStep(
+          Math.max(this.minTimeStep, Math.min(...this.availableTimeSteps))
+        );
+        // Make sure there is an image associated with this time step
+        let step = this.availableTimeSteps.find(
+          (step) => step === this.currentTimeStep
+        );
+        if (isNil(step)) {
+          // If not, display the previous available image
+          // If no previous image display first available
+          let idx = this.availableTimeSteps.findIndex(
+            (step) => step > this.currentTimeStep
+          );
+          idx = Math.max(idx - 1, 0);
+          step = this.availableTimeSteps[idx];
+        }
+        return step;
+      });
       await this.fetchTimestepData(firstAvailableStep);
 
-      this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...this.availableTimeSteps)));
+      this.setMaxTimeStep(
+        Math.max(this.maxTimeStep, Math.max(...this.availableTimeSteps))
+      );
       this.setItemId(this.itemId);
       this.setInitialLoad(false);
       this.react();
@@ -327,11 +339,13 @@ export default {
     loadGallery: function (event) {
       event.preventDefault();
       this.removeRenderer();
-      this.zoom = null
-      var items = JSON.parse(event.dataTransfer.getData('application/x-girder-items'));
+      this.zoom = null;
+      var items = JSON.parse(
+        event.dataTransfer.getData("application/x-girder-items")
+      );
       this.itemId = items[0]._id;
       this.setLoadedFromView(false);
-      this.$root.$children[0].$emit('item-added', this.itemId);
+      this.$root.$children[0].$emit("item-added", this.itemId);
     },
     loadTemplateGallery: function (item) {
       this.loadedTimestepData = [];
@@ -347,9 +361,12 @@ export default {
     previousTimestep: function (timestep) {
       // find previous available timestep
       const previousTimestep = this.availableTimeSteps.findIndex(
-        step => step < timestep);
+        (step) => step < timestep
+      );
 
-      return previousTimestep !== -1 ? this.availableTimeSteps[previousTimestep] : null;
+      return previousTimestep !== -1
+        ? this.availableTimeSteps[previousTimestep]
+        : null;
     },
     /**
      * Return the next valid timestep, null if no timestep exists.
@@ -357,7 +374,8 @@ export default {
      */
     nextTimestep: function (timestep) {
       const nextTimestep = this.availableTimeSteps.findIndex(
-        step => step > timestep);
+        (step) => step > timestep
+      );
 
       return nextTimestep !== -1 ? this.availableTimeSteps[nextTimestep] : null;
     },
@@ -365,14 +383,20 @@ export default {
      * Return true if data for this timestep has already been fetch, false otherwise.
      */
     isTimestepLoaded: function (timestep) {
-      return this.loadedTimestepData.findIndex(image => image.timestep === timestep) !== -1;
+      return (
+        this.loadedTimestepData.findIndex(
+          (image) => image.timestep === timestep
+        ) !== -1
+      );
     },
     /**
      * Return true if this is valid timestep for this variable ( as in data is
      * available ), false otherwise.
      */
     isValidTimestep: function (timestep) {
-      return this.availableTimeSteps.findIndex(step => step === timestep) !== -1;
+      return (
+        this.availableTimeSteps.findIndex((step) => step === timestep) !== -1
+      );
     },
     /**
      * Display the given timestep, if the timestep is not valid then the
@@ -381,7 +405,7 @@ export default {
     displayTimestep: async function (timestep) {
       // If this is not a valid timestep for the variable use the previous
       if (!this.isValidTimestep(timestep)) {
-        timestep = this.previousTimestep(timestep)
+        timestep = this.previousTimestep(timestep);
       }
 
       if (isNull(timestep)) {
@@ -401,7 +425,7 @@ export default {
      * Display the the current timestep, if the current timestep is not valid
      * then the previous timestep will be displayed.
      */
-    displayCurrentTimestep: async function() {
+    displayCurrentTimestep: async function () {
       if (!isNil(this.currentTimeStep)) {
         this.displayTimestep(this.currentTimeStep);
       }
@@ -417,16 +441,17 @@ export default {
       }
 
       // First find the index of the current timestep
-      let startIndex = this.availableTimeSteps.findIndex(step => step === this.currentTimeStep);
+      let startIndex = this.availableTimeSteps.findIndex(
+        (step) => step === this.currentTimeStep
+      );
       // If the current timestep can't be found start at the next available one.
       if (startIndex === -1) {
-        startIndex = this.nextTimestep(this.currentTimeStep)
+        startIndex = this.nextTimestep(this.currentTimeStep);
         // If there isn't one we are done.
         if (startIndex === -1) {
           return;
         }
-      }
-      else {
+      } else {
         // We want the next one
         startIndex += 1;
       }
@@ -445,7 +470,10 @@ export default {
         }
         // Only load this timestep we haven't done so already.
         let nextStep = this.availableTimeSteps[stepIndex];
-        if (!this.isTimestepLoaded(nextStep) && !this.prefetchRequested.has(nextStep)) {
+        if (
+          !this.isTimestepLoaded(nextStep) &&
+          !this.prefetchRequested.has(nextStep)
+        ) {
           this.prefetchRequested.add(nextStep);
           await this.fetchTimestepData(nextStep);
           this.prefetchRequested.delete(nextStep);
@@ -453,16 +481,22 @@ export default {
       }
     },
     react: function () {
-      let nextImage = this.loadedTimestepData.find(img => img.timestep == this.currentTimeStep);
+      let nextImage = this.loadedTimestepData.find(
+        (img) => img.timestep == this.currentTimeStep
+      );
       if (isNil(nextImage) && this.loadedTimestepData.length >= 1) {
-        let idx = this.availableTimeSteps.findIndex(step => step >= this.currentTimeStep);
-        idx = Math.max(idx -= 1, 0);
+        let idx = this.availableTimeSteps.findIndex(
+          (step) => step >= this.currentTimeStep
+        );
+        idx = Math.max((idx -= 1), 0);
         let prevTimeStep = this.availableTimeSteps[idx];
-        nextImage = this.loadedTimestepData.find(img => img.timestep === prevTimeStep);
+        nextImage = this.loadedTimestepData.find(
+          (img) => img.timestep === prevTimeStep
+        );
       }
 
       if (!isNil(nextImage)) {
-        if (nextImage.type === 'plotly') {
+        if (nextImage.type === "plotly") {
           this.removeRenderer();
           if (!this.xaxis) {
             this.xaxis = nextImage.layout.xaxis.title.text;
@@ -483,9 +517,10 @@ export default {
             }
           }
           this.setAnnotations(nextImage.data[0], this.zoomLevels, range);
-          Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {autosize: true});
-          if (!this.eventHandlersSet)
-            this.setEventHandlers();
+          Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {
+            autosize: true,
+          });
+          if (!this.eventHandlersSet) this.setEventHandlers();
           this.json = true;
         } else {
           this.removePlotly();
@@ -504,7 +539,7 @@ export default {
         name: response.name,
         event: e,
         isJson: this.json,
-      }
+      };
       this.$parent.$parent.$parent.$parent.$emit("param-selected", data);
     },
     clearGallery() {
@@ -515,19 +550,19 @@ export default {
       this.setInitialLoad(true);
     },
     setEventHandlers() {
-      this.$refs.plotly.on('plotly_relayout', (eventdata) => {
+      this.$refs.plotly.on("plotly_relayout", (eventdata) => {
         this.zoom = parseZoomValues(eventdata, this.globalRanges[this.itemId]);
         if (!this.zoomOrigin) {
           this.setZoomOrigin(this.itemId);
         }
         if (this.syncZoom && this.itemId !== this.zoomOrigin) {
-          this.setZoomDetails({zoom: this.zoom, xAxis: this.xaxis});
+          this.setZoomDetails({ zoom: this.zoom, xAxis: this.xaxis });
         }
         this.react();
       });
-      this.$refs.plotly.on('plotly_click', (data) => {
-        const xAxis = this.xaxis.split(' ')[0].toLowerCase();
-        if (this.timeStepSelectorMode && xAxis === 'time') {
+      this.$refs.plotly.on("plotly_click", (data) => {
+        const xAxis = this.xaxis.split(" ")[0].toLowerCase();
+        if (this.timeStepSelectorMode && xAxis === "time") {
           if (this.selectedTime !== parseFloat(data.points[0].x)) {
             this.selectedTime = parseFloat(data.points[0].x);
             this.findClosestTime();
@@ -535,39 +570,37 @@ export default {
           }
         }
       });
-      this.$refs.plotly.on('plotly_doubleclick', () => {
-        const xAxis = this.xaxis.split(' ')[0].toLowerCase();
-        if (this.timeStepSelectorMode && xAxis === 'time') {
+      this.$refs.plotly.on("plotly_doubleclick", () => {
+        const xAxis = this.xaxis.split(" ")[0].toLowerCase();
+        if (this.timeStepSelectorMode && xAxis === "time") {
           return false;
         } else {
           this.zoom = null;
           this.rangeText = [];
           if (this.syncZoom) {
-            this.setZoomDetails({zoom: null, xAxis: null});
+            this.setZoomDetails({ zoom: null, xAxis: null });
           }
         }
       });
       this.eventHandlersSet = true;
     },
     updateViewPort() {
-      if (!this.renderer)
-        return
+      if (!this.renderer) return;
 
       const parent = this.$parent.$el.getBoundingClientRect();
       const { x, y, width, height } = this.$el.getBoundingClientRect();
       const viewport = [
         (x - parent.x) / parent.width,
         1 - (y + height) / parent.height,
-        ((x - parent.x) + width) / parent.width,
+        (x - parent.x + width) / parent.width,
         1 - y / parent.height,
       ];
       this.renderer.setViewport(...viewport);
     },
     addRenderer(data) {
-      if (this.renderer)
-        return
+      if (this.renderer) return;
       // Create the building blocks we will need for the polydata
-      this.renderer = vtkRenderer.newInstance({background: [1, 1, 1]});
+      this.renderer = vtkRenderer.newInstance({ background: [1, 1, 1] });
       this.mesh = vtkPolyData.newInstance();
       this.actor = vtkActor.newInstance();
       this.mapper = vtkMapper.newInstance();
@@ -577,25 +610,30 @@ export default {
 
       // Load the cell attributes
       // Create a view of the data
-      const connectivityView = new DataView(data.connectivity.buffer, data.connectivity.byteOffset,  data.connectivity.byteLength);
-      const numberOfNodes = data.connectivity.length / Int32Array.BYTES_PER_ELEMENT / 3;
+      const connectivityView = new DataView(
+        data.connectivity.buffer,
+        data.connectivity.byteOffset,
+        data.connectivity.byteLength
+      );
+      const numberOfNodes =
+        data.connectivity.length / Int32Array.BYTES_PER_ELEMENT / 3;
       this.cells = new Int32Array(numberOfNodes * 4);
       var idx = 0;
       const rowSize = 3 * Int32Array.BYTES_PER_ELEMENT; // 3 => columns
-      for (let i = 0; i < data.connectivity.length; i+=rowSize) {
+      for (let i = 0; i < data.connectivity.length; i += rowSize) {
         this.cells[idx++] = 3;
-        let index = i
+        let index = i;
         this.cells[idx++] = connectivityView.getInt32(index, true);
-        index += 4
+        index += 4;
         this.cells[idx++] = connectivityView.getInt32(index, true);
-        index += 4
+        index += 4;
         this.cells[idx++] = connectivityView.getInt32(index, true);
       }
       this.mesh.getPolys().setData(this.cells);
 
       // Setup colormap
       const lut = vtkColorTransferFunction.newInstance();
-      lut.applyColorMap(vtkColorMaps.getPresetByName('jet'));
+      lut.applyColorMap(vtkColorMaps.getPresetByName("jet"));
 
       // Setup mapper and actor
       this.mapper.setInputData(this.mesh);
@@ -610,8 +648,8 @@ export default {
       // Create axis
       this.axes = vtkCubeAxesActor.newInstance();
       this.axes.setCamera(this.camera);
-      this.axes.setAxisLabels(data.xLabel, data.yLabel, '');
-      this.axes.getGridActor().getProperty().setColor('black');
+      this.axes.setAxisLabels(data.xLabel, data.yLabel, "");
+      this.axes.getGridActor().getProperty().setColor("black");
       this.axes.getGridActor().getProperty().setLineWidth(0.1);
       this.renderer.addActor(this.axes);
 
@@ -619,8 +657,8 @@ export default {
       this.scalarBar = vtkScalarBarActor.newInstance();
       this.scalarBar.setScalarsToColors(lut);
       this.scalarBar.setAxisLabel(data.colorLabel);
-      this.scalarBar.setAxisTextStyle({fontColor: 'black'});
-      this.scalarBar.setTickTextStyle({fontColor: 'black'});
+      this.scalarBar.setAxisTextStyle({ fontColor: "black" });
+      this.scalarBar.setTickTextStyle({ fontColor: "black" });
       this.scalarBar.setDrawNanAnnotation(false);
       this.renderer.addActor2D(this.scalarBar);
 
@@ -635,12 +673,17 @@ export default {
     updateRenderer(data) {
       // Load the point attributes
       // Create a view of the data
-      const pointsView = new DataView(data.nodes.buffer, data.nodes.byteOffset,  data.nodes.byteLength);
-      const numberOfPoints = data.nodes.length / Float64Array.BYTES_PER_ELEMENT / 2;
+      const pointsView = new DataView(
+        data.nodes.buffer,
+        data.nodes.byteOffset,
+        data.nodes.byteLength
+      );
+      const numberOfPoints =
+        data.nodes.length / Float64Array.BYTES_PER_ELEMENT / 2;
       const points = new Float64Array(numberOfPoints * 3);
       var idx = 0;
       const rowSize = 2 * Float64Array.BYTES_PER_ELEMENT; // 3 => columns
-      for (let i = 0; i < data.nodes.length; i+=rowSize) {
+      for (let i = 0; i < data.nodes.length; i += rowSize) {
         points[idx++] = pointsView.getFloat64(i, true);
         points[idx++] = pointsView.getFloat64(i + 8, true);
         points[idx++] = 0.0;
@@ -649,10 +692,17 @@ export default {
       // Set the scalars
       // As we need a typed array we have to copy the data as its unaligned, so we have an aligned buffer to
       // use to create the typed array
-      const buffer = data.color.buffer.slice(data.color.byteOffset, data.color.byteOffset + data.color.byteLength)
-      const color = new Float64Array(buffer, 0, buffer.byteLength / Float64Array.BYTES_PER_ELEMENT)
+      const buffer = data.color.buffer.slice(
+        data.color.byteOffset,
+        data.color.byteOffset + data.color.byteLength
+      );
+      const color = new Float64Array(
+        buffer,
+        0,
+        buffer.byteLength / Float64Array.BYTES_PER_ELEMENT
+      );
       const scalars = vtkDataArray.newInstance({
-        name: 'scalars',
+        name: "scalars",
         values: color,
       });
 
@@ -677,7 +727,7 @@ export default {
       // Hack to adjust the bounds to include the x label
       // This can be removed when vtk.js include the text labels in its bounds.
       const bounds = [...this.actor.getBounds()];
-      bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT
+      bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT;
 
       // Update color bar
       this.scalarBar.setScalarsToColors(lut);
@@ -704,15 +754,15 @@ export default {
     },
     removePlotly() {
       // Remove the Plotly plot if it exists, we're about to load a VTK plot
-      const node =  this.$refs.plotly;
-      const elems = node?.getElementsByClassName('plot-container');
+      const node = this.$refs.plotly;
+      const elems = node?.getElementsByClassName("plot-container");
       if (node !== undefined && elems.length > 0) {
         Plotly.purge(this.$refs.plotly);
         this.rangeText = [];
       }
     },
     enterCurrentRenderer() {
-      if(this.renderer) {
+      if (this.renderer) {
         this.interactor.setCurrentRenderer(this.renderer);
       }
     },
@@ -728,7 +778,7 @@ export default {
       picker.addPickList(this.actor);
       this.interactor.onLeftButtonPress((callData) => {
         this.timeIndex = -1;
-        const xAxis = this.xaxis.split(' ')[0].toLowerCase();
+        const xAxis = this.xaxis.split(" ")[0].toLowerCase();
         this.inThisRenderer = this.renderer === callData.pokedRenderer;
         if (!this.inThisRenderer) {
           return;
@@ -739,7 +789,7 @@ export default {
         if (picker.getActors().length !== 0) {
           const pickedPoints = picker.getPickedPositions();
           this.startPoints = [...pickedPoints[0]];
-          if (this.timeStepSelectorMode && xAxis === 'time') {
+          if (this.timeStepSelectorMode && xAxis === "time") {
             if (this.selectedTime !== pickedPoints[0][0]) {
               this.selectedTime = pickedPoints[0][0];
               this.findClosestTime();
@@ -766,8 +816,8 @@ export default {
           const bounds = this.$el.getBoundingClientRect();
           const r = bounds.width / bounds.height;
 
-          const [startX, startY, ] = this.startPoints;
-          const [finalX, finalY, ] = pickedPoints[0];
+          const [startX, startY] = this.startPoints;
+          const [finalX, finalY] = pickedPoints[0];
           const regionWidth = Math.abs(finalX - startX);
           const regionHeight = Math.abs(finalY - startY);
 
@@ -777,8 +827,8 @@ export default {
             this.scale = regionWidth / r / 2;
           }
 
-          const xMid = ((finalX - startX) / 2) + startX;
-          const yMid = ((finalY - startY) / 2) + startY;
+          const xMid = (finalX - startX) / 2 + startX;
+          const yMid = (finalY - startY) / 2 + startY;
           this.focalPoint = [xMid, yMid, 0.0];
           if (this.syncZoom) {
             this.setGlobalScale(this.scale);
@@ -786,10 +836,15 @@ export default {
           }
           // Update corner annotation
           this.cornerAnnotation.setContainer(this.$refs.plotly);
-          this.cornerAnnotation.updateMetadata({range: this.actor.getBounds()});
+          this.cornerAnnotation.updateMetadata({
+            range: this.actor.getBounds(),
+          });
           this.cornerAnnotation.updateTemplates({
             nw(meta) {
-              return `xRange: [${meta.range.slice(0,2)}] yRange: [${meta.range.slice(2,4)}]`;
+              return `xRange: [${meta.range.slice(
+                0,
+                2
+              )}] yRange: [${meta.range.slice(2, 4)}]`;
             },
           });
         }
@@ -816,7 +871,7 @@ export default {
       const bounds = [...this.actor.getBounds()];
       // Hack to adjust the bounds to include the x label
       // This can be removed when vtk.js include the text labels in its bounds.
-      bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT
+      bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT;
       this.renderer.resetCamera(bounds);
     },
     findClosestTime() {
@@ -831,7 +886,7 @@ export default {
           closestVal = time;
         }
       });
-      this.timeIndex = this.times.findIndex(time => time === closestVal);
+      this.timeIndex = this.times.findIndex((time) => time === closestVal);
     },
     updateZoomedView() {
       if (!this.renderer || !this.focalPoint || !this.scale) {
@@ -847,31 +902,30 @@ export default {
     setAnnotations(data, zoom, yRange) {
       if (!zoom) {
         this.rangeText = [];
-        return
+        return;
       }
 
-      const xRange = [data.x[0], data.x[data.x.length-1]];
-      if (!yRange)
-        yRange = [Math.min(...data.y), Math.max(...data.y)];
+      const xRange = [data.x[0], data.x[data.x.length - 1]];
+      if (!yRange) yRange = [Math.min(...data.y), Math.max(...data.y)];
       this.rangeText = [
         xRange[0].toPrecision(4),
         xRange[1].toPrecision(4),
         yRange[0].toPrecision(4),
-        yRange[1].toPrecision(4)
-      ]
-    }
+        yRange[1].toPrecision(4),
+      ];
+    },
   },
 
-  mounted () {
+  mounted() {
     this.updateCellCount(1);
-    this.$el.addEventListener('mouseenter', this.enterCurrentRenderer);
-    this.$el.addEventListener('mouseleave', this.exitCurrentRenderer);
-    this.$el.addEventListener('dblclick', () => {
+    this.$el.addEventListener("mouseenter", this.enterCurrentRenderer);
+    this.$el.addEventListener("mouseleave", this.exitCurrentRenderer);
+    this.$el.addEventListener("dblclick", () => {
       if (this.renderer) {
         this.resetZoom();
       }
     });
-    window.addEventListener('resize', this.resize);
+    window.addEventListener("resize", this.resize);
   },
 
   beforeDestroy() {
@@ -880,5 +934,5 @@ export default {
 
   destroyed() {
     this.updateCellCount(-1);
-  }
+  },
 };
