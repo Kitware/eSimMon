@@ -19,7 +19,8 @@ export default {
     ...mapGetters({
       visible: 'UI_SHOW_CONTEXT_MENU',
       itemInfo: 'UI_CONTEXT_MENU_ITEM_DATA',
-      zoom: 'PLOT_ZOOM',
+      plotlyZoom: 'PLOT_ZOOM_PLOTLY',
+      vtkZoom: 'PLOT_ZOOM_VTK',
     }),
     showMenu: {
       get() {
@@ -57,7 +58,8 @@ export default {
     },
     downloadData(endpoint, format) {
       const { name } = this.itemInfo;
-      const zoom = this.zoom ? `?zoom=${JSON.stringify(this.zoom)}` : '';
+      let zoom = this.itemInfo.isVTK ? this.vtkZoom : this.plotlyZoom;
+      zoom = zoom ? `?zoom=${JSON.stringify(zoom)}` : '';
       this.girderRest.get(
         `${this.fastRestUrl}/${endpoint}${zoom}`, {responseType: 'blob'}
       ).then((response) => {

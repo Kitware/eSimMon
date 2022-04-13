@@ -33,7 +33,7 @@ async def create_movie(
         for step in timesteps:
             # call generate plot response and get plot
             plot = await get_timestep_plot(id, step, girder_token, as_image=True)
-            image = get_timestep_image_data(plot, "png", zoom)
+            image = await get_timestep_image_data(plot, "png", zoom)
             im = Image.open(io.BytesIO(image), "r", ["PNG"])
             f = tempfile.NamedTemporaryFile(
                 dir=tmpdir, prefix=f"{step}_", suffix=".png", delete=False

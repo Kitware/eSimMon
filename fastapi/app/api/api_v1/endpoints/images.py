@@ -80,7 +80,7 @@ def create_colormap_image(plot_data: dict, format: str):
     return
 
 
-def create_mesh_image(plot_data: dict, format: str):
+def create_mesh_image(plot_data: dict, format: str, zoom: dict):
     nodes = np.asarray(plot_data["nodes"])
     connectivity = np.asarray(plot_data["connectivity"])
     color = np.asarray(plot_data["color"])
@@ -170,6 +170,14 @@ def create_mesh_image(plot_data: dict, format: str):
     bounds[3] += 0.3
     renderer.ResetCamera(bounds)
     renderer.SetBackground([1, 1, 1])
+
+    # Set the zoom if needed
+    if zoom:
+        camera = renderer.GetActiveCamera()
+        fX, fY, fZ = zoom["focalPoint"]
+        camera.SetFocalPoint(fX, fY, fZ)
+        camera.SetParallelScale(zoom["scale"])
+
     ren_win.SetSize(500, 500)
     ren_win.Render()
 

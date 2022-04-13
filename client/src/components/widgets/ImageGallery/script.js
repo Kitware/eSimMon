@@ -98,21 +98,21 @@ export default {
 
   asyncComputed: {
     ...mapGetters({
-      currentTimeStep: "PLOT_TIME_STEP",
-      globalRanges: "PLOT_GLOBAL_RANGES",
-      globalZoom: "PLOT_ZOOM",
-      numcols: "VIEW_COLUMNS",
-      numrows: "VIEW_ROWS",
-      renderWindow: "UI_RENDER_WINDOW",
-      syncZoom: "UI_ZOOM_SYNC",
-      zoomAxis: "PLOT_ZOOM_X_AXIS",
-      timeStepSelectorMode: "UI_TIME_STEP_SELECTOR",
-      initialLoad: "PLOT_INITIAL_LOAD",
-      minTimeStep: "PLOT_MIN_TIME_STEP",
-      interactor: "UI_INTERACTOR",
-      boxSelector: "PLOT_BOX_SELECTOR",
-      globalFocalPoint: "PLOT_FOCAL_POINT",
-      globalScale: "PLOT_SCALE",
+      currentTimeStep: 'PLOT_TIME_STEP',
+      globalRanges: 'PLOT_GLOBAL_RANGES',
+      globalZoom: 'PLOT_ZOOM_PLOTLY',
+      numcols: 'VIEW_COLUMNS',
+      numrows: 'VIEW_ROWS',
+      renderWindow: 'UI_RENDER_WINDOW',
+      syncZoom: 'UI_ZOOM_SYNC',
+      zoomAxis: 'PLOT_ZOOM_X_AXIS',
+      timeStepSelectorMode: 'UI_TIME_STEP_SELECTOR',
+      initialLoad: 'PLOT_INITIAL_LOAD',
+      minTimeStep: 'PLOT_MIN_TIME_STEP',
+      interactor: 'UI_INTERACTOR',
+      boxSelector: 'PLOT_BOX_SELECTOR',
+      globalFocalPoint: 'PLOT_FOCAL_POINT',
+      globalScale: 'PLOT_SCALE',
     }),
 
     loadedTimestepData: {
@@ -549,8 +549,8 @@ export default {
         id: this.itemId,
         name: response.name,
         event: e,
-        // isJson: this.json,
         step: this.currentTimeStep,
+        isVTK: !!this.renderer
       }
       this.setCurrentItemId(this.itemId);
       this.setContextMenuItemData(data);
@@ -573,7 +573,7 @@ export default {
           this.setZoomOrigin(this.itemId);
         }
         if (this.syncZoom && this.itemId !== this.zoomOrigin) {
-          this.setZoomDetails({ zoom: this.zoom, xAxis: this.xaxis });
+          this.setZoomDetails({plotlyZoom: this.zoom, xAxis: this.xaxis});
         }
         this.react();
       });
@@ -595,7 +595,7 @@ export default {
           this.zoom = null;
           this.rangeText = [];
           if (this.syncZoom) {
-            this.setZoomDetails({ zoom: null, xAxis: null });
+            this.setZoomDetails({plotlyZoom: null, xAxis: null});
           }
         }
       });
@@ -847,6 +847,8 @@ export default {
           const xMid = (finalX - startX) / 2 + startX;
           const yMid = (finalY - startY) / 2 + startY;
           this.focalPoint = [xMid, yMid, 0.0];
+          this.zoom = {focalPoint: this.focalPoint, scale: this.scale}
+          this.setZoomDetails({vtkZoom: this.zoom, xAxis: this.xaxis});
           if (this.syncZoom) {
             this.setGlobalScale(this.scale);
             this.setGlobalFocalPoint([...this.focalPoint]);
@@ -890,6 +892,8 @@ export default {
       // This can be removed when vtk.js include the text labels in its bounds.
       bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT;
       this.renderer.resetCamera(bounds);
+      this.setZoomDetails({vtkZoom: null, xAxis: null});
+      this.zoom = null;
     },
     findClosestTime() {
       // Time is stored as seconds but plotted as milliseconds
