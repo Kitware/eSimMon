@@ -213,7 +213,11 @@
   flex-direction: column-reverse;
   .v-snack{
     left: auto;
-    width: min-content;
+    width: fit-content;
     height: fit-content;
   }
+}
+
+.v-snack__wrapper {
+  max-width: 100% !important;
 }

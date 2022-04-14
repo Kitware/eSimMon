@@ -51,7 +51,8 @@
       v-bind:style="{marginBottom: calcMargin(i, 0)}"
     >
       <div>
-        {{ r.type }} Download Requested for {{ r.name }}
+        Generating {{ r.type }} for
+        <vue-mathjax :formula="r.name" :options="mathJaxOptions" />
         <v-btn color="white" text @click="dismiss(i, 0)"> Dismiss </v-btn>
       </div>
       <v-progress-linear
@@ -71,7 +72,8 @@
       color="error"
       v-bind:style="{marginBottom: calcMargin(i, 1)}"
     >
-      {{ f.type }} Download Failed for {{ f.name }}
+      {{ f.type }} Download Failed for
+      <vue-mathjax :formula="f.name" :options="mathJaxOptions" />
       <v-btn color="black" text @click="dismiss(i, 1)"> Dismiss </v-btn>
     </v-snackbar>
     <v-snackbar
@@ -85,7 +87,8 @@
       color="success"
       v-bind:style="{marginBottom: calcMargin(i, 2)}"
     >
-      {{ c.type }} Download Completed for {{ c.name }}
+      {{ c.type }} Download Completed for
+      <vue-mathjax :formula="c.name" :options="mathJaxOptions" />
       <v-btn color="white" text @click="dismiss(i, 2)"> Dismiss </v-btn>
     </v-snackbar>
   </div>

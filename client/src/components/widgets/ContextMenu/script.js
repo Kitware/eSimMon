@@ -142,4 +142,17 @@ export default {
       }
     },
   },
+
+  created() {
+    this.mathJaxOptions = {
+      tex2jax: {
+        inlineMath: [
+          ["$", "$"],
+          ["(", ")"],
+        ],
+        processEscapes: true,
+        processEnvironments: true,
+      },
+    };
+  },
 };
