@@ -30,6 +30,7 @@ export default {
       itemInfo: "UI_CONTEXT_MENU_ITEM_DATA",
       plotlyZoom: "PLOT_ZOOM_PLOTLY",
       vtkZoom: "PLOT_ZOOM_VTK",
+      mathJaxOptions: "UI_MATH_JAX_OPTIONS",
     }),
     showMenu: {
       get() {
@@ -141,18 +142,5 @@ export default {
         this.failed.splice(idx, 1);
       }
     },
-  },
-
-  created() {
-    this.mathJaxOptions = {
-      tex2jax: {
-        inlineMath: [
-          ["$", "$"],
-          ["(", ")"],
-        ],
-        processEscapes: true,
-        processEnvironments: true,
-      },
-    };
   },
 };
