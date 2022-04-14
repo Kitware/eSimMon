@@ -79,6 +79,7 @@ export default {
           link.setAttribute("download", `${name}.${format}`);
           document.body.appendChild(link);
           link.click();
+          document.body.removeChild(link);
         })
         .catch(() => {
           let idx = this.requested.findIndex((d) => d.uuid === uuid);
