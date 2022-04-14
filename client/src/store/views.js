@@ -2,17 +2,17 @@ export default {
   state: {
     allNames: [],
     allViews: [],
-    autoSaveName: '',
+    autoSaveName: "",
     autoSaveRun: false,
     autoSavedView: null,
     columns: 1,
-    creator: '',
+    creator: "",
     formData: {},
     gridSize: 0,
     info: null,
     items: null,
     lastLoadedID: null,
-    lastSaved: '',
+    lastSaved: "",
     public: true,
     rows: 1,
     runId: null,
@@ -145,52 +145,59 @@ export default {
     },
   },
   actions: {
-    async VIEW_AUTO_SAVE({state, commit, dispatch}) {
-      dispatch('VIEW_BUILD_FORM_DATA', state.autoSaveName);
+    async VIEW_AUTO_SAVE({ state, commit, dispatch }) {
+      dispatch("VIEW_BUILD_FORM_DATA", state.autoSaveName);
       const formData = state.formData;
       // Check if auto-saved view already exists
       const { data } = await this.$girderRest.get(
-        `/view?text=${state.autoSaveName}&exact=true&limit=50&sort=name&sortdir=1`);
+        `/view?text=${state.autoSaveName}&exact=true&limit=50&sort=name&sortdir=1`
+      );
       if (data.length) {
         // If it does, update it
-        await this.$girderRest.put(`/view/${data[0]._id}`, formData)
-          .then(() => { commit('VIEW_LAST_SAVED_SET', new Date()); });
+        await this.$girderRest
+          .put(`/view/${data[0]._id}`, formData)
+          .then(() => {
+            commit("VIEW_LAST_SAVED_SET", new Date());
+          });
       } else {
         // If not, create it
-        await this.$girderRest.post('/view', formData)
-          .then(() => { commit('VIEW_LAST_SAVED_SET', new Date()); });
+        await this.$girderRest.post("/view", formData).then(() => {
+          commit("VIEW_LAST_SAVED_SET", new Date());
+        });
       }
     },
-    VIEW_BUILD_FORM_DATA({state, commit, getters}, name) {
+    VIEW_BUILD_FORM_DATA({ state, commit, getters }, name) {
       var formData = new FormData();
-      formData.set('name', name);
-      formData.set('rows', state.rows);
-      formData.set('columns', state.columns);
-      formData.set('step', getters.PLOT_TIME_STEP);
-      formData.set('public', state.public);
-      formData.set('items', JSON.stringify(state.items));
-      formData.set('meta', JSON.stringify(getters.VIEW_META));
-      commit('VIEW_FORM_DATA_SET', formData);
+      formData.set("name", name);
+      formData.set("rows", state.rows);
+      formData.set("columns", state.columns);
+      formData.set("step", getters.PLOT_TIME_STEP);
+      formData.set("public", state.public);
+      formData.set("items", JSON.stringify(state.items));
+      formData.set("meta", JSON.stringify(getters.VIEW_META));
+      commit("VIEW_FORM_DATA_SET", formData);
     },
-    VIEW_BUILD_ITEMS_OBJECT({commit}, layout) {
-      const items = {}
-      layout.forEach(item => {
+    VIEW_BUILD_ITEMS_OBJECT({ commit }, layout) {
+      const items = {};
+      layout.forEach((item) => {
         const { row, col } = item.$attrs;
         items[`${row}::${col}`] = {
           id: item.itemId,
           zoom: item.zoom,
         };
       });
-      commit('VIEW_ITEMS_SET', items);
+      commit("VIEW_ITEMS_SET", items);
     },
-    VIEW_CREATED({state, dispatch}, name) {
-      dispatch('VIEW_BUILD_FORM_DATA', name);
+    VIEW_CREATED({ state, dispatch }, name) {
+      dispatch("VIEW_BUILD_FORM_DATA", name);
       const formData = state.formData;
-      this.$girderRest.post('/view', formData);
+      this.$girderRest.post("/view", formData);
     },
-    async VIEW_FETCH_ALL_AVAILABLE({state, commit}) {
-      const { data } = await this.$girderRest.get('/view?exact=false&limit=50&sort=name&sortdir=1');
-      commit('VIEW_LIST_ALL_SET', data);
+    async VIEW_FETCH_ALL_AVAILABLE({ state, commit }) {
+      const { data } = await this.$girderRest.get(
+        "/view?exact=false&limit=50&sort=name&sortdir=1"
+      );
+      commit("VIEW_LIST_ALL_SET", data);
       let viewNames = [];
       let info = {};
       data.forEach((view) => {
@@ -199,46 +206,47 @@ export default {
           info[view.name] = view._id;
         }
       });
-      commit('VIEW_NAMES_SET', viewNames);
-      commit('VIEW_INFO_SET', info);
+      commit("VIEW_NAMES_SET", viewNames);
+      commit("VIEW_INFO_SET", info);
     },
-    async VIEW_FETCH_AUTO_SAVE({state, commit}) {
-      commit('VIEW_AUTO_SAVE_RUN_SET', false);
+    async VIEW_FETCH_AUTO_SAVE({ state, commit }) {
+      commit("VIEW_AUTO_SAVE_RUN_SET", false);
       const userId = this.$girderRest.user._id;
       const viewName = `${state.simulation}_${state.runId}_${userId}`;
-      commit('VIEW_AUTO_SAVE_NAME_SET', viewName);
+      commit("VIEW_AUTO_SAVE_NAME_SET", viewName);
       const { data } = await this.$girderRest.get(
-        `/view?text=${viewName}&exact=true&limit=50&sort=name&sortdir=1`);
-      const view = data[0]
+        `/view?text=${viewName}&exact=true&limit=50&sort=name&sortdir=1`
+      );
+      const view = data[0];
       if (view) {
-        commit('VIEW_AUTO_SAVED_SET', view);
-        commit('UI_AUTO_SAVE_DIALOG_SET', true);
+        commit("VIEW_AUTO_SAVED_SET", view);
+        commit("UI_AUTO_SAVE_DIALOG_SET", true);
       }
     },
-    VIEW_LOAD_AUTO_SAVE({state, commit, dispatch}) {
-      commit('UI_AUTO_SAVE_DIALOG_SET', false);
-      dispatch('VIEW_LOADED', state.autoSavedView);
+    VIEW_LOAD_AUTO_SAVE({ state, commit, dispatch }) {
+      commit("UI_AUTO_SAVE_DIALOG_SET", false);
+      dispatch("VIEW_LOADED", state.autoSavedView);
     },
-    VIEW_LOADED({commit}, view) {
-      commit('VIEW_ROWS_SET', parseInt(view.rows));
-      commit('VIEW_COLUMNS_SET', parseInt(view.columns));
-      commit('VIEW_GRID_SIZE_SET', view.rows * view.columns);
-      commit('VIEW_ITEMS_SET', view.items);
-      commit('VIEW_PUBLIC_SET', view.public);
-      commit('VIEW_STEP_SET', parseInt(view.step));
-      commit('VIEW_ITEMS_SET', view.items);
-      commit('VIEW_RUN_ID_SET', view.meta.run);
-      commit('VIEW_SIMULATION_SET', view.meta.simulation);
-      commit('VIEW_LAST_LOADED_ID_SET', view._id);
+    VIEW_LOADED({ commit }, view) {
+      commit("VIEW_ROWS_SET", parseInt(view.rows));
+      commit("VIEW_COLUMNS_SET", parseInt(view.columns));
+      commit("VIEW_GRID_SIZE_SET", view.rows * view.columns);
+      commit("VIEW_ITEMS_SET", view.items);
+      commit("VIEW_PUBLIC_SET", view.public);
+      commit("VIEW_STEP_SET", parseInt(view.step));
+      commit("VIEW_ITEMS_SET", view.items);
+      commit("VIEW_RUN_ID_SET", view.meta.run);
+      commit("VIEW_SIMULATION_SET", view.meta.simulation);
+      commit("VIEW_LAST_LOADED_ID_SET", view._id);
       // commit('VIEW_ZOOM_LEVELS', view.zoomLevels);
 
-      commit('PLOT_VIEW_TIME_STEP_SET', parseInt(view.step));
-      commit('UI_PAUSE_GALLERY_SET', true);
+      commit("PLOT_VIEW_TIME_STEP_SET", parseInt(view.step));
+      commit("UI_PAUSE_GALLERY_SET", true);
     },
-    VIEW_UPDATE_EXISTING({state, dispatch}, name) {
-      dispatch('VIEW_BUILD_FORM_DATA', name);
+    VIEW_UPDATE_EXISTING({ state, dispatch }, name) {
+      dispatch("VIEW_BUILD_FORM_DATA", name);
       const formData = state.formData;
       this.$girderRest.put(`/view/${state.lastLoadedID}`, formData);
     },
   },
-}
+};

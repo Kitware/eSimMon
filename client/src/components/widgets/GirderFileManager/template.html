@@ -1,5 +1,4 @@
-<v-card class="girder-data-browser-snippet"
-    @contextmenu.prevent="fetchMovie">
+<v-card class="girder-data-browser-snippet" @contextmenu.prevent="fetchMovie">
   <girder-data-browser
     ref="girderBrowser"
     :location.sync="internalLocation"
@@ -54,7 +53,10 @@
     </template>
     <template #row="props">
       <slot v-bind="props" name="row-widget" />
-      <vue-mathjax :formula="props.item.name" :options="mathJaxOptions"></vue-mathjax>
+      <vue-mathjax
+        :formula="props.item.name"
+        :options="mathJaxOptions"
+      ></vue-mathjax>
     </template>
   </girder-data-browser>
 </v-card>

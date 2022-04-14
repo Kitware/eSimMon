@@ -3,9 +3,9 @@ This component extends the FileManager component in order to provide a
 search bar and to collect and filter parameter options.
 */
 
-import _ from 'lodash';
-import { GirderBreadcrumb, GirderFileManager } from '@girder/components/src';
-import GirderDataBrowser from '../GirderDataBrowser';
+import _ from "lodash";
+import { GirderBreadcrumb, GirderFileManager } from "@girder/components/src";
+import GirderDataBrowser from "../GirderDataBrowser";
 export default {
   components: {
     GirderBreadcrumb,
@@ -14,13 +14,13 @@ export default {
 
   mixins: [GirderFileManager],
 
-  inject: ['girderRest'],
+  inject: ["girderRest"],
 
   data() {
     return {
       query: null,
       filteredItems: [],
-      input: '',
+      input: "",
       showPartials: false,
       root: null,
       outsideOfRoot: false,
@@ -29,20 +29,18 @@ export default {
 
   computed: {
     queryValues: {
-      get () {
-        if (this.query && _.has(this.query, 'value') && !this.showPartials) {
+      get() {
+        if (this.query && _.has(this.query, "value") && !this.showPartials) {
           return [this.query.value];
-        }
-        else if (this.showPartials && this.filteredItems) {
-          let values = this.filteredItems.map(item => {
-            return {...item.value, 'name': item.text};
+        } else if (this.showPartials && this.filteredItems) {
+          let values = this.filteredItems.map((item) => {
+            return { ...item.value, name: item.text };
           });
-          if (!this.input)
-            this.$refs.query.blur();
+          if (!this.input) this.$refs.query.blur();
           return values;
         }
         return [];
-      }
+      },
     },
   },
 
@@ -51,16 +49,19 @@ export default {
 
     this.mathJaxOptions = {
       tex2jax: {
-        inlineMath: [['$', '$'], ['(', ')']],
+        inlineMath: [
+          ["$", "$"],
+          ["(", ")"],
+        ],
         processEscapes: true,
-        processEnvironments: true
-      }
+        processEnvironments: true,
+      },
     };
   },
 
   watch: {
     async query() {
-      if (this.$refs.query.isFocused && !(_.isObject(this.query))){
+      if (this.$refs.query.isFocused && !_.isObject(this.query)) {
         this.showPartials = true;
       } else if (_.isObject(this.query)) {
         this.showPartials = false;
@@ -68,8 +69,9 @@ export default {
       this.refresh();
       if (!this.showPartials && _.isObject(this.query)) {
         let { data } = await this.girderRest.get(
-          `/folder/${this.query.value.folderId}`);
-        this.internalLocation = {...data, 'search': true};
+          `/folder/${this.query.value.folderId}`
+        );
+        this.internalLocation = { ...data, search: true };
       }
     },
     input() {
@@ -78,22 +80,23 @@ export default {
       }
     },
     internalLocation() {
-      if (!('search' in this.lazyLocation)) {
+      if (!("search" in this.lazyLocation)) {
         this.clear();
       }
       this.setCurrentPath();
       this.getFilteredResults();
-    }
+    },
   },
 
   methods: {
-    async setCurrentPath(){
+    async setCurrentPath() {
       var location = this.lazyLocation ? this.lazyLocation : this.location;
 
-      this.currentPath = '';
-      if ('_id' in location && '_modelType' in location) {
+      this.currentPath = "";
+      if ("_id" in location && "_modelType" in location) {
         let { data } = await this.girderRest.get(
-          `/resource/${location._id}/path?type=${location._modelType}`);
+          `/resource/${location._id}/path?type=${location._modelType}`
+        );
         this.currentPath = data;
       }
 
@@ -110,12 +113,14 @@ export default {
     clear() {
       this.showPartials = false;
       this.query = null;
-      this.input = '';
+      this.input = "";
       this.refresh();
     },
     showMatches() {
-      if (_.isEqual(this.query, this.input) ||
-            (_.isNull(this.query) && _.isEmpty(this.input))) {
+      if (
+        _.isEqual(this.query, this.input) ||
+        (_.isNull(this.query) && _.isEmpty(this.input))
+      ) {
         this.showPartials = true;
         this.refresh();
       }
@@ -126,21 +131,25 @@ export default {
     async fetchMovie(e) {
       let name = e.target.textContent.trim();
       var item = await this.girderRest.get(
-        `/item?folderId=${this.location._id}&name=${name}`);
+        `/item?folderId=${this.location._id}&name=${name}`
+      );
       let files = await this.girderRest.get(`/item/${item.data[0]._id}/files`);
-      if (files.data[0]['exts'] == 'json')
-        return;
+      if (files.data[0]["exts"] == "json") return;
       this.$parent.$parent.$parent.$parent.$emit(
-        "param-selected", item.data[0]._id, name, e);
+        "param-selected",
+        item.data[0]._id,
+        name,
+        e
+      );
     },
-    getFilteredResults:  _.throttle(async function() {
-      if (this.outsideOfRoot)
-        return;
+    getFilteredResults: _.throttle(async function () {
+      if (this.outsideOfRoot) return;
 
       try {
-        let input = this.input ? this.input : '';
+        let input = this.input ? this.input : "";
         let { data } = await this.girderRest.get(
-          `resource/${this.location._id}/search?type=folder&q=${input}`);
+          `resource/${this.location._id}/search?type=folder&q=${input}`
+        );
         this.filteredItems = data.results;
       } catch (error) {
         return;

@@ -1,16 +1,16 @@
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import "@kitware/vtk.js/Rendering/Profiles/Geometry";
 
-import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow';
-import vtkOpenGLRenderWindow from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindowInteractor from '@kitware/vtk.js/Rendering/Core/RenderWindowInteractor';
-import vtkInteractorStyleManipulator from '@kitware/vtk.js/Interaction/Style/InteractorStyleManipulator';
-import Manipulators from '@kitware/vtk.js/Interaction/Manipulators';
+import vtkRenderWindow from "@kitware/vtk.js/Rendering/Core/RenderWindow";
+import vtkOpenGLRenderWindow from "@kitware/vtk.js/Rendering/OpenGL/RenderWindow";
+import vtkRenderWindowInteractor from "@kitware/vtk.js/Rendering/Core/RenderWindowInteractor";
+import vtkInteractorStyleManipulator from "@kitware/vtk.js/Interaction/Style/InteractorStyleManipulator";
+import Manipulators from "@kitware/vtk.js/Interaction/Manipulators";
 
-import { mapGetters, mapMutations } from 'vuex';
+import { mapGetters, mapMutations } from "vuex";
 
 export default {
-  name: 'RenderWindow',
+  name: "RenderWindow",
 
   data() {
     return {
@@ -21,9 +21,9 @@ export default {
 
   methods: {
     ...mapMutations({
-      setInteractor: 'UI_INTERACTOR_SET',
-      setRenderWindow: 'UI_RENDER_WINDOW_SET',
-      setBoxSelector: 'PLOT_BOX_SELECTOR_SET',
+      setInteractor: "UI_INTERACTOR_SET",
+      setRenderWindow: "UI_RENDER_WINDOW_SET",
+      setBoxSelector: "PLOT_BOX_SELECTOR_SET",
     }),
     resize() {
       const { width, height } = this.$el.getBoundingClientRect();
@@ -42,7 +42,7 @@ export default {
         const allRenderers = this.$root.$children[0].$refs.imageGallery;
         allRenderers.forEach((plotCell) => {
           if (plotCell.renderer) {
-            plotCell.resetZoom()
+            plotCell.resetZoom();
           }
         });
       }
@@ -59,32 +59,34 @@ export default {
 
     // Create box selector for zooming
     this.setInteractor(vtkRenderWindowInteractor.newInstance());
-    const boxSelector = Manipulators.vtkMouseBoxSelectorManipulator.newInstance({
-      button: 1,
-    });
+    const boxSelector = Manipulators.vtkMouseBoxSelectorManipulator.newInstance(
+      {
+        button: 1,
+      }
+    );
     this.setBoxSelector(boxSelector);
     const iStyle = vtkInteractorStyleManipulator.newInstance();
     iStyle.addMouseManipulator(boxSelector);
     this.interactor.setInteractorStyle(iStyle);
     this.interactor.initialize();
     this.interactor.setView(this.openglRenderWindow);
-    this.container = document.querySelector('.splitpanes__pane.main-content');
+    this.container = document.querySelector(".splitpanes__pane.main-content");
     this.interactor.bindEvents(this.container);
     this.interactor.disable();
 
-    window.addEventListener('dblclick', this.resetAllZoom);
-    window.addEventListener('resize', this.resize);
+    window.addEventListener("dblclick", this.resetAllZoom);
+    window.addEventListener("resize", this.resize);
     this.resize();
     window.requestAnimationFrame(this.animate);
   },
 
   computed: {
     ...mapGetters({
-      interactor: 'UI_INTERACTOR',
-      renderWindow: 'UI_RENDER_WINDOW',
-      renderersCount: 'UI_RENDERER_COUNT',
-      syncZoom: 'UI_ZOOM_SYNC',
-      selectTimeStep: 'UI_TIME_STEP_SELECTOR',
+      interactor: "UI_INTERACTOR",
+      renderWindow: "UI_RENDER_WINDOW",
+      renderersCount: "UI_RENDERER_COUNT",
+      syncZoom: "UI_ZOOM_SYNC",
+      selectTimeStep: "UI_TIME_STEP_SELECTOR",
     }),
   },
 
@@ -99,4 +101,4 @@ export default {
       }
     },
   },
-}
+};

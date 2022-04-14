@@ -111,17 +111,20 @@ export default {
     },
   },
   actions: {
-    PLOT_GLOBAL_RANGES_UPDATED({state}, range) {
-      state.globalRanges = {...state.globalRanges, [`${state.itemId}`]: range};
+    PLOT_GLOBAL_RANGES_UPDATED({ state }, range) {
+      state.globalRanges = {
+        ...state.globalRanges,
+        [`${state.itemId}`]: range,
+      };
     },
-    PLOT_ZOOM_DETAILS({commit}, details) {
-      const {zoom, xAxis} = details;
-      commit('PLOT_ZOOM_SET', zoom);
-      commit('PLOT_ZOOM_X_AXIS_SET', xAxis);
+    PLOT_ZOOM_DETAILS({ commit }, details) {
+      const { zoom, xAxis } = details;
+      commit("PLOT_ZOOM_SET", zoom);
+      commit("PLOT_ZOOM_X_AXIS_SET", xAxis);
     },
-    PLOT_MIN_TIME_STEP_CHANGED({state, commit}, val) {
-      commit('PLOT_MIN_TIME_STEP_SET', val);
-      commit('PLOT_TIME_STEP_SET', Math.max(state.currentTimeStep, val));
+    PLOT_MIN_TIME_STEP_CHANGED({ state, commit }, val) {
+      commit("PLOT_MIN_TIME_STEP_SET", val);
+      commit("PLOT_TIME_STEP_SET", Math.max(state.currentTimeStep, val));
     },
   },
-}
+};
