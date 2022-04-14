@@ -1,5 +1,6 @@
 <div>
-  <v-menu v-model="showMenu"
+  <v-menu
+    v-model="showMenu"
     :position-x="pos[0]"
     :position-y="pos[1]"
     absolute
@@ -8,35 +9,25 @@
     <v-card style="padding: 5px">
       <v-list>
         <v-list-item dense @click="showRangeDialog=true">
-          <v-list-item-title>
-            Set global range
-          </v-list-item-title>
+          <v-list-item-title> Set global range </v-list-item-title>
         </v-list-item>
       </v-list>
-      <v-divider/>
+      <v-divider />
       <v-list>
         <v-list-item dense @click="fetchImage('png')">
-          <v-list-item-title>
-            Save Image as PNG
-          </v-list-item-title>
+          <v-list-item-title> Save Image as PNG </v-list-item-title>
         </v-list-item>
         <v-list-item dense @click="fetchImage('pdf')">
-          <v-list-item-title>
-            Save Image as PDF
-          </v-list-item-title>
+          <v-list-item-title> Save Image as PDF </v-list-item-title>
         </v-list-item>
       </v-list>
-      <v-divider/>
+      <v-divider />
       <v-list>
         <v-list-item dense @click="fetchMovie('mp4')">
-          <v-list-item-title>
-            Download Movie as MP4
-          </v-list-item-title>
+          <v-list-item-title> Download Movie as MP4 </v-list-item-title>
         </v-list-item>
         <v-list-item dense @click="fetchMovie('mpg')">
-          <v-list-item-title>
-            Download Movie as MPG
-          </v-list-item-title>
+          <v-list-item-title> Download Movie as MPG </v-list-item-title>
         </v-list-item>
       </v-list>
     </v-card>
@@ -47,28 +38,13 @@
     @close="showRangeDialog=false"
   />
   <div class="notification">
-    <v-sheet
-      v-for="r in requested"
-      :key="r.id"
-      :elevation="12"
-      color="blue"
-    >
+    <v-sheet v-for="r in requested" :key="r.id" :elevation="12" color="blue">
       {{ r.type }} Download Requested for {{ r.name }}
     </v-sheet>
-    <v-sheet
-      v-for="f in failed"
-      :key="f.id"
-      :elevation="12"
-      color="red"
-    >
+    <v-sheet v-for="f in failed" :key="f.id" :elevation="12" color="red">
       {{ f.type }} Download Failed for {{ f.name }}
     </v-sheet>
-    <v-sheet
-      v-for="c in completed"
-      :key="c.id"
-      :elevation="12"
-      color="green"
-    >
+    <v-sheet v-for="c in completed" :key="c.id" :elevation="12" color="green">
       {{ c.type }} Download Completed for {{ c.name }}
     </v-sheet>
   </div>

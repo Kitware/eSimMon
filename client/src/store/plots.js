@@ -124,14 +124,14 @@ export default {
         [`${state.itemId}`]: range,
       };
     },
-    PLOT_ZOOM_DETAILS({commit}, details) {
+    PLOT_ZOOM_DETAILS({ commit }, details) {
       const { xAxis } = details;
-      if ('plotlyZoom' in details) {
-        commit('PLOT_ZOOM_PLOTLY_SET', details.plotlyZoom);
-      } else if ('vtkZoom' in details) {
-        commit('PLOT_ZOOM_VTK_SET', details.vtkZoom);
+      if ("plotlyZoom" in details) {
+        commit("PLOT_ZOOM_PLOTLY_SET", details.plotlyZoom);
+      } else if ("vtkZoom" in details) {
+        commit("PLOT_ZOOM_VTK_SET", details.vtkZoom);
       }
-      commit('PLOT_ZOOM_X_AXIS_SET', xAxis);
+      commit("PLOT_ZOOM_X_AXIS_SET", xAxis);
     },
     PLOT_MIN_TIME_STEP_CHANGED({ state, commit }, val) {
       commit("PLOT_MIN_TIME_STEP_SET", val);

@@ -80,7 +80,7 @@ export default {
     },
     UI_CONTEXT_MENU_ITEM_DATA_SET(state, val) {
       state.contextMenuItemData = val;
-    }
+    },
   },
   actions: {
     UI_TOGGLE_PLAY_PAUSE({ state }) {

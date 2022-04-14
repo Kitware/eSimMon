@@ -1,13 +1,13 @@
-import { Splitpanes, Pane } from 'splitpanes';
-import 'splitpanes/dist/splitpanes.css';
-import _ from 'lodash';
-import RenderWindow from '../../widgets/RenderWindow';
-import ImageGallery from '../../widgets/ImageGallery';
-import { GirderAuthentication as GirderAuthentication } from '@girder/components/src';
-import GirderFileManager from '../../widgets/GirderFileManager';
-import ViewControls from '../ViewControls';
-import ContextMenu from '../../widgets/ContextMenu';
-import { mapActions, mapGetters, mapMutations } from 'vuex';
+import { Splitpanes, Pane } from "splitpanes";
+import "splitpanes/dist/splitpanes.css";
+import _ from "lodash";
+import RenderWindow from "../../widgets/RenderWindow";
+import ImageGallery from "../../widgets/ImageGallery";
+import { GirderAuthentication as GirderAuthentication } from "@girder/components/src";
+import GirderFileManager from "../../widgets/GirderFileManager";
+import ViewControls from "../ViewControls";
+import ContextMenu from "../../widgets/ContextMenu";
+import { mapActions, mapGetters, mapMutations } from "vuex";
 
 export default {
   name: "App",
@@ -53,19 +53,19 @@ export default {
     }),
 
     ...mapMutations({
-      setAutoSaveName: 'VIEW_AUTO_SAVE_NAME_SET',
-      setAutoSavedViewDialog: 'UI_AUTO_SAVE_DIALOG_SET',
-      setColumns: 'VIEW_COLUMNS_SET',
-      setCreator: 'VIEW_CREATOR_SET',
-      setCurrentTimeStep: 'PLOT_TIME_STEP_SET',
-      setGridSize: 'VIEW_GRID_SIZE_SET',
-      setPaused: 'UI_PAUSE_GALLERY_SET',
-      setPublic: 'VIEW_PUBLIC_SET',
-      setRows: 'VIEW_ROWS_SET',
-      setRunId: 'VIEW_RUN_ID_SET',
-      setShouldAutoSave: 'VIEW_AUTO_SAVE_RUN_SET',
-      setSimulation: 'VIEW_SIMULATION_SET',
-      setMaxTimeStep: 'PLOT_MAX_TIME_STEP_SET',
+      setAutoSaveName: "VIEW_AUTO_SAVE_NAME_SET",
+      setAutoSavedViewDialog: "UI_AUTO_SAVE_DIALOG_SET",
+      setColumns: "VIEW_COLUMNS_SET",
+      setCreator: "VIEW_CREATOR_SET",
+      setCurrentTimeStep: "PLOT_TIME_STEP_SET",
+      setGridSize: "VIEW_GRID_SIZE_SET",
+      setPaused: "UI_PAUSE_GALLERY_SET",
+      setPublic: "VIEW_PUBLIC_SET",
+      setRows: "VIEW_ROWS_SET",
+      setRunId: "VIEW_RUN_ID_SET",
+      setShouldAutoSave: "VIEW_AUTO_SAVE_RUN_SET",
+      setSimulation: "VIEW_SIMULATION_SET",
+      setMaxTimeStep: "PLOT_MAX_TIME_STEP_SET",
     }),
 
     addColumn() {
@@ -308,9 +308,9 @@ export default {
   },
 
   created: async function () {
-    this.$on('data-loaded', this.initialDataLoaded);
-    this.$on('gallery-ready', this.incrementReady);
-    this.$on('item-added', this.setRun);
+    this.$on("data-loaded", this.initialDataLoaded);
+    this.$on("gallery-ready", this.incrementReady);
+    this.$on("item-added", this.setRun);
   },
 
   asyncComputed: {

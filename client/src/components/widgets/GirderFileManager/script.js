@@ -128,9 +128,8 @@ export default {
         this.$refs.query.blur();
       }
     },
-    getFilteredResults:  _.throttle(async function() {
-      if (this.outsideOfRoot)
-        return;
+    getFilteredResults: _.throttle(async function () {
+      if (this.outsideOfRoot) return;
 
       try {
         let input = this.input ? this.input : "";

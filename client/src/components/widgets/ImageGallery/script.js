@@ -8,18 +8,18 @@ import {
 } from "../../../utils/vtkPlotStyling";
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import "@kitware/vtk.js/Rendering/Profiles/Geometry";
 
-import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
-import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
-import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
-import vtkCubeAxesActor from '@kitware/vtk.js/Rendering/Core/CubeAxesActor';
-import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
-import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
-import vtkPointPicker from '@kitware/vtk.js/Rendering/Core/PointPicker';
-import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
-import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
-import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
+import vtkActor from "@kitware/vtk.js/Rendering/Core/Actor";
+import vtkColorMaps from "@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps";
+import vtkColorTransferFunction from "@kitware/vtk.js/Rendering/Core/ColorTransferFunction";
+import vtkCubeAxesActor from "@kitware/vtk.js/Rendering/Core/CubeAxesActor";
+import vtkDataArray from "@kitware/vtk.js/Common/Core/DataArray";
+import vtkMapper from "@kitware/vtk.js/Rendering/Core/Mapper";
+import vtkPointPicker from "@kitware/vtk.js/Rendering/Core/PointPicker";
+import vtkPolyData from "@kitware/vtk.js/Common/DataModel/PolyData";
+import vtkRenderer from "@kitware/vtk.js/Rendering/Core/Renderer";
+import vtkScalarBarActor from "@kitware/vtk.js/Rendering/Core/ScalarBarActor";
 
 // Number of timesteps to prefetch data for.
 const TIMESTEPS_TO_PREFETCH = 3;
@@ -96,21 +96,21 @@ export default {
 
   asyncComputed: {
     ...mapGetters({
-      currentTimeStep: 'PLOT_TIME_STEP',
-      globalRanges: 'PLOT_GLOBAL_RANGES',
-      globalZoom: 'PLOT_ZOOM_PLOTLY',
-      numcols: 'VIEW_COLUMNS',
-      numrows: 'VIEW_ROWS',
-      renderWindow: 'UI_RENDER_WINDOW',
-      syncZoom: 'UI_ZOOM_SYNC',
-      zoomAxis: 'PLOT_ZOOM_X_AXIS',
-      timeStepSelectorMode: 'UI_TIME_STEP_SELECTOR',
-      initialLoad: 'PLOT_INITIAL_LOAD',
-      minTimeStep: 'PLOT_MIN_TIME_STEP',
-      interactor: 'UI_INTERACTOR',
-      boxSelector: 'PLOT_BOX_SELECTOR',
-      globalFocalPoint: 'PLOT_FOCAL_POINT',
-      globalScale: 'PLOT_SCALE',
+      currentTimeStep: "PLOT_TIME_STEP",
+      globalRanges: "PLOT_GLOBAL_RANGES",
+      globalZoom: "PLOT_ZOOM_PLOTLY",
+      numcols: "VIEW_COLUMNS",
+      numrows: "VIEW_ROWS",
+      renderWindow: "UI_RENDER_WINDOW",
+      syncZoom: "UI_ZOOM_SYNC",
+      zoomAxis: "PLOT_ZOOM_X_AXIS",
+      timeStepSelectorMode: "UI_TIME_STEP_SELECTOR",
+      initialLoad: "PLOT_INITIAL_LOAD",
+      minTimeStep: "PLOT_MIN_TIME_STEP",
+      interactor: "UI_INTERACTOR",
+      boxSelector: "PLOT_BOX_SELECTOR",
+      globalFocalPoint: "PLOT_FOCAL_POINT",
+      globalScale: "PLOT_SCALE",
     }),
 
     loadedTimestepData: {
@@ -207,20 +207,20 @@ export default {
       setMinTimeStep: "PLOT_MIN_TIME_STEP_CHANGED",
     }),
     ...mapMutations({
-      setTimeStep: 'PLOT_TIME_STEP_SET',
-      setZoomOrigin: 'PLOT_ZOOM_ORIGIN_SET',
-      updateCellCount: 'PLOT_VISIBLE_CELL_COUNT_SET',
-      setMaxTimeStep: 'PLOT_MAX_TIME_STEP_SET',
-      setItemId: 'PLOT_CURRENT_ITEM_ID_SET',
-      setLoadedFromView: 'PLOT_LOADED_FROM_VIEW_SET',
-      setInitialLoad: 'PLOT_INITIAL_LOAD_SET',
-      updateRendererCount: 'UI_RENDERER_COUNT_SET',
-      setPauseGallery: 'UI_PAUSE_GALLERY_SET',
-      setGlobalFocalPoint: 'PLOT_FOCAL_POINT_SET',
-      setGlobalScale: 'PLOT_SCALE_SET',
-      showContextMenu: 'UI_SHOW_CONTEXT_MENU_SET',
-      setContextMenuItemData: 'UI_CONTEXT_MENU_ITEM_DATA_SET',
-      setCurrentItemId: 'PLOT_CURRENT_ITEM_ID_SET',
+      setTimeStep: "PLOT_TIME_STEP_SET",
+      setZoomOrigin: "PLOT_ZOOM_ORIGIN_SET",
+      updateCellCount: "PLOT_VISIBLE_CELL_COUNT_SET",
+      setMaxTimeStep: "PLOT_MAX_TIME_STEP_SET",
+      setItemId: "PLOT_CURRENT_ITEM_ID_SET",
+      setLoadedFromView: "PLOT_LOADED_FROM_VIEW_SET",
+      setInitialLoad: "PLOT_INITIAL_LOAD_SET",
+      updateRendererCount: "UI_RENDERER_COUNT_SET",
+      setPauseGallery: "UI_PAUSE_GALLERY_SET",
+      setGlobalFocalPoint: "PLOT_FOCAL_POINT_SET",
+      setGlobalScale: "PLOT_SCALE_SET",
+      showContextMenu: "UI_SHOW_CONTEXT_MENU_SET",
+      setContextMenuItemData: "UI_CONTEXT_MENU_ITEM_DATA_SET",
+      setCurrentItemId: "PLOT_CURRENT_ITEM_ID_SET",
     }),
     relayoutPlotly() {
       const node = this.$refs.plotly;
@@ -551,8 +551,8 @@ export default {
         name: response.name,
         event: e,
         step: this.currentTimeStep,
-        isVTK: !!this.renderer
-      }
+        isVTK: !!this.renderer,
+      };
       this.setCurrentItemId(this.itemId);
       this.setContextMenuItemData(data);
       this.showContextMenu(true);
@@ -574,7 +574,7 @@ export default {
           this.setZoomOrigin(this.itemId);
         }
         if (this.syncZoom && this.itemId !== this.zoomOrigin) {
-          this.setZoomDetails({plotlyZoom: this.zoom, xAxis: this.xaxis});
+          this.setZoomDetails({ plotlyZoom: this.zoom, xAxis: this.xaxis });
         }
         this.react();
       });
@@ -596,7 +596,7 @@ export default {
           this.zoom = null;
           this.rangeText = [];
           if (this.syncZoom) {
-            this.setZoomDetails({plotlyZoom: null, xAxis: null});
+            this.setZoomDetails({ plotlyZoom: null, xAxis: null });
           }
         }
       });
@@ -846,8 +846,8 @@ export default {
           const xMid = (finalX - startX) / 2 + startX;
           const yMid = (finalY - startY) / 2 + startY;
           this.focalPoint = [xMid, yMid, 0.0];
-          this.zoom = {focalPoint: this.focalPoint, scale: this.scale}
-          this.setZoomDetails({vtkZoom: this.zoom, xAxis: this.xaxis});
+          this.zoom = { focalPoint: this.focalPoint, scale: this.scale };
+          this.setZoomDetails({ vtkZoom: this.zoom, xAxis: this.xaxis });
           if (this.syncZoom) {
             this.setGlobalScale(this.scale);
             this.setGlobalFocalPoint([...this.focalPoint]);
@@ -857,8 +857,8 @@ export default {
             range[0].toPrecision(4),
             range[1].toPrecision(4),
             range[2].toPrecision(4),
-            range[3].toPrecision(4)
-          ]
+            range[3].toPrecision(4),
+          ];
         }
       });
     },
@@ -884,7 +884,7 @@ export default {
       // This can be removed when vtk.js include the text labels in its bounds.
       bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT;
       this.renderer.resetCamera(bounds);
-      this.setZoomDetails({vtkZoom: null, xAxis: null});
+      this.setZoomDetails({ vtkZoom: null, xAxis: null });
       this.zoom = null;
       this.rangeText = [];
     },
