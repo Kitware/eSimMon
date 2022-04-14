@@ -2,6 +2,11 @@ import RangeDialog from "../RangeDialog";
 import { v4 as uuidv4 } from "uuid";
 import { mapGetters, mapMutations } from "vuex";
 
+// Enum values
+const REQUEST = 0;
+const COMPLETE = 1;
+const FAIL = 2;
+
 export default {
   name: "ContextMenu",
   inject: ["girderRest", "fastRestUrl"],
@@ -42,6 +47,15 @@ export default {
     },
     parameter() {
       return this.itemInfo ? this.itemInfo.name : "";
+    },
+    requests() {
+      return this.requested.length > 0;
+    },
+    completions() {
+      return this.completed.length > 0;
+    },
+    failures() {
+      return this.failed.length > 0;
     },
   },
 
@@ -89,17 +103,43 @@ export default {
         .finally(() => {
           // Clean up the notifications no matter the result
           setTimeout(() => {
-            let idx = this.completed.findIndex((d) => d.uuid === uuid);
-            if (idx >= 0) {
-              this.completed.splice(idx, 1);
-            } else {
-              idx = this.failed.findIndex((d) => d.uuid === uuid);
+            if (this.completions) {
+              let idx = this.completed.findIndex((d) => d.uuid === uuid);
+              if (idx >= 0) {
+                this.completed.splice(idx, 1);
+              }
+            }
+            if (this.failures) {
+              let idx = this.failed.findIndex((d) => d.uuid === uuid);
               if (idx >= 0) {
                 this.failed.splice(idx, 1);
               }
             }
           }, 3000);
         });
+    },
+    calcMargin(idx, notificationType) {
+      // Find the total number of notifications visible
+      let reqCount = this.requested.length;
+      let failCount = this.failed.length;
+      let compCount = this.completed.length;
+      if (notificationType === REQUEST) {
+        return `${idx * 80 + (failCount + compCount) * 65}px`;
+      } else if (notificationType === COMPLETE) {
+        return `${reqCount * 80 + (failCount + idx) * 65}px`;
+      } else if (notificationType === FAIL) {
+        return `${reqCount * 80 + (idx + compCount) * 65}px`;
+      }
+      return `${reqCount * 80 + (failCount + compCount) * 65}px`;
+    },
+    dismiss(idx, notificationType) {
+      if (notificationType === REQUEST) {
+        this.requested.splice(idx, 1);
+      } else if (notificationType === COMPLETE) {
+        this.completed.splice(idx, 1);
+      } else if (notificationType === FAIL) {
+        this.failed.splice(idx, 1);
+      }
     },
   },
 };

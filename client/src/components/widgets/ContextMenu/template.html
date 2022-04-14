@@ -37,15 +37,56 @@
     :param="parameter"
     @close="showRangeDialog=false"
   />
-  <div class="notification">
-    <v-sheet v-for="r in requested" :key="r.id" :elevation="12" color="blue">
-      {{ r.type }} Download Requested for {{ r.name }}
-    </v-sheet>
-    <v-sheet v-for="f in failed" :key="f.id" :elevation="12" color="red">
+  <div class="notifications">
+    <v-snackbar
+      v-model="requests"
+      v-for="(r, i) in requested"
+      :key="r.uuid"
+      timeout="-1"
+      absolute
+      bottom
+      right
+      vertical
+      color="info"
+      v-bind:style="{marginBottom: calcMargin(i, 0)}"
+    >
+      <div>
+        {{ r.type }} Download Requested for {{ r.name }}
+        <v-btn color="white" text @click="dismiss(i, 0)"> Dismiss </v-btn>
+      </div>
+      <v-progress-linear
+        indeterminate
+        background-color="blue-grey"
+        color="white"
+      />
+    </v-snackbar>
+    <v-snackbar
+      v-model="failures"
+      v-for="(f, i) in failed"
+      :key="f.uuid"
+      timeout="3000"
+      absolute
+      bottom
+      right
+      color="error"
+      v-bind:style="{marginBottom: calcMargin(i, 1)}"
+    >
       {{ f.type }} Download Failed for {{ f.name }}
-    </v-sheet>
-    <v-sheet v-for="c in completed" :key="c.id" :elevation="12" color="green">
+      <v-btn color="black" text @click="dismiss(i, 1)"> Dismiss </v-btn>
+    </v-snackbar>
+    <v-snackbar
+      v-model="completions"
+      v-for="(c, i) in completed"
+      :key="c.uuid"
+      timeout="3000"
+      absolute
+      bottom
+      right
+      color="success"
+      v-bind:style="{marginBottom: calcMargin(i, 2)}"
+    >
       {{ c.type }} Download Completed for {{ c.name }}
-    </v-sheet>
+      <v-btn color="white" text @click="dismiss(i, 2)"> Dismiss </v-btn>
+    </v-snackbar>
   </div>
 </div>
