@@ -76,10 +76,6 @@ def _mkVtkIdList(it):
     return vil
 
 
-def create_colormap_image(plot_data: dict, format: str):
-    return
-
-
 def create_mesh_image(plot_data: dict, format: str, zoom: dict):
     nodes = np.asarray(plot_data["nodes"])
     connectivity = np.asarray(plot_data["connectivity"])
@@ -220,8 +216,6 @@ async def get_timestep_image_data(plot: dict, format: str, zoom: dict):
         image = create_plotly_image(plot, format, zoom)
     elif plot["type"] == "mesh":
         image = create_mesh_image(plot, format, zoom)
-    elif plot["type"] == "colormap":
-        image = create_colormap_image(plot, format, zoom)
     return image
 
 
