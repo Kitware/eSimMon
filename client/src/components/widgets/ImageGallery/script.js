@@ -853,12 +853,7 @@ export default {
             this.setGlobalFocalPoint([...this.focalPoint]);
           }
           const range = this.actor.getBounds();
-          this.rangeText = [
-            range[0].toPrecision(4),
-            range[1].toPrecision(4),
-            range[2].toPrecision(4),
-            range[3].toPrecision(4),
-          ];
+          this.rangeText = range.map((r) => r.toPrecision(4));
         }
       });
     },
@@ -921,12 +916,8 @@ export default {
 
       const xRange = [data.x[0], data.x[data.x.length - 1]];
       if (!yRange) yRange = [Math.min(...data.y), Math.max(...data.y)];
-      this.rangeText = [
-        xRange[0].toPrecision(4),
-        xRange[1].toPrecision(4),
-        yRange[0].toPrecision(4),
-        yRange[1].toPrecision(4),
-      ];
+      const range = [...xRange, ...yRange];
+      this.rangeText = range.map((r) => r.toPrecision(4));
     },
     toggleLogScale() {
       this.logScale = !this.logScale;
