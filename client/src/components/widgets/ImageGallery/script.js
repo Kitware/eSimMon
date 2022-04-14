@@ -531,6 +531,7 @@ export default {
                 click: this.toggleLogScale,
               },
             ],
+            modeBarButtonsToRemove: ["toImage"],
           });
           if (!this.eventHandlersSet) this.setEventHandlers();
           this.json = true;
