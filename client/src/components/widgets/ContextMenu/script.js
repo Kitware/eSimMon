@@ -3,9 +3,9 @@ import { v4 as uuidv4 } from "uuid";
 import { mapGetters, mapMutations } from "vuex";
 
 // Enum values
-const REQUEST = 0;
-const COMPLETE = 1;
-const FAIL = 2;
+const REQUEST = "in progress";
+const COMPLETE = "complete";
+const FAIL = "failed";
 
 export default {
   name: "ContextMenu",
@@ -18,9 +18,7 @@ export default {
   data() {
     return {
       showRangeDialog: false,
-      requested: [],
-      completed: [],
-      failed: [],
+      downloads: [],
     };
   },
 
@@ -49,14 +47,8 @@ export default {
     parameter() {
       return this.itemInfo ? this.itemInfo.name : "";
     },
-    requests() {
-      return this.requested.length > 0;
-    },
-    completions() {
-      return this.completed.length > 0;
-    },
-    failures() {
-      return this.failed.length > 0;
+    downloading() {
+      return this.downloads.length > 0;
     },
   },
 
@@ -68,26 +60,28 @@ export default {
     fetchImage(format) {
       const { id, step } = this.itemInfo;
       const endpoint = `images/${id}/timesteps/${step}/format/${format}`;
-      this.downloadData(endpoint, format, "Image");
+      this.downloadData(endpoint, format, "image");
     },
     fetchMovie(format) {
       const { id } = this.itemInfo;
       const endpoint = `movie/${id}/format/${format}`;
-      this.downloadData(endpoint, format, "Movie");
+      this.downloadData(endpoint, format, "movie");
     },
     downloadData(endpoint, format, type) {
       const uuid = uuidv4();
       this.updateItemInfo({ ...this.itemInfo, uuid });
       const { name } = this.itemInfo;
-      this.requested.push({ type, uuid, name });
+      this.downloads.push({ type, uuid, name, status: REQUEST });
       let zoom = this.itemInfo.isVTK ? this.vtkZoom : this.plotlyZoom;
       zoom = zoom ? `?zoom=${JSON.stringify(zoom)}` : "";
       this.girderRest
         .get(`${this.fastRestUrl}/${endpoint}${zoom}`, { responseType: "blob" })
         .then((response) => {
-          let idx = this.requested.findIndex((d) => d.uuid === uuid);
-          this.completed.push(this.requested[idx]);
-          this.requested.splice(idx, 1);
+          let idx = this.downloads.findIndex((d) => d.uuid === uuid);
+          this.$set(this.downloads, idx, {
+            ...this.downloads[idx],
+            status: COMPLETE,
+          });
           const url = window.URL.createObjectURL(new Blob([response.data]));
           const link = document.createElement("a");
           link.href = url;
@@ -97,50 +91,26 @@ export default {
           document.body.removeChild(link);
         })
         .catch(() => {
-          let idx = this.requested.findIndex((d) => d.uuid === uuid);
-          this.failed.push(this.requested[idx]);
-          this.requested.splice(idx, 1);
+          let idx = this.downloads.findIndex((d) => d.uuid === uuid);
+          this.$set(this.downloads, idx, {
+            ...this.downloads[idx],
+            status: FAIL,
+          });
         })
         .finally(() => {
           // Clean up the notifications no matter the result
           setTimeout(() => {
-            if (this.completions) {
-              let idx = this.completed.findIndex((d) => d.uuid === uuid);
-              if (idx >= 0) {
-                this.completed.splice(idx, 1);
-              }
+            let idx = this.downloads.findIndex((d) => {
+              return d.uuid === uuid && d.status !== REQUEST;
+            });
+            if (idx >= 0) {
+              this.downloads.splice(idx, 1);
             }
-            if (this.failures) {
-              let idx = this.failed.findIndex((d) => d.uuid === uuid);
-              if (idx >= 0) {
-                this.failed.splice(idx, 1);
-              }
-            }
-          }, 3000);
+          }, 5000);
         });
     },
-    calcMargin(idx, notificationType) {
-      // Find the total number of notifications visible
-      let reqCount = this.requested.length;
-      let failCount = this.failed.length;
-      let compCount = this.completed.length;
-      if (notificationType === REQUEST) {
-        return `${idx * 80 + (failCount + compCount) * 65}px`;
-      } else if (notificationType === COMPLETE) {
-        return `${reqCount * 80 + (failCount + idx) * 65}px`;
-      } else if (notificationType === FAIL) {
-        return `${reqCount * 80 + (idx + compCount) * 65}px`;
-      }
-      return `${reqCount * 80 + (failCount + compCount) * 65}px`;
-    },
-    dismiss(idx, notificationType) {
-      if (notificationType === REQUEST) {
-        this.requested.splice(idx, 1);
-      } else if (notificationType === COMPLETE) {
-        this.completed.splice(idx, 1);
-      } else if (notificationType === FAIL) {
-        this.failed.splice(idx, 1);
-      }
+    dismiss(idx) {
+      this.downloads.splice(idx, 1);
     },
   },
 };

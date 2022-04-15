@@ -37,59 +37,38 @@
     :param="parameter"
     @close="showRangeDialog=false"
   />
-  <div class="notifications">
-    <v-snackbar
-      v-model="requests"
-      v-for="(r, i) in requested"
-      :key="r.uuid"
-      timeout="-1"
-      absolute
-      bottom
-      right
-      vertical
-      color="info"
-      v-bind:style="{marginBottom: calcMargin(i, 0)}"
-    >
-      <div>
-        Generating {{ r.type }} for
-        <vue-mathjax :formula="r.name" :options="mathJaxOptions" />
-        <v-btn color="white" text @click="dismiss(i, 0)"> Dismiss </v-btn>
-      </div>
-      <v-progress-linear
-        indeterminate
-        background-color="blue-grey"
-        color="white"
-      />
-    </v-snackbar>
-    <v-snackbar
-      v-model="failures"
-      v-for="(f, i) in failed"
-      :key="f.uuid"
-      timeout="3000"
-      absolute
-      bottom
-      right
-      color="error"
-      v-bind:style="{marginBottom: calcMargin(i, 1)}"
-    >
-      {{ f.type }} Download Failed for
-      <vue-mathjax :formula="f.name" :options="mathJaxOptions" />
-      <v-btn color="black" text @click="dismiss(i, 1)"> Dismiss </v-btn>
-    </v-snackbar>
-    <v-snackbar
-      v-model="completions"
-      v-for="(c, i) in completed"
-      :key="c.uuid"
-      timeout="3000"
-      absolute
-      bottom
-      right
-      color="success"
-      v-bind:style="{marginBottom: calcMargin(i, 2)}"
-    >
-      {{ c.type }} Download Completed for
-      <vue-mathjax :formula="c.name" :options="mathJaxOptions" />
-      <v-btn color="white" text @click="dismiss(i, 2)"> Dismiss </v-btn>
-    </v-snackbar>
-  </div>
+  <v-snackbar v-model="downloading" timeout="-1" absolute bottom right>
+    <v-navigation-drawer stateless value="true">
+      <v-list>
+        <v-list-group value="true">
+          <template v-slot:activator>
+            <v-list-item>
+              <v-list-item-title>Downloads</v-list-item-title>
+            </v-list-item>
+          </template>
+          <v-list-item v-for="d in downloads" :key="d.uuid">
+            <v-list-item-title>
+              <vue-mathjax :formula="d.name" :options="mathJaxOptions" />
+              {{d.type}} download {{d.status}}.
+            </v-list-item-title>
+            <v-list-item-action>
+              <v-progress-circular
+                v-if="d.status === 'in progress'"
+                indeterminate
+              />
+              <v-icon v-if="d.status === 'failed'" color="error">
+                mdi-alert-circle-outline
+              </v-icon>
+              <v-icon v-if="d.status === 'complete'" color="success">
+                mdi-check-circle-outline
+              </v-icon>
+            </v-list-item-action>
+            <v-list-item-action>
+              <v-icon v-on:click="dismiss"> mdi-close </v-icon>
+            </v-list-item-action>
+          </v-list-item>
+        </v-list-group>
+      </v-list>
+    </v-navigation-drawer>
+  </v-snackbar>
 </div>

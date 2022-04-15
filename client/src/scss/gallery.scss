@@ -221,3 +221,15 @@
 .v-snack__wrapper {
   max-width: 100% !important;
 }
+
+.v-navigation-drawer {
+  width: auto !important;
+}
+
+.v-navigation-drawer__border {
+  display: none;
+}
+
+.v-list-item__action {
+  margin-left: 10px;
+}
