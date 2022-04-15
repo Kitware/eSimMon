@@ -30,6 +30,7 @@ from vtkmodules.vtkRenderingCore import vtkRenderer
 from vtkmodules.vtkRenderingCore import vtkRenderWindow
 from vtkmodules.vtkRenderingCore import vtkTextActor
 from vtkmodules.vtkRenderingCore import vtkWindowToImageFilter
+from vtkmodules.vtkRenderingMatplotlib import vtkMatplotlibMathTextUtilities  # noqa
 
 from fastapi import APIRouter
 from fastapi import Header
