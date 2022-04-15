@@ -6,6 +6,5 @@ uvicorn[standard]
 msgpack
 plotly
 kaleido
-vtk
 numpy
 Pillow
