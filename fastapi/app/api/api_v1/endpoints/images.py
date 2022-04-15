@@ -219,11 +219,11 @@ async def get_timestep_image_data(plot: dict, format: str, zoom: dict):
     return image
 
 
-@router.get("/{variable_id}/timesteps/{timestep}/format/{image_type}")
+@router.get("/{variable_id}/timesteps/{timestep}/image")
 async def get_timestep_image(
     variable_id: str,
     timestep: int,
-    image_type: str,
+    format: str,
     zoom: Optional[str] = None,
     girder_token: str = Header(None),
 ):
@@ -237,5 +237,5 @@ async def get_timestep_image(
     zoom = json.loads(unquote(zoom)) if zoom else {}
     # call generate plot response and get plot
     plot = await get_timestep_plot(variable_id, timestep, girder_token, as_image=True)
-    img_bytes = await get_timestep_image_data(plot, image_type, zoom)
+    img_bytes = await get_timestep_image_data(plot, format, zoom)
     return StreamingResponse(io.BytesIO(img_bytes), media_type=f"image/{format}")

@@ -59,12 +59,12 @@ export default {
     }),
     fetchImage(format) {
       const { id, step } = this.itemInfo;
-      const endpoint = `images/${id}/timesteps/${step}/format/${format}`;
+      const endpoint = `variables/${id}/timesteps/${step}/image?format=${format}`;
       this.downloadData(endpoint, format, "image");
     },
     fetchMovie(format) {
       const { id } = this.itemInfo;
-      const endpoint = `movie/${id}/format/${format}`;
+      const endpoint = `variables/${id}/timesteps/movie?format=${format}`;
       this.downloadData(endpoint, format, "movie");
     },
     downloadData(endpoint, format, type) {
@@ -73,7 +73,7 @@ export default {
       const { name } = this.itemInfo;
       this.downloads.push({ type, uuid, name, status: REQUEST });
       let zoom = this.itemInfo.isVTK ? this.vtkZoom : this.plotlyZoom;
-      zoom = zoom ? `?zoom=${JSON.stringify(zoom)}` : "";
+      zoom = zoom ? `&zoom=${JSON.stringify(zoom)}` : "";
       this.girderRest
         .get(`${this.fastRestUrl}/${endpoint}${zoom}`, { responseType: "blob" })
         .then((response) => {

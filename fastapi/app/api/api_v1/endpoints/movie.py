@@ -19,7 +19,7 @@ from .variables import get_timestep_plot
 router = APIRouter()
 
 
-@router.get("/{id}/format/{format}", response_class=FileResponse)
+@router.get("/{id}/timesteps/movie", response_class=FileResponse)
 async def create_movie(
     id: str, format: str, zoom: Optional[str] = None, girder_token: str = Header(None)
 ):

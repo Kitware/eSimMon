@@ -8,6 +8,6 @@ from fastapi import APIRouter
 api_router = APIRouter()
 
 api_router.include_router(health.router, prefix="/health", tags=["health"])
-api_router.include_router(movie.router, prefix="/movie", tags=["movie"])
+api_router.include_router(movie.router, prefix="/variables", tags=["movie"])
 api_router.include_router(variables.router, prefix="/variables", tags=["variables"])
-api_router.include_router(images.router, prefix="/images", tags=["images"])
+api_router.include_router(images.router, prefix="/variables", tags=["images"])
