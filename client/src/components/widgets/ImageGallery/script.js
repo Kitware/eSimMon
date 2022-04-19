@@ -92,6 +92,7 @@ export default {
       // duplicate prefetching.
       prefetchRequested: new Set(),
       rangeText: [],
+      logScale: false,
     };
   },
 
@@ -519,6 +520,13 @@ export default {
           this.setAnnotations(nextImage.data[0], this.zoomLevels, range);
           Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {
             autosize: true,
+            modeBarButtonsToAdd: [
+              {
+                name: "toggle log scaling",
+                icon: Plotly.Icons["3d_rotate"],
+                click: this.toggleLogScale,
+              },
+            ],
           });
           if (!this.eventHandlersSet) this.setEventHandlers();
           this.json = true;
@@ -551,6 +559,9 @@ export default {
     },
     setEventHandlers() {
       this.$refs.plotly.on("plotly_relayout", (eventdata) => {
+        if (!eventdata["xaxis.range[0]"] || !eventdata["yaxis.range[0]"]) {
+          return;
+        }
         this.zoom = parseZoomValues(eventdata, this.globalRanges[this.itemId]);
         if (!this.zoomOrigin) {
           this.setZoomOrigin(this.itemId);
@@ -913,6 +924,13 @@ export default {
         yRange[0].toPrecision(4),
         yRange[1].toPrecision(4),
       ];
+    },
+    toggleLogScale() {
+      this.logScale = !this.logScale;
+      Plotly.relayout(this.$refs.plotly, {
+        "xaxis.type": this.logScale ? "log" : "linear",
+        "yaxis.type": this.logScale ? "log" : "linear",
+      });
     },
   },
 
