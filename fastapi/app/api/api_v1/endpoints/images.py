@@ -25,6 +25,7 @@ from vtkmodules.vtkRenderingAnnotation import vtkCubeAxesActor
 from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
 from vtkmodules.vtkRenderingCore import vtkActor
 from vtkmodules.vtkRenderingCore import vtkCamera
+from vtkmodules.vtkRenderingCore import vtkColorTransferFunction
 from vtkmodules.vtkRenderingCore import vtkPolyDataMapper
 from vtkmodules.vtkRenderingCore import vtkRenderer
 from vtkmodules.vtkRenderingCore import vtkRenderWindow
@@ -114,7 +115,25 @@ def create_mesh_image(plot_data: dict, format: str, zoom: dict):
 
     # Add the colormap to the lookup table
     lut = vtkLookupTable()
-    lut.SetHueRange(0.667, 0.0)
+    # Build and set the Jet colormap
+    lutNum = 256
+    lut.SetNumberOfTableValues(lutNum)
+    ctf = vtkColorTransferFunction()
+    ctf.SetColorSpaceToRGB()
+    cl = []
+    cl.append([float(cc) / 255.0 for cc in [0, 0, 143.4375]])
+    cl.append([float(cc) / 255.0 for cc in [0, 0, 255]])
+    cl.append([float(cc) / 255.0 for cc in [0, 255, 255]])
+    cl.append([float(cc) / 255.0 for cc in [127.5, 255, 127.5]])
+    cl.append([float(cc) / 255.0 for cc in [255, 255, 0]])
+    cl.append([float(cc) / 255.0 for cc in [255, 0, 0]])
+    cl.append([float(cc) / 255.0 for cc in [127.5, 0, 0]])
+    vv = [float(xx) / float(len(cl) - 1) for xx in range(len(cl))]
+    for pt, color in zip(vv, cl):
+        ctf.AddRGBPoint(pt, color[0], color[1], color[2])
+    for ii, ss in enumerate([float(xx) / float(lutNum) for xx in range(lutNum)]):
+        cc = ctf.GetColor(ss)
+        lut.SetTableValue(ii, cc[0], cc[1], cc[2], 1.0)
     mesh_mapper.SetLookupTable(lut)
 
     # The usual rendering stuff.
