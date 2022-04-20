@@ -58,7 +58,7 @@ def create_plotly_image(plot_data: dict, format: str, zoom: dict):
 
     # Get image as bytes
     fig = go.Figure(plot_data["data"], plot_data["layout"])
-    return fig.to_image(format, width=500, height=500)
+    return fig.to_image(format, width=1000, height=1000)
 
 
 def _convert_image(png_image, format: str):
@@ -158,7 +158,7 @@ def create_mesh_image(plot_data: dict, format: str, zoom: dict):
     title_text_prop.SetColor([0, 0, 0])
     title_text_prop.SetJustificationToCentered()
     title_text_prop.SetVerticalJustificationToTop()
-    title_text.SetPosition(250, 480)
+    title_text.SetPosition(500, 980)
     renderer.AddActor2D(title_text)
 
     # Create the axis
@@ -183,8 +183,7 @@ def create_mesh_image(plot_data: dict, format: str, zoom: dict):
     # Hack to manipulate the camera bounds
     # This ensures axes labels and title are not cut off
     bounds = list(mesh_actor.GetBounds())
-    bounds[2] -= 0.5
-    bounds[3] += 0.3
+    bounds[2] -= 0.1
     renderer.ResetCamera(bounds)
     renderer.SetBackground([1, 1, 1])
 
@@ -195,7 +194,7 @@ def create_mesh_image(plot_data: dict, format: str, zoom: dict):
         camera.SetFocalPoint(fX, fY, fZ)
         camera.SetParallelScale(zoom["scale"])
 
-    ren_win.SetSize(500, 500)
+    ren_win.SetSize(1000, 1000)
     ren_win.Render()
 
     # Build the colorbar
@@ -205,8 +204,9 @@ def create_mesh_image(plot_data: dict, format: str, zoom: dict):
     scalar_bar.SetTitle(colorLabel)
     scalar_bar.SetNumberOfLabels(6)
     scalar_bar.UnconstrainedFontSizeOn()
-    scalar_bar.SetMaximumWidthInPixels(20)
-    scalar_bar.SetMaximumHeightInPixels(500)
+    scalar_bar.SetMaximumWidthInPixels(40)
+    scalar_bar.SetMaximumHeightInPixels(1000)
+    scalar_bar.SetDisplayPosition(850, 100)
     scalar_bar.SetOrientationToVertical()
     scalar_bar.GetLabelTextProperty().ShadowOff()
     scalar_bar.GetLabelTextProperty().SetColor(0, 0, 0)
