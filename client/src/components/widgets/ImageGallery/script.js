@@ -20,7 +20,6 @@ import vtkPointPicker from "@kitware/vtk.js/Rendering/Core/PointPicker";
 import vtkPolyData from "@kitware/vtk.js/Common/DataModel/PolyData";
 import vtkRenderer from "@kitware/vtk.js/Rendering/Core/Renderer";
 import vtkScalarBarActor from "@kitware/vtk.js/Rendering/Core/ScalarBarActor";
-import vtkCornerAnnotation from "@kitware/vtk.js/Interaction/UI/CornerAnnotation";
 
 // Number of timesteps to prefetch data for.
 const TIMESTEPS_TO_PREFETCH = 3;
@@ -82,7 +81,6 @@ export default {
       timeIndex: -1,
       inThisRenderer: false,
       startPoints: null,
-      cornerAnnotation: null,
       camera: null,
       focalPoint: null,
       scale: 0,
@@ -100,7 +98,7 @@ export default {
     ...mapGetters({
       currentTimeStep: "PLOT_TIME_STEP",
       globalRanges: "PLOT_GLOBAL_RANGES",
-      globalZoom: "PLOT_ZOOM",
+      globalZoom: "PLOT_ZOOM_PLOTLY",
       numcols: "VIEW_COLUMNS",
       numrows: "VIEW_ROWS",
       renderWindow: "UI_RENDER_WINDOW",
@@ -220,6 +218,9 @@ export default {
       setPauseGallery: "UI_PAUSE_GALLERY_SET",
       setGlobalFocalPoint: "PLOT_FOCAL_POINT_SET",
       setGlobalScale: "PLOT_SCALE_SET",
+      showContextMenu: "UI_SHOW_CONTEXT_MENU_SET",
+      setContextMenuItemData: "UI_CONTEXT_MENU_ITEM_DATA_SET",
+      setCurrentItemId: "PLOT_CURRENT_ITEM_ID_SET",
     }),
     relayoutPlotly() {
       const node = this.$refs.plotly;
@@ -236,6 +237,9 @@ export default {
       this.relayoutPlotly();
     },
     resize() {
+      if (this.zoom) {
+        return;
+      }
       this.relayoutPlotly();
     },
 
@@ -527,6 +531,7 @@ export default {
                 click: this.toggleLogScale,
               },
             ],
+            modeBarButtonsToRemove: ["toImage"],
           });
           if (!this.eventHandlersSet) this.setEventHandlers();
           this.json = true;
@@ -540,15 +545,18 @@ export default {
       }
       this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
     },
-    async fetchMovie(e) {
+    async requestContextMenu(e) {
       const response = await this.callEndpoint(`item/${this.itemId}`);
       const data = {
         id: this.itemId,
         name: response.name,
         event: e,
-        isJson: this.json,
+        step: this.currentTimeStep,
+        isVTK: !!this.renderer,
       };
-      this.$parent.$parent.$parent.$parent.$emit("param-selected", data);
+      this.setCurrentItemId(this.itemId);
+      this.setContextMenuItemData(data);
+      this.showContextMenu(true);
     },
     clearGallery() {
       this.itemId = null;
@@ -567,7 +575,7 @@ export default {
           this.setZoomOrigin(this.itemId);
         }
         if (this.syncZoom && this.itemId !== this.zoomOrigin) {
-          this.setZoomDetails({ zoom: this.zoom, xAxis: this.xaxis });
+          this.setZoomDetails({ plotlyZoom: this.zoom, xAxis: this.xaxis });
         }
         this.react();
       });
@@ -589,7 +597,7 @@ export default {
           this.zoom = null;
           this.rangeText = [];
           if (this.syncZoom) {
-            this.setZoomDetails({ zoom: null, xAxis: null });
+            this.setZoomDetails({ plotlyZoom: null, xAxis: null });
           }
         }
       });
@@ -676,9 +684,6 @@ export default {
       // Setup picker
       this.setupPointPicker();
 
-      // Add corner annotation
-      this.cornerAnnotation = vtkCornerAnnotation.newInstance();
-
       this.$nextTick(this.updateViewPort);
     },
     updateRenderer(data) {
@@ -761,6 +766,7 @@ export default {
         this.updateRendererCount(this.renderWindow.getRenderers().length);
         this.position = null;
         this.renderWindow.render();
+        this.rangeText = [];
       }
     },
     removePlotly() {
@@ -841,23 +847,14 @@ export default {
           const xMid = (finalX - startX) / 2 + startX;
           const yMid = (finalY - startY) / 2 + startY;
           this.focalPoint = [xMid, yMid, 0.0];
+          this.zoom = { focalPoint: this.focalPoint, scale: this.scale };
+          this.setZoomDetails({ vtkZoom: this.zoom, xAxis: this.xaxis });
           if (this.syncZoom) {
             this.setGlobalScale(this.scale);
             this.setGlobalFocalPoint([...this.focalPoint]);
           }
-          // Update corner annotation
-          this.cornerAnnotation.setContainer(this.$refs.plotly);
-          this.cornerAnnotation.updateMetadata({
-            range: this.actor.getBounds(),
-          });
-          this.cornerAnnotation.updateTemplates({
-            nw(meta) {
-              return `xRange: [${meta.range.slice(
-                0,
-                2
-              )}] yRange: [${meta.range.slice(2, 4)}]`;
-            },
-          });
+          const range = this.actor.getBounds();
+          this.rangeText = range.map((r) => r.toPrecision(4));
         }
       });
     },
@@ -877,13 +874,15 @@ export default {
         this.setGlobalFocalPoint(this.focalPoint);
         this.setGlobalScale(this.scale);
       }
-      this.cornerAnnotation.setContainer(null);
       this.camera.setPosition(...this.position);
       const bounds = [...this.actor.getBounds()];
       // Hack to adjust the bounds to include the x label
       // This can be removed when vtk.js include the text labels in its bounds.
       bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT;
       this.renderer.resetCamera(bounds);
+      this.setZoomDetails({ vtkZoom: null, xAxis: null });
+      this.zoom = null;
+      this.rangeText = [];
     },
     findClosestTime() {
       // Time is stored as seconds but plotted as milliseconds
@@ -918,12 +917,8 @@ export default {
 
       const xRange = [data.x[0], data.x[data.x.length - 1]];
       if (!yRange) yRange = [Math.min(...data.y), Math.max(...data.y)];
-      this.rangeText = [
-        xRange[0].toPrecision(4),
-        xRange[1].toPrecision(4),
-        yRange[0].toPrecision(4),
-        yRange[1].toPrecision(4),
-      ];
+      const range = [...xRange, ...yRange];
+      this.rangeText = range.map((r) => r.toPrecision(4));
     },
     toggleLogScale() {
       this.logScale = !this.logScale;

@@ -9,6 +9,18 @@ export default {
     renderWindow: null,
     zoomSync: true,
     rendererCount: 0,
+    contextMenu: false,
+    contextMenuItemData: null,
+    mathJaxOptions: {
+      tex2jax: {
+        inlineMath: [
+          ["$", "$"],
+          ["(", ")"],
+        ],
+        processEscapes: true,
+        processEnvironments: true,
+      },
+    },
   },
   getters: {
     UI_AUTO_SAVE_DIALOG(state) {
@@ -38,6 +50,15 @@ export default {
     UI_RENDERER_COUNT(state) {
       return state.rendererCount;
     },
+    UI_SHOW_CONTEXT_MENU(state) {
+      return state.contextMenu;
+    },
+    UI_CONTEXT_MENU_ITEM_DATA(state) {
+      return state.contextMenuItemData;
+    },
+    UI_MATH_JAX_OPTIONS(state) {
+      return state.mathJaxOptions;
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {
@@ -66,6 +87,12 @@ export default {
     },
     UI_RENDERER_COUNT_SET(state, val) {
       state.rendererCount = val;
+    },
+    UI_SHOW_CONTEXT_MENU_SET(state, val) {
+      state.contextMenu = val;
+    },
+    UI_CONTEXT_MENU_ITEM_DATA_SET(state, val) {
+      state.contextMenuItemData = val;
     },
   },
   actions: {

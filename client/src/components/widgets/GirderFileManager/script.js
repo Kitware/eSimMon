@@ -6,6 +6,7 @@ search bar and to collect and filter parameter options.
 import _ from "lodash";
 import { GirderBreadcrumb, GirderFileManager } from "@girder/components/src";
 import GirderDataBrowser from "../GirderDataBrowser";
+import { mapGetters } from "vuex";
 export default {
   components: {
     GirderBreadcrumb,
@@ -28,6 +29,9 @@ export default {
   },
 
   computed: {
+    ...mapGetters({
+      mathJaxOptions: "UI_MATH_JAX_OPTIONS",
+    }),
     queryValues: {
       get() {
         if (this.query && _.has(this.query, "value") && !this.showPartials) {
@@ -46,17 +50,6 @@ export default {
 
   async created() {
     await this.setCurrentPath();
-
-    this.mathJaxOptions = {
-      tex2jax: {
-        inlineMath: [
-          ["$", "$"],
-          ["(", ")"],
-        ],
-        processEscapes: true,
-        processEnvironments: true,
-      },
-    };
   },
 
   watch: {
@@ -127,20 +120,6 @@ export default {
       if (this.$refs.query.isMenuActive) {
         this.$refs.query.blur();
       }
-    },
-    async fetchMovie(e) {
-      let name = e.target.textContent.trim();
-      var item = await this.girderRest.get(
-        `/item?folderId=${this.location._id}&name=${name}`
-      );
-      let files = await this.girderRest.get(`/item/${item.data[0]._id}/files`);
-      if (files.data[0]["exts"] == "json") return;
-      this.$parent.$parent.$parent.$parent.$emit(
-        "param-selected",
-        item.data[0]._id,
-        name,
-        e
-      );
     },
     getFilteredResults: _.throttle(async function () {
       if (this.outsideOfRoot) return;

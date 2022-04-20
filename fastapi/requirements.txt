@@ -4,3 +4,8 @@ girder-client
 pydantic[dotenv]
 uvicorn[standard]
 msgpack
+plotly
+kaleido
+numpy
+Pillow
+matplotlib # For VTK MathText rendering

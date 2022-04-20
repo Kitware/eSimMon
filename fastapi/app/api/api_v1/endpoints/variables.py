@@ -11,7 +11,9 @@ from fastapi import Header
 from fastapi import HTTPException
 
 from .colormap import generate_colormap_response
+from .mesh import generate_mesh_data
 from .mesh import generate_mesh_response
+from .plotly import generate_plotly_data
 from .plotly import generate_plotly_response
 from .utils import get_girder_client
 
@@ -97,6 +99,20 @@ async def generate_plot_response(bp, variable: str):
     raise HTTPException(status_code=400, detail="Unsupported plot type.")
 
 
+async def generate_plot_data(bp, variable: str):
+    plot_config = bp.read_attribute_string(variable)
+    plot_config = json.loads(plot_config[0])
+
+    plot_type = plot_config["type"]
+
+    if plot_type == PlotFormat.plotly:
+        return await generate_plotly_data(plot_config, bp, variable)
+    elif plot_type == PlotFormat.mesh:
+        return await generate_mesh_data(plot_config, bp, variable)
+
+    raise HTTPException(status_code=400, detail="Unsupported plot type.")
+
+
 @router.get("/{variable_id}/timesteps")
 async def get_timesteps(variable_id: str, girder_token: str = Header(None)):
     gc = get_girder_client(girder_token)
@@ -110,7 +126,10 @@ async def get_timesteps(variable_id: str, girder_token: str = Header(None)):
 # variable_id => Girder item id for item used to represent the variable.
 @router.get("/{variable_id}/timesteps/{timestep}/plot")
 async def get_timestep_plot(
-    variable_id: str, timestep: int, girder_token: str = Header(None)
+    variable_id: str,
+    timestep: int,
+    girder_token: str = Header(None),
+    as_image: bool = False,
 ):
     gc = get_girder_client(girder_token)
     group_folder_id = get_group_folder_id(gc, variable_id)
@@ -130,4 +149,7 @@ async def get_timestep_plot(
         )
         # Extract data from the BP file
         with adios2.open(str(bp_file_path), "r") as bp:
-            return await generate_plot_response(bp, variable)
+            if as_image:
+                return await generate_plot_data(bp, variable)
+            else:
+                return await generate_plot_response(bp, variable)

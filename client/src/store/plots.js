@@ -1,6 +1,7 @@
 export default {
   state: {
-    zoom: null,
+    zoomPlotly: null,
+    zoomVTK: null,
     currentTimeStep: 1,
     visibleCells: 0,
     globalRanges: {},
@@ -17,8 +18,11 @@ export default {
     viewTimeStep: 1,
   },
   getters: {
-    PLOT_ZOOM(state) {
-      return state.zoom;
+    PLOT_ZOOM_PLOTLY(state) {
+      return state.zoomPlotly;
+    },
+    PLOT_ZOOM_VTK(state) {
+      return state.zoomVTK;
     },
     PLOT_TIME_STEP(state) {
       return state.currentTimeStep;
@@ -64,8 +68,11 @@ export default {
     },
   },
   mutations: {
-    PLOT_ZOOM_SET(state, val) {
-      state.zoom = val;
+    PLOT_ZOOM_PLOTLY_SET(state, val) {
+      state.zoomPlotly = val;
+    },
+    PLOT_ZOOM_VTK_SET(state, val) {
+      state.zoomVTK = val;
     },
     PLOT_TIME_STEP_SET(state, val) {
       state.currentTimeStep = val;
@@ -118,8 +125,12 @@ export default {
       };
     },
     PLOT_ZOOM_DETAILS({ commit }, details) {
-      const { zoom, xAxis } = details;
-      commit("PLOT_ZOOM_SET", zoom);
+      const { xAxis } = details;
+      if ("plotlyZoom" in details) {
+        commit("PLOT_ZOOM_PLOTLY_SET", details.plotlyZoom);
+      } else if ("vtkZoom" in details) {
+        commit("PLOT_ZOOM_VTK_SET", details.vtkZoom);
+      }
       commit("PLOT_ZOOM_X_AXIS_SET", xAxis);
     },
     PLOT_MIN_TIME_STEP_CHANGED({ state, commit }, val) {
