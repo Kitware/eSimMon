@@ -150,8 +150,9 @@ def create_mesh_image(plot_data: dict, format: str, zoom: dict):
     # Set the title
     title_text = vtkTextActor()
     title_text.SetInput(title)
-    title_text.SetAlignmentPoint(7)
     title_text_prop = title_text.GetTextProperty()
+    title_text_prop.SetJustificationToCentered()
+    title_text_prop.SetVerticalJustificationToTop()
     title_text_prop.SetFontFamilyToArial()
     title_text_prop.SetFontSize(18)
     title_text_prop.SetColor([0, 0, 0])
