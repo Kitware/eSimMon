@@ -229,6 +229,15 @@ def create_mesh_image(plot_data: dict, format: str, zoom: dict):
     writer.SetFileName(output_file.name)
     writer.SetInputConnection(w2if.GetOutputPort())
     writer.Write()
+
+    # Cleanup and free up resources
+    del mesh_mapper
+    del mesh_actor
+    del renderer
+    del ren_win
+    del writer
+    del w2if
+
     return _convert_image(output_file, format)
 
 
