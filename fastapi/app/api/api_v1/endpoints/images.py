@@ -54,7 +54,8 @@ def create_plotly_image(plot_data: dict, format: str, zoom: dict):
     plot_data["layout"].pop("name", None)
     plot_data["layout"].pop("frames", None)
     if zoom:
-        if "log" in zoom:
+        log_scaling = zoom.get("log", False)
+        if log_scaling:
             plot_data["layout"]["xaxis"]["type"] = "log"
             plot_data["layout"]["yaxis"]["type"] = "log"
         if "range" in zoom:
