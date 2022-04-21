@@ -137,7 +137,7 @@ class MeshImagePipeline:
             camera = self.renderer.GetActiveCamera()
             fX, fY, fZ = zoom["focalPoint"]
             camera.SetFocalPoint(fX, fY, fZ)
-            camera.SetParallelScale(zoom["scale"])
+            camera.SetParallelScale(zoom["serverScale"])
 
         self.scalar_bar.SetTitle(colorLabel)
 

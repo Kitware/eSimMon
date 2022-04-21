@@ -838,16 +838,22 @@ export default {
           const regionWidth = Math.abs(finalX - startX);
           const regionHeight = Math.abs(finalY - startY);
 
+          let serverScale = 1;
           if (r >= regionWidth / regionHeight) {
             this.scale = regionHeight / 2;
           } else {
             this.scale = regionWidth / r / 2;
+            serverScale = regionWidth / 2;
           }
 
           const xMid = (finalX - startX) / 2 + startX;
           const yMid = (finalY - startY) / 2 + startY;
           this.focalPoint = [xMid, yMid, 0.0];
-          this.zoom = { focalPoint: this.focalPoint, scale: this.scale };
+          this.zoom = {
+            focalPoint: this.focalPoint,
+            scale: this.scale,
+            serverScale,
+          };
           this.setZoomDetails({ vtkZoom: this.zoom, xAxis: this.xaxis });
           if (this.syncZoom) {
             this.setGlobalScale(this.scale);
