@@ -506,11 +506,12 @@ export default {
           if (!this.xaxis) {
             this.xaxis = nextImage.layout.xaxis.title.text;
           }
-
+          nextImage.layout.xaxis.type = this.logScale ? "log" : "linear";
+          nextImage.layout.yaxis.type = this.logScale ? "log" : "linear";
           nextImage.layout.yaxis.autorange = true;
-          if (this.zoomLevels) {
-            nextImage.layout.xaxis.range = this.zoomLevels.xAxis;
-            nextImage.layout.yaxis.range = this.zoomLevels.yAxis;
+          if (this.zoomLevels && this.zoomLevels?.range) {
+            nextImage.layout.xaxis.range = this.zoomLevels.range.xAxis;
+            nextImage.layout.yaxis.range = this.zoomLevels.range.yAxis;
             nextImage.layout.yaxis.autorange = false;
           }
           var range = null;
@@ -521,7 +522,7 @@ export default {
               nextImage.layout.yaxis.autorange = false;
             }
           }
-          this.setAnnotations(nextImage.data[0], this.zoomLevels, range);
+          this.setAnnotations(nextImage.data[0], this.zoomLevels?.range, range);
           Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {
             autosize: true,
             modeBarButtonsToAdd: [
@@ -570,7 +571,10 @@ export default {
         if (!eventdata["xaxis.range[0]"] || !eventdata["yaxis.range[0]"]) {
           return;
         }
-        this.zoom = parseZoomValues(eventdata, this.globalRanges[this.itemId]);
+        this.zoom = {
+          ...this.zoom,
+          range: parseZoomValues(eventdata, this.globalRanges[this.itemId]),
+        };
         if (!this.zoomOrigin) {
           this.setZoomOrigin(this.itemId);
         }
@@ -850,9 +854,12 @@ export default {
           const yMid = (finalY - startY) / 2 + startY;
           this.focalPoint = [xMid, yMid, 0.0];
           this.zoom = {
-            focalPoint: this.focalPoint,
-            scale: this.scale,
-            serverScale,
+            range: {
+              focalPoint: this.focalPoint,
+              scale: this.scale,
+              serverScale,
+            },
+            log: false,
           };
           this.setZoomDetails({ vtkZoom: this.zoom, xAxis: this.xaxis });
           if (this.syncZoom) {
@@ -928,10 +935,8 @@ export default {
     },
     toggleLogScale() {
       this.logScale = !this.logScale;
-      Plotly.relayout(this.$refs.plotly, {
-        "xaxis.type": this.logScale ? "log" : "linear",
-        "yaxis.type": this.logScale ? "log" : "linear",
-      });
+      this.zoom = { ...this.zoom, log: this.logScale };
+      this.setZoomDetails({ plotlyZoom: this.zoom, xAxis: this.xaxis });
     },
   },
 
