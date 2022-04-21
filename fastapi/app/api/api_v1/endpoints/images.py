@@ -54,8 +54,12 @@ def create_plotly_image(plot_data: dict, format: str, zoom: dict):
     plot_data["layout"].pop("name", None)
     plot_data["layout"].pop("frames", None)
     if zoom:
-        plot_data["layout"]["xaxis"]["range"] = zoom["xAxis"]
-        plot_data["layout"]["yaxis"]["range"] = zoom["yAxis"]
+        if "log" in zoom:
+            plot_data["layout"]["xaxis"]["type"] = "log"
+            plot_data["layout"]["yaxis"]["type"] = "log"
+        if "range" in zoom:
+            plot_data["layout"]["xaxis"]["range"] = zoom["range"]["xAxis"]
+            plot_data["layout"]["yaxis"]["range"] = zoom["range"]["yAxis"]
 
     # Get image as bytes
     fig = go.Figure(plot_data["data"], plot_data["layout"])
@@ -133,11 +137,11 @@ class MeshImagePipeline:
         self.renderer.SetBackground([1, 1, 1])
 
         # Set the zoom if needed
-        if zoom:
+        if zoom and "range" in zoom:
             camera = self.renderer.GetActiveCamera()
-            fX, fY, fZ = zoom["focalPoint"]
+            fX, fY, fZ = zoom["range"]["focalPoint"]
             camera.SetFocalPoint(fX, fY, fZ)
-            camera.SetParallelScale(zoom["serverScale"])
+            camera.SetParallelScale(zoom["range"]["serverScale"])
 
         self.scalar_bar.SetTitle(colorLabel)
 
