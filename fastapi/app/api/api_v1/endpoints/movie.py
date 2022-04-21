@@ -32,8 +32,11 @@ async def create_movie(
     with tempfile.TemporaryDirectory() as tmpdir:
         for step in timesteps:
             # call generate plot response and get plot
+            print('get data')
             plot = await get_timestep_plot(id, step, girder_token, as_image=True)
+            print("generating")
             image = await get_timestep_image_data(plot, "png", zoom)
+            print("generating done")
             im = Image.open(io.BytesIO(image), "r", ["PNG"])
             f = tempfile.NamedTemporaryFile(
                 dir=tmpdir, prefix=f"{step}_", suffix=".png", delete=False
