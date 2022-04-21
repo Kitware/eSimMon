@@ -1,6 +1,7 @@
 import io
 import json
 import tempfile
+from typing import Dict
 from typing import Optional
 from urllib.parse import unquote
 
@@ -14,7 +15,7 @@ import vtkmodules.vtkInteractionStyle  # noqa
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 from PIL import Image
 from starlette.responses import StreamingResponse
-from vtkmodules.vtkCommonCore import vtkFloatArray
+from vtk.util import numpy_support
 from vtkmodules.vtkCommonCore import vtkIdList
 from vtkmodules.vtkCommonCore import vtkLookupTable
 from vtkmodules.vtkCommonCore import vtkPoints
@@ -78,167 +79,186 @@ def _mkVtkIdList(it):
     return vil
 
 
+class MeshImagePipeline:
+    def render_image(self, plot_data: Dict, format: str, zoom: Dict):
+        nodes = np.asarray(plot_data["nodes"])
+        connectivity = np.asarray(plot_data["connectivity"])
+        color = np.asarray(plot_data["color"])
+        xLabel = plot_data["xLabel"]
+        yLabel = plot_data["yLabel"]
+        colorLabel = plot_data["colorLabel"]
+        title = plot_data["title"]
+
+        # For now we can cache mesh as the connectivity is the same
+        if self.points is None:
+            self.points = vtkPoints()
+            for i, (x, y) in enumerate(nodes):
+                self.points.InsertPoint(i, (x, y, 0.0))
+            self.mesh.SetPoints(self.points)
+        if self.cells is None:
+            self.cells = vtkCellArray()
+            for pt in connectivity:
+                self.cells.InsertNextCell(_mkVtkIdList(pt))
+            self.mesh.SetPolys(self.cells)
+
+        scalars = numpy_support.numpy_to_vtk(color)
+
+        # We now assign the pieces to the vtkPolyData.
+        self.mesh.GetPointData().SetScalars(scalars)
+
+        # Setup mapper and actor
+        self.mesh_mapper.SetInputData(self.mesh)
+        self.mesh_mapper.SetScalarRange(scalars.GetRange())
+
+        self.title_text.SetInput(title)
+
+        camera = vtkCamera()
+        camera.SetParallelProjection(True)
+        self.renderer.SetActiveCamera(camera)
+
+        self.axes.SetCamera(self.renderer.GetActiveCamera())
+        self.axes.SetXTitle(xLabel)
+        self.axes.SetYTitle(yLabel)
+        self.axes.SetBounds(self.mesh_actor.GetBounds())
+
+        # Needed to ensure grid axes is updated
+        self.renderer.RemoveActor(self.axes)
+        self.renderer.AddActor(self.axes)
+
+        # Hack to manipulate the camera bounds
+        # This ensures axes labels and title are not cut off
+        bounds = list(self.mesh_actor.GetBounds())
+        bounds[2] -= 0.1
+        self.renderer.ResetCamera(bounds)
+        self.renderer.SetBackground([1, 1, 1])
+
+        # Set the zoom if needed
+        if zoom:
+            camera = self.renderer.GetActiveCamera()
+            fX, fY, fZ = zoom["focalPoint"]
+            camera.SetFocalPoint(fX, fY, fZ)
+            camera.SetParallelScale(zoom["serverScale"])
+
+        self.scalar_bar.SetTitle(colorLabel)
+
+        self.ren_win.Render()
+
+        # Grab the plot as a png image
+        w2if = vtkWindowToImageFilter()
+        w2if.SetInput(self.ren_win)
+        w2if.SetInputBufferTypeToRGB()
+        w2if.ReadFrontBufferOff()
+        w2if.Update()
+
+        output_file = tempfile.NamedTemporaryFile(suffix=f".{format}", delete=False)
+        self.writer.SetFileName(output_file.name)
+        self.writer.SetInputConnection(w2if.GetOutputPort())
+        self.writer.Write()
+
+        return _convert_image(output_file, format)
+
+    def __init__(self):
+        # We"ll create the building blocks of polydata including data attributes.
+        self.mesh = vtkPolyData()
+        self.points = None  # vtkPoints()
+        self.cells = None  # vtkCellArray()
+
+        # Setup mapper and actor
+        self.mesh_mapper = vtkPolyDataMapper()
+
+        self.mesh_actor = vtkActor()
+        self.mesh_actor.SetMapper(self.mesh_mapper)
+
+        # Add the colormap to the lookup table
+        lut = vtkLookupTable()
+        # Build and set the Jet colormap
+        lutNum = 256
+        lut.SetNumberOfTableValues(lutNum)
+        ctf = vtkColorTransferFunction()
+        ctf.SetColorSpaceToRGB()
+        cl = []
+        cl.append([float(cc) / 255.0 for cc in [0, 0, 143.4375]])
+        cl.append([float(cc) / 255.0 for cc in [0, 0, 255]])
+        cl.append([float(cc) / 255.0 for cc in [0, 255, 255]])
+        cl.append([float(cc) / 255.0 for cc in [127.5, 255, 127.5]])
+        cl.append([float(cc) / 255.0 for cc in [255, 255, 0]])
+        cl.append([float(cc) / 255.0 for cc in [255, 0, 0]])
+        cl.append([float(cc) / 255.0 for cc in [127.5, 0, 0]])
+        vv = [float(xx) / float(len(cl) - 1) for xx in range(len(cl))]
+        for pt, color in zip(vv, cl):
+            ctf.AddRGBPoint(pt, color[0], color[1], color[2])
+        for ii, ss in enumerate([float(xx) / float(lutNum) for xx in range(lutNum)]):
+            cc = ctf.GetColor(ss)
+            lut.SetTableValue(ii, cc[0], cc[1], cc[2], 1.0)
+        self.mesh_mapper.SetLookupTable(lut)
+
+        self.renderer = vtkRenderer()
+        self.ren_win = vtkRenderWindow()
+        self.ren_win.AddRenderer(self.renderer)
+
+        self.renderer.AddActor(self.mesh_actor)
+
+        # Set the title
+        self.title_text = vtkTextActor()
+        self.title_text_prop = self.title_text.GetTextProperty()
+        self.title_text_prop.SetJustificationToCentered()
+        self.title_text_prop.SetVerticalJustificationToTop()
+        self.title_text_prop.SetFontFamilyToArial()
+        self.title_text_prop.SetFontSize(18)
+        self.title_text_prop.SetColor([0, 0, 0])
+        self.title_text_prop.SetJustificationToCentered()
+        self.title_text_prop.SetVerticalJustificationToTop()
+        self.title_text.SetPosition(500, 980)
+        self.renderer.AddActor2D(self.title_text)
+
+        # Create the axis
+        self.axes = vtkCubeAxesActor()
+        self.axes.SetUse2DMode(0)
+        self.axes.SetCamera(self.renderer.GetActiveCamera())
+        self.axes.GetTitleTextProperty(0).SetColor(0, 0, 0)
+        self.axes.GetLabelTextProperty(0).SetColor(0, 0, 0)
+        self.axes.GetXAxesGridlinesProperty().SetColor(0, 0, 0)
+        self.axes.XAxisMinorTickVisibilityOff()
+        self.axes.DrawXGridlinesOn()
+        self.axes.GetTitleTextProperty(1).SetColor(0, 0, 0)
+        self.axes.GetLabelTextProperty(1).SetColor(0, 0, 0)
+        self.axes.GetYAxesGridlinesProperty().SetColor(0, 0, 0)
+        self.axes.YAxisMinorTickVisibilityOff()
+        self.axes.DrawYGridlinesOn()
+
+        self.ren_win.SetSize(1000, 1000)
+
+        # Build the colorbar
+        self.scalar_bar = vtkScalarBarActor()
+        self.scalar_bar.SetOrientationToHorizontal()
+        self.scalar_bar.SetLookupTable(lut)
+        self.scalar_bar.SetNumberOfLabels(6)
+        self.scalar_bar.UnconstrainedFontSizeOn()
+        self.scalar_bar.SetMaximumWidthInPixels(40)
+        self.scalar_bar.SetMaximumHeightInPixels(1000)
+        self.scalar_bar.SetDisplayPosition(850, 100)
+        self.scalar_bar.SetOrientationToVertical()
+        self.scalar_bar.GetLabelTextProperty().ShadowOff()
+        self.scalar_bar.GetLabelTextProperty().SetColor(0, 0, 0)
+        self.scalar_bar.GetLabelTextProperty().BoldOff()
+        self.scalar_bar.GetLabelTextProperty().ItalicOff()
+        self.scalar_bar.GetTitleTextProperty().ShadowOff()
+        self.scalar_bar.GetTitleTextProperty().SetColor(0, 0, 0)
+        self.scalar_bar.GetTitleTextProperty().BoldOff()
+        self.scalar_bar.GetTitleTextProperty().ItalicOff()
+        self.renderer.AddActor2D(self.scalar_bar)
+
+        # Setup image filter
+        self.writer = vtkPNGWriter()
+
+
+pipeline = MeshImagePipeline()
+
+
 def create_mesh_image(plot_data: dict, format: str, zoom: dict):
-    nodes = np.asarray(plot_data["nodes"])
-    connectivity = np.asarray(plot_data["connectivity"])
-    color = np.asarray(plot_data["color"])
-    xLabel = plot_data["xLabel"]
-    yLabel = plot_data["yLabel"]
-    colorLabel = plot_data["colorLabel"]
-    title = plot_data["title"]
+    global pipeline
 
-    # We"ll create the building blocks of polydata including data attributes.
-    mesh = vtkPolyData()
-    points = vtkPoints()
-    cells = vtkCellArray()
-    scalars = vtkFloatArray()
-
-    # Load the point, cell, and data attributes.
-    for i, (x, y) in enumerate(nodes):
-        points.InsertPoint(i, (x, y, 0.0))
-    for pt in connectivity:
-        cells.InsertNextCell(_mkVtkIdList(pt))
-    for i, j in enumerate(color):
-        scalars.InsertTuple1(i, j)
-
-    # We now assign the pieces to the vtkPolyData.
-    mesh.SetPoints(points)
-    mesh.SetPolys(cells)
-    mesh.GetPointData().SetScalars(scalars)
-
-    # Setup mapper and actor
-    mesh_mapper = vtkPolyDataMapper()
-    mesh_mapper.SetInputData(mesh)
-    mesh_mapper.SetScalarRange(scalars.GetRange())
-    mesh_actor = vtkActor()
-    mesh_actor.SetMapper(mesh_mapper)
-
-    # Add the colormap to the lookup table
-    lut = vtkLookupTable()
-    # Build and set the Jet colormap
-    lutNum = 256
-    lut.SetNumberOfTableValues(lutNum)
-    ctf = vtkColorTransferFunction()
-    ctf.SetColorSpaceToRGB()
-    cl = []
-    cl.append([float(cc) / 255.0 for cc in [0, 0, 143.4375]])
-    cl.append([float(cc) / 255.0 for cc in [0, 0, 255]])
-    cl.append([float(cc) / 255.0 for cc in [0, 255, 255]])
-    cl.append([float(cc) / 255.0 for cc in [127.5, 255, 127.5]])
-    cl.append([float(cc) / 255.0 for cc in [255, 255, 0]])
-    cl.append([float(cc) / 255.0 for cc in [255, 0, 0]])
-    cl.append([float(cc) / 255.0 for cc in [127.5, 0, 0]])
-    vv = [float(xx) / float(len(cl) - 1) for xx in range(len(cl))]
-    for pt, color in zip(vv, cl):
-        ctf.AddRGBPoint(pt, color[0], color[1], color[2])
-    for ii, ss in enumerate([float(xx) / float(lutNum) for xx in range(lutNum)]):
-        cc = ctf.GetColor(ss)
-        lut.SetTableValue(ii, cc[0], cc[1], cc[2], 1.0)
-    mesh_mapper.SetLookupTable(lut)
-
-    # The usual rendering stuff.
-    camera = vtkCamera()
-    camera.SetParallelProjection(True)
-
-    renderer = vtkRenderer()
-    ren_win = vtkRenderWindow()
-    ren_win.AddRenderer(renderer)
-
-    renderer.AddActor(mesh_actor)
-    renderer.SetActiveCamera(camera)
-
-    # Set the title
-    title_text = vtkTextActor()
-    title_text.SetInput(title)
-    title_text_prop = title_text.GetTextProperty()
-    title_text_prop.SetJustificationToCentered()
-    title_text_prop.SetVerticalJustificationToTop()
-    title_text_prop.SetFontFamilyToArial()
-    title_text_prop.SetFontSize(18)
-    title_text_prop.SetColor([0, 0, 0])
-    title_text_prop.SetJustificationToCentered()
-    title_text_prop.SetVerticalJustificationToTop()
-    title_text.SetPosition(500, 980)
-    renderer.AddActor2D(title_text)
-
-    # Create the axis
-    axes = vtkCubeAxesActor()
-    axes.SetUse2DMode(0)
-    axes.SetCamera(renderer.GetActiveCamera())
-    axes.SetXTitle(xLabel)
-    axes.SetYTitle(yLabel)
-    axes.SetBounds(mesh_actor.GetBounds())
-    axes.GetTitleTextProperty(0).SetColor(0, 0, 0)
-    axes.GetLabelTextProperty(0).SetColor(0, 0, 0)
-    axes.GetXAxesGridlinesProperty().SetColor(0, 0, 0)
-    axes.XAxisMinorTickVisibilityOff()
-    axes.DrawXGridlinesOn()
-    axes.GetTitleTextProperty(1).SetColor(0, 0, 0)
-    axes.GetLabelTextProperty(1).SetColor(0, 0, 0)
-    axes.GetYAxesGridlinesProperty().SetColor(0, 0, 0)
-    axes.YAxisMinorTickVisibilityOff()
-    axes.DrawYGridlinesOn()
-    renderer.AddActor(axes)
-
-    # Hack to manipulate the camera bounds
-    # This ensures axes labels and title are not cut off
-    bounds = list(mesh_actor.GetBounds())
-    bounds[2] -= 0.1
-    renderer.ResetCamera(bounds)
-    renderer.SetBackground([1, 1, 1])
-
-    # Set the zoom if needed
-    if zoom:
-        camera = renderer.GetActiveCamera()
-        fX, fY, fZ = zoom["focalPoint"]
-        camera.SetFocalPoint(fX, fY, fZ)
-        camera.SetParallelScale(zoom["scale"])
-
-    ren_win.SetSize(1000, 1000)
-    ren_win.Render()
-
-    # Build the colorbar
-    scalar_bar = vtkScalarBarActor()
-    scalar_bar.SetOrientationToHorizontal()
-    scalar_bar.SetLookupTable(lut)
-    scalar_bar.SetTitle(colorLabel)
-    scalar_bar.SetNumberOfLabels(6)
-    scalar_bar.UnconstrainedFontSizeOn()
-    scalar_bar.SetMaximumWidthInPixels(40)
-    scalar_bar.SetMaximumHeightInPixels(1000)
-    scalar_bar.SetDisplayPosition(850, 100)
-    scalar_bar.SetOrientationToVertical()
-    scalar_bar.GetLabelTextProperty().ShadowOff()
-    scalar_bar.GetLabelTextProperty().SetColor(0, 0, 0)
-    scalar_bar.GetLabelTextProperty().BoldOff()
-    scalar_bar.GetLabelTextProperty().ItalicOff()
-    scalar_bar.GetTitleTextProperty().ShadowOff()
-    scalar_bar.GetTitleTextProperty().SetColor(0, 0, 0)
-    scalar_bar.GetTitleTextProperty().BoldOff()
-    scalar_bar.GetTitleTextProperty().ItalicOff()
-    renderer.AddActor2D(scalar_bar)
-
-    # Grab the plot as a png image
-    w2if = vtkWindowToImageFilter()
-    w2if.SetInput(ren_win)
-    w2if.SetInputBufferTypeToRGB()
-    w2if.ReadFrontBufferOff()
-    w2if.Update()
-    writer = vtkPNGWriter()
-    output_file = tempfile.NamedTemporaryFile(suffix=f".{format}", delete=False)
-    writer.SetFileName(output_file.name)
-    writer.SetInputConnection(w2if.GetOutputPort())
-    writer.Write()
-
-    # Cleanup and free up resources
-    del mesh_mapper
-    del mesh_actor
-    del renderer
-    del ren_win
-    del writer
-    del w2if
-
-    return _convert_image(output_file, format)
+    return pipeline.render_image(plot_data, format, zoom)
 
 
 async def get_timestep_image_data(plot: dict, format: str, zoom: dict):
@@ -246,6 +266,9 @@ async def get_timestep_image_data(plot: dict, format: str, zoom: dict):
         image = create_plotly_image(plot, format, zoom)
     elif plot["type"] == "mesh":
         image = create_mesh_image(plot, format, zoom)
+    else:
+        raise Exception("Unrecognized type")
+
     return image
 
 
