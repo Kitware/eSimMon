@@ -32,7 +32,6 @@ export default {
       dataLoaded: false,
       forgotPasswordUrl: "/#?dialog=resetpassword",
       numLoadedGalleries: 0,
-      numReady: 0,
       runId: null,
       range: "",
       pos: [],
@@ -66,6 +65,7 @@ export default {
       setShouldAutoSave: "VIEW_AUTO_SAVE_RUN_SET",
       setSimulation: "VIEW_SIMULATION_SET",
       setMaxTimeStep: "PLOT_MAX_TIME_STEP_SET",
+      updateNumReady: "PLOT_NUM_READY",
     }),
 
     addColumn() {
@@ -165,7 +165,7 @@ export default {
     incrementTimeStep(should_pause) {
       if (this.currentTimeStep < this.maxTimeStep) {
         this.setCurrentTimeStep(this.currentTimeStep + 1);
-        this.numReady = 0;
+        this.updateNumReady(0);
       }
       this.setPaused(should_pause);
     },
@@ -244,11 +244,6 @@ export default {
       this.cellHeight = 100 / this.numrows + "vh";
     },
 
-    incrementReady() {
-      this.numReady += 1;
-      // this.getRangeData();
-    },
-
     applyView() {
       this.$refs.imageGallery.forEach((cell) => {
         const { row, col } = cell.$attrs;
@@ -271,7 +266,6 @@ export default {
       this.setRows(1);
       this.setGridSize(1);
       this.numLoadedGalleries = 0;
-      this.numReady = 0;
       this.dataLoaded = false;
       this.runId = null;
       this.location = null;
@@ -293,24 +287,9 @@ export default {
       }, 30000);
     },
 
-    async setRun(itemId) {
-      const { data } = await this.girderRest.get(`/item/${itemId}/rootpath`);
-      const runIdx = data.length - 2;
-      const simulationIdx = runIdx - 1;
-      this.setRunId(data[runIdx].object._id);
-      this.setSimulation(data[simulationIdx].object._id);
-      this.setShouldAutoSave(true);
-    },
-
     loadAutoSavedView() {
       this.loadAutoSave();
     },
-  },
-
-  created: async function () {
-    this.$on("data-loaded", this.initialDataLoaded);
-    this.$on("gallery-ready", this.incrementReady);
-    this.$on("item-added", this.setRun);
   },
 
   asyncComputed: {
@@ -335,6 +314,7 @@ export default {
       initialDataLoaded: "PLOT_INITIAL_LOAD",
       minTimeStep: "PLOT_MIN_TIME_STEP",
       viewTimeStep: "PLOT_VIEW_TIME_STEP",
+      numReady: "PLOT_NUM_READY",
     }),
 
     location: {

@@ -16,6 +16,7 @@ export default {
     focalPoint: null,
     scale: 0,
     viewTimeStep: 1,
+    numReady: 0,
   },
   getters: {
     PLOT_ZOOM_PLOTLY(state) {
@@ -66,6 +67,9 @@ export default {
     PLOT_VIEW_TIME_STEP(state) {
       return state.viewTimeStep;
     },
+    PLOT_NUM_READY(state) {
+      return state.numReady;
+    },
   },
   mutations: {
     PLOT_ZOOM_PLOTLY_SET(state, val) {
@@ -115,6 +119,9 @@ export default {
     },
     PLOT_VIEW_TIME_STEP_SET(state, val) {
       state.viewTimeStep = val;
+    },
+    PLOT_NUM_READY_SET(state, val) {
+      state.numReady = val;
     },
   },
   actions: {

@@ -111,6 +111,7 @@ export default {
       boxSelector: "PLOT_BOX_SELECTOR",
       globalFocalPoint: "PLOT_FOCAL_POINT",
       globalScale: "PLOT_SCALE",
+      numReady: "PLOT_NUM_READY",
     }),
 
     loadedTimestepData: {
@@ -221,6 +222,7 @@ export default {
       showContextMenu: "UI_SHOW_CONTEXT_MENU_SET",
       setContextMenuItemData: "UI_CONTEXT_MENU_ITEM_DATA_SET",
       setCurrentItemId: "PLOT_CURRENT_ITEM_ID_SET",
+      updateNumReady: "PLOT_NUM_READY_SET",
     }),
     relayoutPlotly() {
       const node = this.$refs.plotly;
@@ -350,7 +352,7 @@ export default {
       );
       this.itemId = items[0]._id;
       this.setLoadedFromView(false);
-      this.$root.$children[0].$emit("item-added", this.itemId);
+      this.setRun(this.itemId);
     },
     loadTemplateGallery: function (item) {
       this.loadedTimestepData = [];
@@ -544,7 +546,7 @@ export default {
           this.updateRenderer(nextImage.data);
         }
       }
-      this.$parent.$parent.$parent.$parent.$emit("gallery-ready");
+      this.updateNumReady(this.numReady++);
     },
     async requestContextMenu(e) {
       const response = await this.callEndpoint(`item/${this.itemId}`);
@@ -937,6 +939,14 @@ export default {
       this.logScale = !this.logScale;
       this.zoom = { ...this.zoom, log: this.logScale };
       this.setZoomDetails({ plotlyZoom: this.zoom, xAxis: this.xaxis });
+    },
+    async setRun(itemId) {
+      const { data } = await this.girderRest.get(`/item/${itemId}/rootpath`);
+      const runIdx = data.length - 2;
+      const simulationIdx = runIdx - 1;
+      this.setRunId(data[runIdx].object._id);
+      this.setSimulation(data[simulationIdx].object._id);
+      this.setShouldAutoSave(true);
     },
   },
 
