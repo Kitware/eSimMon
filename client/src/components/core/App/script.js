@@ -2,11 +2,11 @@ import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 import _ from "lodash";
 import RenderWindow from "../../widgets/RenderWindow";
-import ImageGallery from "../../widgets/ImageGallery";
 import { GirderAuthentication as GirderAuthentication } from "@girder/components/src";
 import GirderFileManager from "../../widgets/GirderFileManager";
 import ViewControls from "../ViewControls";
 import ContextMenu from "../../widgets/ContextMenu";
+import Plots from "../../widgets/Plots";
 import { mapActions, mapGetters, mapMutations } from "vuex";
 
 export default {
@@ -17,11 +17,11 @@ export default {
     GirderAuthentication,
     GirderFileManager,
     RenderWindow,
-    ImageGallery,
     Splitpanes,
     Pane,
     ViewControls,
     ContextMenu,
+    Plots,
   },
 
   data() {
@@ -62,10 +62,9 @@ export default {
       setPublic: "VIEW_PUBLIC_SET",
       setRows: "VIEW_ROWS_SET",
       setRunId: "VIEW_RUN_ID_SET",
-      setShouldAutoSave: "VIEW_AUTO_SAVE_RUN_SET",
       setSimulation: "VIEW_SIMULATION_SET",
       setMaxTimeStep: "PLOT_MAX_TIME_STEP_SET",
-      updateNumReady: "PLOT_NUM_READY",
+      updateNumReady: "PLOT_NUM_READY_SET",
     }),
 
     addColumn() {
@@ -245,8 +244,8 @@ export default {
     },
 
     applyView() {
-      this.$refs.imageGallery.forEach((cell) => {
-        const { row, col } = cell.$attrs;
+      this.$refs.plots.forEach((cell) => {
+        const { row, col } = cell;
         const item = this.items[`${row}::${col}`];
         if (item) {
           cell.loadTemplateGallery(item);
@@ -275,7 +274,7 @@ export default {
       this._autosave = setTimeout(async () => {
         try {
           if (this.shouldAutoSave) {
-            this.createItems(this.$refs.imageGallery);
+            this.createItems(this.$refs.plots);
             const name = `${this.simulation}_${this.runId}_${this.creator}`;
             this.setAutoSaveName(name);
             this.setPublic(false);
@@ -298,7 +297,6 @@ export default {
       cellCount: "PLOT_VISIBLE_CELL_COUNT",
       creator: "VIEW_CREATOR",
       currentTimeStep: "PLOT_TIME_STEP",
-      globalRanges: "PLOT_GLOBAL_RANGES",
       gridSize: "VIEW_GRID_SIZE",
       itemId: "PLOT_CURRENT_ITEM_ID",
       items: "VIEW_ITEMS",
@@ -393,19 +391,19 @@ export default {
     },
 
     gridSize(size) {
-      if (size === this.cellCount && this.$refs.imageGallery) {
+      if (size === this.cellCount && this.$refs.plots) {
         this.applyView();
       }
     },
 
     cellCount(count) {
       if (this.gridSize === count) {
-        if (this.loggedOut && this.$refs.imageGallery) {
-          this.$refs.imageGallery.forEach((cell) => {
+        if (this.loggedOut && this.$refs.plots) {
+          this.$refs.plots.forEach((cell) => {
             cell.loadTemplateGallery({ id: null, zoom: null });
             cell.clearGallery();
           });
-        } else if (this.$refs.imageGallery) {
+        } else if (this.$refs.plots) {
           this.applyView();
         }
       }

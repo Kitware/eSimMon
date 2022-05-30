@@ -56,7 +56,7 @@
         <span>Logout</span>
       </v-tooltip>
     </v-col>
-    <save-dialog :layout="imageGallery" @close="setSaveDialogVisible(false)" />
+    <save-dialog :layout="plots" @close="setSaveDialogVisible(false)" />
     <load-dialog @close="setLoadDialogVisible(false)" />
   </v-row>
   <v-row v-if="lastSaved">

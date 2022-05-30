@@ -1,0 +1,19 @@
+<div>
+  <v-card
+    vertical-center
+    v-on:drop="loadGallery($event)"
+    v-on:dragover="preventDefault($event)"
+    @contextmenu.prevent="requestContextMenu"
+  >
+    <plotly-plot
+      :ref="row+'-'+col"
+      v-if="plotType === 'plotly'"
+      v-bind:itemId="itemId"
+    />
+    <vtk-plot
+      :ref="row+'-'+col"
+      v-if="plotType === 'vtk'"
+      v-bind:itemId="itemId"
+    />
+  </v-card>
+</div>

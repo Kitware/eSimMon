@@ -26,8 +26,7 @@ export default {
     ...mapGetters({
       visible: "UI_SHOW_CONTEXT_MENU",
       itemInfo: "UI_CONTEXT_MENU_ITEM_DATA",
-      plotlyZoom: "PLOT_ZOOM_PLOTLY",
-      vtkZoom: "PLOT_ZOOM_VTK",
+      plotDetails: "PLOT_DETAILS",
       mathJaxOptions: "UI_MATH_JAX_OPTIONS",
     }),
     showMenu: {
@@ -72,10 +71,12 @@ export default {
       this.updateItemInfo({ ...this.itemInfo, uuid });
       const { name } = this.itemInfo;
       this.downloads.push({ type, uuid, name, status: REQUEST });
-      let zoom = this.itemInfo.isVTK ? this.vtkZoom : this.plotlyZoom;
-      zoom = zoom ? `&zoom=${JSON.stringify(zoom)}` : "";
+      let details = this.plotDetails[`${this.itemInfo.id}`];
+      details = details ? `&details=${JSON.stringify(details)}` : "";
       this.girderRest
-        .get(`${this.fastRestUrl}/${endpoint}${zoom}`, { responseType: "blob" })
+        .get(`${this.fastRestUrl}/${endpoint}${details}`, {
+          responseType: "blob",
+        })
         .then((response) => {
           let idx = this.downloads.findIndex((d) => d.uuid === uuid);
           this.$set(this.downloads, idx, {

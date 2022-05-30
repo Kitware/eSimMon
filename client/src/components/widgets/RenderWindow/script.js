@@ -39,7 +39,7 @@ export default {
     },
     resetAllZoom() {
       if (this.syncZoom && !this.selectTimeStep) {
-        const allRenderers = this.$root.$children[0].$refs.imageGallery;
+        const allRenderers = this.$root.$children[0].$refs.plots;
         allRenderers.forEach((plotCell) => {
           if (plotCell.renderer) {
             plotCell.resetZoom();

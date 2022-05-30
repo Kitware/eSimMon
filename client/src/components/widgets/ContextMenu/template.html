@@ -7,12 +7,12 @@
     offset-y
   >
     <v-card style="padding: 5px">
-      <v-list>
+      <v-list v-if="itemInfo && !itemInfo.isVTK">
         <v-list-item dense @click="showRangeDialog=true">
           <v-list-item-title> Set global range </v-list-item-title>
         </v-list-item>
       </v-list>
-      <v-divider />
+      <v-divider v-if="itemInfo && !itemInfo.isVTK" />
       <v-list>
         <v-list-item dense @click="fetchImage('png')">
           <v-list-item-title> Save Image as PNG </v-list-item-title>
@@ -35,6 +35,7 @@
   <range-dialog
     :visible="showRangeDialog"
     :param="parameter"
+    :id="itemInfo ? itemInfo.id : ''"
     @close="showRangeDialog=false"
   />
   <v-snackbar v-model="downloading" timeout="-1" absolute bottom right>

@@ -177,14 +177,13 @@ export default {
       formData.set("meta", JSON.stringify(getters.VIEW_META));
       commit("VIEW_FORM_DATA_SET", formData);
     },
-    VIEW_BUILD_ITEMS_OBJECT({ commit }, layout) {
+    VIEW_BUILD_ITEMS_OBJECT({ commit, getters }, layout) {
       const items = {};
+      const plotDetails = getters.PLOT_DETAILS;
       layout.forEach((item) => {
-        const { row, col } = item.$attrs;
-        items[`${row}::${col}`] = {
-          id: item.itemId,
-          zoom: item.zoom,
-        };
+        const { row, col } = item;
+        const { log, range, xAxis, zoom } = plotDetails[`${item.itemId}`];
+        items[`${row}::${col}`] = { id: item.itemId, log, range, xAxis, zoom };
       });
       commit("VIEW_ITEMS_SET", items);
     },
