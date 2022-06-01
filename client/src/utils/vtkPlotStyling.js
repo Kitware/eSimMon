@@ -1,19 +1,20 @@
-export function setAxesStyling(axes) {
+export function setAxesStyling(axes, scale) {
   const tickCounts = axes.getTickCounts();
   let textValues = axes.getTextValues();
   const labels = new Array(3);
   const ticks = new Array(3);
   let start = 0;
   for (var i = 0; i < 2; i++) {
+    let factor = i === 0 ? scale : 1;
     // We only want x and y values for 2D plots, hence i < 2
     let numLabels = tickCounts[i] + 1;
     labels[i] = textValues.slice(start + 1, start + numLabels);
     ticks[i] = textValues.slice(start + 1, (start += numLabels)).map((v) => {
       if (v.startsWith("−")) {
         // The negative values are stored with an em dash rather than a dash
-        return parseFloat(v.slice(1)) * -1;
+        return parseFloat(v.slice(1)) * factor * -1;
       }
-      return parseFloat(v);
+      return parseFloat(v) * factor;
     });
   }
   // Hardcode the z values that we're not using

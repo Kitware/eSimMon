@@ -132,6 +132,7 @@ export default {
             const ltsd = this.loadedTimeStepData();
             if (this.plotType === "vtk") {
               img = decode(reader.result);
+              this.plotType = "connectivity" in img ? "mesh" : "colormap";
               this.$refs[`${this.row}-${this.col}`].addRenderer(img);
               this.setLoadedTimeStepData({
                 [`${this.itemId}`]: [
@@ -139,7 +140,6 @@ export default {
                   {
                     timestep: timeStep,
                     data: img,
-                    type: this.plotType,
                   },
                 ],
               });
@@ -152,7 +152,6 @@ export default {
                     timestep: timeStep,
                     data: img.data,
                     layout: img.layout,
-                    type: this.plotType,
                   },
                 ],
               });
@@ -360,7 +359,7 @@ export default {
         name: response.name,
         event: e,
         step: this.currentTimeStep,
-        isVTK: this.plotType === "vtk",
+        isVTK: this.plotType !== "plotly",
       };
       this.setCurrentItemId(this.itemId);
       this.setContextMenuItemData(data);

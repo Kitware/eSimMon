@@ -30,6 +30,10 @@ export default {
       type: String,
       required: true,
     },
+    plotType: {
+      type: String,
+      required: true,
+    },
   },
 
   data() {
@@ -133,6 +137,15 @@ export default {
         this.updateZoomedView();
       },
     },
+    plotType: {
+      handler(newVal, oldVal) {
+        if (newVal !== "vtk" && oldVal !== "vtk") {
+          // Connectivity is handled differently for different plots
+          // Recreate the renderer for new plot types
+          this.removeRenderer();
+        }
+      },
+    },
   },
 
   methods: {
@@ -203,28 +216,30 @@ export default {
       this.renderWindow.addRenderer(this.renderer);
       this.updateRendererCount(this.renderWindow.getRenderers().length);
 
-      // Load the cell attributes
-      // Create a view of the data
-      const connectivityView = new DataView(
-        data.connectivity.buffer,
-        data.connectivity.byteOffset,
-        data.connectivity.byteLength
-      );
-      const numberOfNodes =
-        data.connectivity.length / Int32Array.BYTES_PER_ELEMENT / 3;
-      const cells = new Int32Array(numberOfNodes * 4);
-      var idx = 0;
-      const rowSize = 3 * Int32Array.BYTES_PER_ELEMENT; // 3 => columns
-      for (let i = 0; i < data.connectivity.length; i += rowSize) {
-        cells[idx++] = 3;
-        let index = i;
-        cells[idx++] = connectivityView.getInt32(index, true);
-        index += 4;
-        cells[idx++] = connectivityView.getInt32(index, true);
-        index += 4;
-        cells[idx++] = connectivityView.getInt32(index, true);
+      if (this.plotType === "mesh") {
+        // Load the cell attributes
+        // Create a view of the data
+        const connectivityView = new DataView(
+          data.connectivity.buffer,
+          data.connectivity.byteOffset,
+          data.connectivity.byteLength
+        );
+        const numberOfNodes =
+          data.connectivity.length / Int32Array.BYTES_PER_ELEMENT / 3;
+        const cells = new Int32Array(numberOfNodes * 4);
+        var idx = 0;
+        const rowSize = 3 * Int32Array.BYTES_PER_ELEMENT; // 3 => columns
+        for (let i = 0; i < data.connectivity.length; i += rowSize) {
+          cells[idx++] = 3;
+          let index = i;
+          cells[idx++] = connectivityView.getInt32(index, true);
+          index += 4;
+          cells[idx++] = connectivityView.getInt32(index, true);
+          index += 4;
+          cells[idx++] = connectivityView.getInt32(index, true);
+        }
+        this.mesh.getPolys().setData(cells);
       }
-      this.mesh.getPolys().setData(cells);
 
       // Setup colormap
       const lut = vtkColorTransferFunction.newInstance();
@@ -246,6 +261,9 @@ export default {
       this.axes.setAxisLabels(data.xLabel, data.yLabel, "");
       this.axes.getGridActor().getProperty().setColor("black");
       this.axes.getGridActor().getProperty().setLineWidth(0.1);
+      if (this.plotType === "colormap") {
+        this.axes.setGridLines(false);
+      }
       this.renderer.addActor(this.axes);
 
       // Build color bar
@@ -263,22 +281,12 @@ export default {
       this.$nextTick(this.updateViewPort);
     },
     updateRenderer(data) {
-      // Load the point attributes
-      // Create a view of the data
-      const pointsView = new DataView(
-        data.nodes.buffer,
-        data.nodes.byteOffset,
-        data.nodes.byteLength
-      );
-      const numberOfPoints =
-        data.nodes.length / Float64Array.BYTES_PER_ELEMENT / 2;
-      const points = new Float64Array(numberOfPoints * 3);
-      var idx = 0;
-      const rowSize = 2 * Float64Array.BYTES_PER_ELEMENT; // 3 => columns
-      for (let i = 0; i < data.nodes.length; i += rowSize) {
-        points[idx++] = pointsView.getFloat64(i, true);
-        points[idx++] = pointsView.getFloat64(i + 8, true);
-        points[idx++] = 0.0;
+      if (!this.renderer) return;
+
+      if (this.plotType === "mesh") {
+        this.updateMeshRenderer(data);
+      } else {
+        this.updateGridRenderer(data);
       }
 
       // Set the scalars
@@ -299,7 +307,6 @@ export default {
       });
 
       // Build the polydata
-      this.mesh.getPoints().setData(points, 3);
       this.mesh.getPointData().setScalars(scalars);
 
       // Setup colormap
@@ -312,14 +319,23 @@ export default {
       this.mapper.setScalarRange(...scalars.getRange());
 
       // Update axes
-      this.axes.setDataBounds(this.actor.getBounds());
-      const { faces, edges, ticks, labels } = setAxesStyling(this.axes);
+      // TODO: Remove this when we have more functionality in VTK charts
+      // Use the original data from the mesh rather than the potentially scaled
+      // actor data
+      this.axes.setDataBounds(this.mesh.getBounds());
+      this.axes.setScaleFrom(this.actor.getScale());
+      const [scale] = this.actor.getScale();
+      const { faces, edges, ticks, labels } = setAxesStyling(this.axes, scale);
       this.axes.updateTextData(faces, edges, ticks, labels);
+      if (scale !== 1) {
+        // TODO: Remove this when we have more functionality in VTK charts
+        // Remove the axis border since scaling does not shrink the bounding box
+        this.axes.getGridActor().getMapper().getInputData().getLines().delete();
+      }
 
+      // TODO: Remove this when we have more functionality in VTK charts
       // Hack to adjust the bounds to include the x label
-      // This can be removed when vtk.js include the text labels in its bounds.
       const bounds = [...this.actor.getBounds()];
-      bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT;
 
       // Update color bar
       this.scalarBar.setScalarsToColors(lut);
@@ -327,11 +343,88 @@ export default {
 
       // Update camera
       if (!this.zoom) {
+        // TODO: Remove this when we have more functionality in VTK charts
+        // Hack to adjust the bounds to include the x label
+        if (this.plotType === "mesh") {
+          bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT;
+        }
         this.renderer.resetCamera(bounds);
         if (!this.position) {
           this.position = this.camera.getPosition();
         }
       }
+    },
+    updateGridRenderer(data) {
+      // Load the point attributes
+      // Create a view of the data
+      const xBuffer = data.x.buffer.slice(
+        data.x.byteOffset,
+        data.x.byteOffset + data.x.byteLength
+      );
+      const x = new Float64Array(
+        xBuffer,
+        0,
+        xBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT
+      );
+      const yBuffer = data.y.buffer.slice(
+        data.y.byteOffset,
+        data.y.byteOffset + data.y.byteLength
+      );
+      const y = new Float64Array(
+        yBuffer,
+        0,
+        yBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT
+      );
+
+      const points = [];
+      let cells = [];
+      let idx = 0;
+      for (let j = 0; j < y.length; j++) {
+        for (let i = 0; i < x.length; i++) {
+          points.push(x[i], y[j], 0.0);
+          if (i < x.length - 1 && j < y.length - 1) {
+            cells.push(
+              5,
+              idx,
+              idx + x.length,
+              idx + x.length + 1,
+              idx + 1,
+              idx
+            );
+          }
+          idx++;
+        }
+      }
+      this.mesh.getPoints().setData(points, 3);
+      this.mesh.getPolys().setData(cells);
+      // FIXME: This is a hack to attempt to keep
+      // the plot ratio relatively square
+      const yRange = Math.max(...y) - Math.min(...y);
+      const xRange = Math.max(...x) - Math.min(...x);
+      const actorScale = yRange / xRange;
+      if (!this.zoom) {
+        this.actor.setScale(actorScale, 1, 1);
+      }
+    },
+    updateMeshRenderer(data) {
+      // Load the point attributes
+      // Create a view of the data
+      const pointsView = new DataView(
+        data.nodes.buffer,
+        data.nodes.byteOffset,
+        data.nodes.byteLength
+      );
+      const numberOfPoints =
+        data.nodes.length / Float64Array.BYTES_PER_ELEMENT / 2;
+      const points = new Float64Array(numberOfPoints * 3);
+      var idx = 0;
+      const rowSize = 2 * Float64Array.BYTES_PER_ELEMENT; // 3 => columns
+      for (let i = 0; i < data.nodes.length; i += rowSize) {
+        points[idx++] = pointsView.getFloat64(i, true);
+        points[idx++] = pointsView.getFloat64(i + 8, true);
+        points[idx++] = 0.0;
+      }
+      this.mesh.getPoints().setData(points, 3);
     },
     removeRenderer() {
       // Remove the renderer if it exists, we're about to load a Plotly plot
@@ -439,13 +532,13 @@ export default {
         return;
       }
       if (!this.zoom) {
-        if (this.position) {
-          this.camera.setPosition(...this.position);
-        }
         const bounds = [...this.actor.getBounds()];
-        // Hack to adjust the bounds to include the x label
-        // This can be removed when vtk.js include the text labels in its bounds.
-        bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT;
+        if (this.plotType === "mesh") {
+          this.camera.setPosition(...this.position);
+          // Hack to adjust the bounds to include the x label
+          // This can be removed when vtk.js include the text labels in its bounds.
+          bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT;
+        }
         this.renderer.resetCamera(bounds);
         this.rangeText = [];
       } else if (!isEqual(this.zoom.focalPoint, this.camera.getFocalPoint())) {
