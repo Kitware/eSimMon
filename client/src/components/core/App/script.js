@@ -2,11 +2,11 @@ import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 import _ from "lodash";
 import RenderWindow from "../../widgets/RenderWindow";
-import ImageGallery from "../../widgets/ImageGallery";
 import { GirderAuthentication as GirderAuthentication } from "@girder/components/src";
 import GirderFileManager from "../../widgets/GirderFileManager";
 import ViewControls from "../ViewControls";
 import ContextMenu from "../../widgets/ContextMenu";
+import Plots from "../../widgets/Plots";
 import { mapActions, mapGetters, mapMutations } from "vuex";
 
 export default {
@@ -17,11 +17,11 @@ export default {
     GirderAuthentication,
     GirderFileManager,
     RenderWindow,
-    ImageGallery,
     Splitpanes,
     Pane,
     ViewControls,
     ContextMenu,
+    Plots,
   },
 
   data() {
@@ -32,7 +32,6 @@ export default {
       dataLoaded: false,
       forgotPasswordUrl: "/#?dialog=resetpassword",
       numLoadedGalleries: 0,
-      numReady: 0,
       runId: null,
       range: "",
       pos: [],
@@ -63,9 +62,9 @@ export default {
       setPublic: "VIEW_PUBLIC_SET",
       setRows: "VIEW_ROWS_SET",
       setRunId: "VIEW_RUN_ID_SET",
-      setShouldAutoSave: "VIEW_AUTO_SAVE_RUN_SET",
       setSimulation: "VIEW_SIMULATION_SET",
       setMaxTimeStep: "PLOT_MAX_TIME_STEP_SET",
+      updateNumReady: "PLOT_NUM_READY_SET",
     }),
 
     addColumn() {
@@ -165,7 +164,7 @@ export default {
     incrementTimeStep(should_pause) {
       if (this.currentTimeStep < this.maxTimeStep) {
         this.setCurrentTimeStep(this.currentTimeStep + 1);
-        this.numReady = 0;
+        this.updateNumReady(0);
       }
       this.setPaused(should_pause);
     },
@@ -193,8 +192,8 @@ export default {
       this._poller = setTimeout(async () => {
         try {
           const { data } = await this.girderRest.get(`/folder/${this.runId}`);
-          if ("meta" in data && "currentTimestep" in data.meta) {
-            var new_timestep = data.meta.currentTimestep;
+          if ("meta" in data && "currentTimeStep" in data.meta) {
+            var new_timestep = data.meta.currentTimeStep;
             if (new_timestep > this.maxTimeStep) {
               this.setMaxTimeStep(new_timestep);
             }
@@ -244,14 +243,9 @@ export default {
       this.cellHeight = 100 / this.numrows + "vh";
     },
 
-    incrementReady() {
-      this.numReady += 1;
-      // this.getRangeData();
-    },
-
     applyView() {
-      this.$refs.imageGallery.forEach((cell) => {
-        const { row, col } = cell.$attrs;
+      this.$refs.plots.forEach((cell) => {
+        const { row, col } = cell;
         const item = this.items[`${row}::${col}`];
         if (item) {
           cell.loadTemplateGallery(item);
@@ -271,7 +265,6 @@ export default {
       this.setRows(1);
       this.setGridSize(1);
       this.numLoadedGalleries = 0;
-      this.numReady = 0;
       this.dataLoaded = false;
       this.runId = null;
       this.location = null;
@@ -281,7 +274,7 @@ export default {
       this._autosave = setTimeout(async () => {
         try {
           if (this.shouldAutoSave) {
-            this.createItems(this.$refs.imageGallery);
+            this.createItems(this.$refs.plots);
             const name = `${this.simulation}_${this.runId}_${this.creator}`;
             this.setAutoSaveName(name);
             this.setPublic(false);
@@ -293,24 +286,9 @@ export default {
       }, 30000);
     },
 
-    async setRun(itemId) {
-      const { data } = await this.girderRest.get(`/item/${itemId}/rootpath`);
-      const runIdx = data.length - 2;
-      const simulationIdx = runIdx - 1;
-      this.setRunId(data[runIdx].object._id);
-      this.setSimulation(data[simulationIdx].object._id);
-      this.setShouldAutoSave(true);
-    },
-
     loadAutoSavedView() {
       this.loadAutoSave();
     },
-  },
-
-  created: async function () {
-    this.$on("data-loaded", this.initialDataLoaded);
-    this.$on("gallery-ready", this.incrementReady);
-    this.$on("item-added", this.setRun);
   },
 
   asyncComputed: {
@@ -319,7 +297,6 @@ export default {
       cellCount: "PLOT_VISIBLE_CELL_COUNT",
       creator: "VIEW_CREATOR",
       currentTimeStep: "PLOT_TIME_STEP",
-      globalRanges: "PLOT_GLOBAL_RANGES",
       gridSize: "VIEW_GRID_SIZE",
       itemId: "PLOT_CURRENT_ITEM_ID",
       items: "VIEW_ITEMS",
@@ -335,6 +312,7 @@ export default {
       initialDataLoaded: "PLOT_INITIAL_LOAD",
       minTimeStep: "PLOT_MIN_TIME_STEP",
       viewTimeStep: "PLOT_VIEW_TIME_STEP",
+      numReady: "PLOT_NUM_READY",
     }),
 
     location: {
@@ -395,7 +373,7 @@ export default {
         simFolder = data[data.length - 2]?.object;
       }
 
-      if ("meta" in runFolder && "currentTimestep" in runFolder.meta) {
+      if ("meta" in runFolder && "currentTimeStep" in runFolder.meta) {
         // This is a run folder. Check for auto-saved view to load and
         // update simulation and run id.
         this.setSimulation(simFolder._id);
@@ -413,19 +391,19 @@ export default {
     },
 
     gridSize(size) {
-      if (size === this.cellCount && this.$refs.imageGallery) {
+      if (size === this.cellCount && this.$refs.plots) {
         this.applyView();
       }
     },
 
     cellCount(count) {
       if (this.gridSize === count) {
-        if (this.loggedOut && this.$refs.imageGallery) {
-          this.$refs.imageGallery.forEach((cell) => {
+        if (this.loggedOut && this.$refs.plots) {
+          this.$refs.plots.forEach((cell) => {
             cell.loadTemplateGallery({ id: null, zoom: null });
             cell.clearGallery();
           });
-        } else if (this.$refs.imageGallery) {
+        } else if (this.$refs.plots) {
           this.applyView();
         }
       }

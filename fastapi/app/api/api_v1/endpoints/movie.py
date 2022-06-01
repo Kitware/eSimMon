@@ -21,19 +21,22 @@ router = APIRouter()
 
 @router.get("/{id}/timesteps/movie", response_class=FileResponse)
 async def create_movie(
-    id: str, format: str, zoom: Optional[str] = None, girder_token: str = Header(None)
+    id: str,
+    format: str,
+    details: Optional[str] = None,
+    girder_token: str = Header(None),
 ):
     # Get all timesteps
     gc = get_girder_client(girder_token)
     item = gc.getItem(id)
     timesteps = item["meta"]["timesteps"]
-    # Check if there are zoom settings to apply
-    zoom = json.loads(unquote(zoom)) if zoom else {}
+    # Check if there are additional settings to apply
+    details = json.loads(unquote(details)) if details else {}
     with tempfile.TemporaryDirectory() as tmpdir:
         for step in timesteps:
             # call generate plot response and get plot
             plot = await get_timestep_plot(id, step, girder_token, as_image=True)
-            image = await get_timestep_image_data(plot, "png", zoom)
+            image = await get_timestep_image_data(plot, "png", details)
             im = Image.open(io.BytesIO(image), "r", ["PNG"])
             f = tempfile.NamedTemporaryFile(
                 dir=tmpdir, prefix=f"{step}_", suffix=".png", delete=False

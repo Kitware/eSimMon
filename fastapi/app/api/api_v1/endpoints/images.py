@@ -43,7 +43,7 @@ from .variables import get_timestep_plot
 router = APIRouter()
 
 
-def create_plotly_image(plot_data: dict, format: str, zoom: dict):
+def create_plotly_image(plot_data: dict, format: str, details: dict):
     # The json contains Javascript syntax. Update values for Python
     for data in plot_data["data"]:
         data["mode"] = "lines"
@@ -53,14 +53,15 @@ def create_plotly_image(plot_data: dict, format: str, zoom: dict):
     plot_data["layout"]["title"]["x"] = 0.5
     plot_data["layout"].pop("name", None)
     plot_data["layout"].pop("frames", None)
-    if zoom:
-        log_scaling = zoom.get("log", False)
+    if details:
+        log_scaling = details.get("log", False)
         if log_scaling:
             plot_data["layout"]["xaxis"]["type"] = "log"
             plot_data["layout"]["yaxis"]["type"] = "log"
-        if "range" in zoom:
-            plot_data["layout"]["xaxis"]["range"] = zoom["range"]["xAxis"]
-            plot_data["layout"]["yaxis"]["range"] = zoom["range"]["yAxis"]
+        zoom = details.get("zoom", False)
+        if zoom:
+            plot_data["layout"]["xaxis"]["range"] = details["zoom"]["xAxis"]
+            plot_data["layout"]["yaxis"]["range"] = details["zoom"]["yAxis"]
 
     # Get image as bytes
     fig = go.Figure(plot_data["data"], plot_data["layout"])
@@ -85,7 +86,7 @@ def _mkVtkIdList(it):
 
 
 class MeshImagePipeline:
-    def render_image(self, plot_data: Dict, format: str, zoom: Dict):
+    def render_image(self, plot_data: Dict, format: str, details: Dict):
         nodes = np.asarray(plot_data["nodes"])
         connectivity = np.asarray(plot_data["connectivity"])
         color = np.asarray(plot_data["color"])
@@ -138,11 +139,11 @@ class MeshImagePipeline:
         self.renderer.SetBackground([1, 1, 1])
 
         # Set the zoom if needed
-        if zoom and "range" in zoom:
+        if details and (zoom := details.get("zoom", False)):
             camera = self.renderer.GetActiveCamera()
-            fX, fY, fZ = zoom["range"]["focalPoint"]
+            fX, fY, fZ = zoom["focalPoint"]
             camera.SetFocalPoint(fX, fY, fZ)
-            camera.SetParallelScale(zoom["range"]["serverScale"])
+            camera.SetParallelScale(zoom["serverScale"])
 
         self.scalar_bar.SetTitle(colorLabel)
 
@@ -260,17 +261,17 @@ class MeshImagePipeline:
 pipeline = MeshImagePipeline()
 
 
-def create_mesh_image(plot_data: dict, format: str, zoom: dict):
+def create_mesh_image(plot_data: dict, format: str, details: dict):
     global pipeline
 
-    return pipeline.render_image(plot_data, format, zoom)
+    return pipeline.render_image(plot_data, format, details)
 
 
-async def get_timestep_image_data(plot: dict, format: str, zoom: dict):
+async def get_timestep_image_data(plot: dict, format: str, details: dict):
     if plot["type"] == "plotly":
-        image = create_plotly_image(plot, format, zoom)
+        image = create_plotly_image(plot, format, details)
     elif plot["type"] == "mesh":
-        image = create_mesh_image(plot, format, zoom)
+        image = create_mesh_image(plot, format, details)
     else:
         raise Exception("Unrecognized type")
 
@@ -282,7 +283,7 @@ async def get_timestep_image(
     variable_id: str,
     timestep: int,
     format: str,
-    zoom: Optional[str] = None,
+    details: Optional[str] = None,
     girder_token: str = Header(None),
 ):
     # Make sure time step exists
@@ -291,9 +292,9 @@ async def get_timestep_image(
     timesteps = item["meta"]["timesteps"]
     if timestep not in timesteps:
         timestep = max([s for s in timesteps if s < timestep])
-    # Check if there are zoom settings to apply
-    zoom = json.loads(unquote(zoom)) if zoom else {}
+    # Check if there are additional settings to apply
+    details = json.loads(unquote(details)) if details else {}
     # call generate plot response and get plot
     plot = await get_timestep_plot(variable_id, timestep, girder_token, as_image=True)
-    img_bytes = await get_timestep_image_data(plot, format, zoom)
+    img_bytes = await get_timestep_image_data(plot, format, details)
     return StreamingResponse(io.BytesIO(img_bytes), media_type=f"image/{format}")

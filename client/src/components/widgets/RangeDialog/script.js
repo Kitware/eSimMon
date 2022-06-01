@@ -19,6 +19,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    id: {
+      type: String,
+      default: "",
+    },
   },
   computed: {
     settingsDialog: {
@@ -37,13 +41,13 @@ export default {
   },
   methods: {
     ...mapActions({
-      updateGlobalRanges: "PLOT_GLOBAL_RANGES_UPDATED",
+      updatePlotDetails: "PLOT_DETAILS_UPDATED",
     }),
     save() {
       const min = parseFloat(this.newStart);
       const max = parseFloat(this.newEnd);
       const range = max - min < 1 ? null : [min, max];
-      this.updateGlobalRanges(range);
+      this.updatePlotDetails({ [`${this.id}`]: { range } });
       this.settingsDialog = false;
     },
     clear() {

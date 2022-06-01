@@ -126,20 +126,21 @@
                 </v-icon>
               </v-col>
             </v-row>
-            <view-controls :imageGallery.sync="$refs.imageGallery" />
+            <view-controls :plots.sync="$refs.plots" />
           </v-container>
         </v-col>
       </v-row>
     </pane>
     <!-- Scientific data on the right. -->
     <pane
+      id="mainContent"
       min-size="50"
       :size="85"
       class="main-content"
       v-on:mouseover.native="hoverOut"
     >
       <!-- image gallery grid. -->
-      <render-window class="imageGallery" />
+      <render-window class="plots" />
       <v-container v-bind:style="{padding: '0', maxWidth: '100%'}">
         <template v-for="i in numrows">
           <v-row v-bind:key="i">
@@ -148,9 +149,8 @@
                 v-bind:key="j"
                 v-bind:style="{ width: cellWidth, height: cellHeight, padding: '0' }"
               >
-                <image-gallery
-                  ref="imageGallery"
-                  :maxTimeStep.sync="maxTimeStep"
+                <plots
+                  ref="plots"
                   v-bind:style="{padding: '0 0 0 3px', height: 'inherit'}"
                   v-bind:class="[paused ? 'show-toolbar' : 'hide-toolbar']"
                   v-bind:row="i"

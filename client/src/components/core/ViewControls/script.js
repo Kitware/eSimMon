@@ -20,7 +20,7 @@ export default {
   },
 
   props: {
-    imageGallery: {
+    plots: {
       type: Array,
       default: () => [],
     },
@@ -36,7 +36,6 @@ export default {
       setPaused: "UI_PAUSE_GALLERY_SET",
       setLoadDialogVisible: "UI_SHOW_LOAD_DIALOG_SET",
       setSaveDialogVisible: "UI_SHOW_SAVE_DIALOG_SET",
-      setZoomOrigin: "PLOT_ZOOM_ORIGIN_SET",
     }),
     async saveView() {
       await this.fetchAllViews();
@@ -58,13 +57,5 @@ export default {
       simulation: "VIEW_SIMULATION",
       step: "PLOT_TIME_STEP",
     }),
-  },
-
-  watch: {
-    zoomSync(selected) {
-      if (!selected) {
-        this.setZoomOrigin(null);
-      }
-    },
   },
 };
