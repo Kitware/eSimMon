@@ -230,6 +230,7 @@ export default {
     },
 
     setTickWait(wait_ms) {
+      // eslint-disable-next-line
       var self = this;
       setTimeout(function () {
         self.tick();

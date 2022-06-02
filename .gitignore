@@ -6,7 +6,7 @@ __pycache__/
 
 .DS_Store
 node_modules
-/dist
+dist
 site.retry
 
 # local env files
