@@ -23,7 +23,7 @@ async def generate_mesh_data(plot_config: Dict, bp_file, variable: str):
         "yLabel": y_label,
         "colorLabel": color_variable,
         "title": title,
-        "type": "mesh",
+        "type": "mesh-colormap",
     }
 
 

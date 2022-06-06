@@ -15,6 +15,7 @@ import vtkmodules.vtkInteractionStyle  # noqa
 # noinspection PyUnresolvedReferences
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 from fastapi.responses import FileResponse
+from app.schemas.format import PlotFormat
 from PIL import Image
 from starlette.responses import StreamingResponse
 from vtk.util import numpy_support
@@ -89,30 +90,69 @@ def _mkVtkIdList(it):
 
 class MeshImagePipeline:
     def render_image(self, plot_data: Dict, format: str, details: Dict):
-        nodes = np.asarray(plot_data["nodes"])
-        connectivity = np.asarray(plot_data["connectivity"])
+        plot_type = plot_data["type"]
+        if plot_type == PlotFormat.mesh:
+            nodes = np.asarray(plot_data["nodes"])
+            connectivity = np.asarray(plot_data["connectivity"])
+        elif plot_type == PlotFormat.colormap:
+            xpoints, ypoints = plot_data["x"], plot_data["y"]
+            nodes, connectivity = [], []
+            idx = 0
+            for j in range(len(ypoints)):
+                for i in range(len(xpoints)):
+                    nodes.append([xpoints[i], ypoints[j]])
+                    if i < len(xpoints) - 1 and j < len(ypoints) - 1:
+                        connectivity.append(
+                            [
+                                idx,
+                                idx + len(xpoints),
+                                idx + len(xpoints) + 1,
+                                idx + 1,
+                                idx,
+                            ]
+                        )
+                    idx += 1
+            nodes = np.array(nodes)
+            connectivity = np.array(connectivity)
+
         color = np.asarray(plot_data["color"])
+        if color.ndim > 1:
+            color = color.flatten()
         xLabel = plot_data["xLabel"]
         yLabel = plot_data["yLabel"]
         colorLabel = plot_data["colorLabel"]
         title = plot_data["title"]
 
-        # For now we can cache mesh as the connectivity is the same
-        if self.points is None:
+        if self.points is None or plot_data != self.prev_plot_type:
             self.points = vtkPoints()
             for i, (x, y) in enumerate(nodes):
                 self.points.InsertPoint(i, (x, y, 0.0))
             self.mesh.SetPoints(self.points)
-        if self.cells is None:
+        if self.cells is None or plot_data != self.prev_plot_type:
+            # For now we can cache mesh as the connectivity is the  for mesh plots
             self.cells = vtkCellArray()
             for pt in connectivity:
                 self.cells.InsertNextCell(_mkVtkIdList(pt))
             self.mesh.SetPolys(self.cells)
 
+        if plot_type == PlotFormat.colormap:
+            # TODO: Remove this when we have more functionality in VTK charts
+            # Manipulate actor scale to ensure the plot remains square
+            scale = (max(ypoints) - min(ypoints)) / (max(xpoints) - min(xpoints))
+            self.mesh_actor.SetScale(scale, 1, 1)
+
         scalars = numpy_support.numpy_to_vtk(color)
 
         # We now assign the pieces to the vtkPolyData.
         self.mesh.GetPointData().SetScalars(scalars)
+
+        if plot_type == PlotFormat.colormap:
+            # TODO: Remove this when we have more functionality in VTK charts
+            # Manipulate actor scale to ensure the plot remains square
+            scale = (max(ypoints) - min(ypoints)) / (max(xpoints) - min(xpoints))
+            self.mesh_actor.SetScale(scale, 1, 1)
+        elif plot_type == PlotFormat.mesh:
+            self.mesh_actor.SetScale(1, 1, 1)
 
         # Setup mapper and actor
         self.mesh_mapper.SetInputData(self.mesh)
@@ -130,13 +170,24 @@ class MeshImagePipeline:
         self.axes.SetBounds(self.mesh_actor.GetBounds())
 
         # Needed to ensure grid axes is updated
+        if plot_type == PlotFormat.mesh:
+            self.axes.DrawXGridlinesOn()
+            self.axes.DrawYGridlinesOn()
+        elif plot_type == PlotFormat.colormap:
+            self.axes.DrawXGridlinesOff()
+            self.axes.DrawYGridlinesOff()
         self.renderer.RemoveActor(self.axes)
         self.renderer.AddActor(self.axes)
 
-        # Hack to manipulate the camera bounds
-        # This ensures axes labels and title are not cut off
         bounds = list(self.mesh_actor.GetBounds())
-        bounds[2] -= 0.1
+        if plot_type == PlotFormat.mesh:
+            # TODO: Remove this when we have more functionality in VTK charts
+            # Hack to manipulate the camera bounds
+            # This ensures axes labels and title are not cut off
+            bounds[2] -= 0.1
+        elif plot_type == PlotFormat.colormap:
+            xscale, _, _ = self.mesh_actor.GetScale()
+            bounds[1] += xscale * 0.1
         self.renderer.ResetCamera(bounds)
         self.renderer.SetBackground([1, 1, 1])
 
@@ -163,9 +214,13 @@ class MeshImagePipeline:
         self.writer.SetInputConnection(w2if.GetOutputPort())
         self.writer.Write()
 
+        self.prev_plot_type = plot_type
+
         return _convert_image(output_file, format)
 
     def __init__(self):
+        # Note previous plot type in order to take advantage of caching
+        self.prev_plot_type = None
         # We"ll create the building blocks of polydata including data attributes.
         self.mesh = vtkPolyData()
         self.points = None  # vtkPoints()
@@ -226,13 +281,13 @@ class MeshImagePipeline:
         self.axes.GetTitleTextProperty(0).SetColor(0, 0, 0)
         self.axes.GetLabelTextProperty(0).SetColor(0, 0, 0)
         self.axes.GetXAxesGridlinesProperty().SetColor(0, 0, 0)
+        self.axes.GetXAxesLinesProperty().SetColor(0, 0, 0)
         self.axes.XAxisMinorTickVisibilityOff()
-        self.axes.DrawXGridlinesOn()
         self.axes.GetTitleTextProperty(1).SetColor(0, 0, 0)
         self.axes.GetLabelTextProperty(1).SetColor(0, 0, 0)
         self.axes.GetYAxesGridlinesProperty().SetColor(0, 0, 0)
+        self.axes.GetYAxesLinesProperty().SetColor(0, 0, 0)
         self.axes.YAxisMinorTickVisibilityOff()
-        self.axes.DrawYGridlinesOn()
 
         self.ren_win.SetSize(1000, 1000)
 
@@ -270,9 +325,9 @@ def create_mesh_image(plot_data: dict, format: str, details: dict):
 
 
 async def get_timestep_image_data(plot: dict, format: str, details: dict):
-    if plot["type"] == "plotly":
+    if plot["type"] == PlotFormat.plotly:
         image = create_plotly_image(plot, format, details)
-    elif plot["type"] == "mesh":
+    elif plot["type"] == PlotFormat.mesh or plot["type"] == PlotFormat.colormap:
         image = create_mesh_image(plot, format, details)
     else:
         raise Exception("Unrecognized type")
