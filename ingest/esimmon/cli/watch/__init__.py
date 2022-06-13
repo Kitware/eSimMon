@@ -1,3 +1,4 @@
+import abc
 import asyncio
 import logging
 import mimetypes
@@ -6,6 +7,8 @@ import ssl
 import tarfile
 from io import BytesIO
 from pathlib import Path
+from typing import Union
+from urllib.parse import urlparse
 
 import aiohttp
 import click
@@ -211,6 +214,119 @@ class AsyncGirderClient(object):
         return await self.get(f"folder/{folder_id}")
 
 
+class UploadSource(abc.ABC):
+    @abc.abstractmethod
+    async def fetch_json(self, url: str) -> Union[dict, None]:
+        pass
+
+    @abc.abstractmethod
+    async def fetch_binary(self, url: str) -> Union[bytes, None]:
+        pass
+
+
+class HttpUploadSource(UploadSource):
+    def __init__(self):
+        self.session = None
+
+    async def __aenter__(self):
+        def ignore_aiohttp_ssl_eror(loop, aiohttpversion="3.5.4"):
+            """Ignore aiohttp #3535 issue with SSL data after close
+
+            There appears to be an issue on Python 3.7 and aiohttp SSL that throws a
+            ssl.SSLError fatal error (ssl.SSLError: [SSL: KRB5_S_INIT] application data
+            after close notify (_ssl.c:2609)) after we are already done with the
+            connection. See GitHub issue aio-libs/aiohttp#3535
+
+            Given a loop, this sets up a exception handler that ignores this specific
+            exception, but passes everything else on to the previous exception handler
+            this one replaces.
+
+            If the current aiohttp version is not exactly equal to aiohttpversion
+            nothing is done, assuming that the next version will have this bug fixed.
+            This can be disabled by setting this parameter to None
+
+            """
+            if aiohttpversion is not None and aiohttp.__version__ != aiohttpversion:
+                return
+
+            orig_handler = loop.get_exception_handler()
+
+            def ignore_ssl_error(loop, context):
+                if context.get("message") == "SSL error in data received":
+                    # validate we have the right exception, transport and protocol
+                    exception = context.get("exception")
+                    protocol = context.get("protocol")
+                    if (
+                        isinstance(exception, ssl.SSLError)
+                        and exception.reason == "KRB5_S_INIT"
+                        and isinstance(protocol, asyncio.sslproto.SSLProtocol)
+                        and isinstance(
+                            protocol._app_protocol, aiohttp.client_proto.ResponseHandler
+                        )
+                    ):
+                        if loop.get_debug():
+                            asyncio.log.logger.debug(
+                                "Ignoring aiohttp SSL KRB5_S_INIT error"
+                            )
+                        return
+                if orig_handler is not None:
+                    orig_handler(loop, context)
+                else:
+                    loop.default_exception_handler(context)
+
+            loop.set_exception_handler(ignore_ssl_error)
+
+        ignore_aiohttp_ssl_eror(asyncio.get_running_loop())
+
+        self.session = aiohttp.ClientSession(
+            connector=aiohttp.TCPConnector(verify_ssl=False)
+        )
+
+        return self
+
+    async def __aexit__(self, *args):
+        if self.session is not None:
+            await self.session.close()
+
+    @tenacity.retry(
+        retry=tenacity.retry_if_exception_type(
+            aiohttp.client_exceptions.ServerConnectionError
+        ),
+        wait=tenacity.wait_exponential(max=10),
+        stop=tenacity.stop_after_attempt(10),
+    )
+    async def fetch_json(self, url: str) -> Union[dict, None]:
+        if self.session is None:
+            raise RuntimeError("Session has not been initialized")
+
+        async with self.session.get(url) as r:
+            if r.status == 404:
+                return None
+
+            r.raise_for_status()
+
+            return await r.json()
+
+    @tenacity.retry(
+        retry=tenacity.retry_if_exception_type(
+            aiohttp.client_exceptions.ServerConnectionError
+        ),
+        wait=tenacity.wait_exponential(max=10),
+        stop=tenacity.stop_after_attempt(10),
+    )
+    async def fetch_binary(self, url: str) -> Union[bytes, None]:
+        if self.session is None:
+            raise RuntimeError("Session has not been initialized")
+
+        async with self.session.get(url) as r:
+            if r.status == 404:
+                return None
+
+            r.raise_for_status()
+
+            return await r.read()
+
+
 async def ensure_folders(gc, parent, folders):
     for folder_name in folders:
         parent = await gc.create_folder(parent["_id"], "folder", folder_name)
@@ -306,48 +422,24 @@ async def upload_timestep_bp_archive(
         await gc.upload_file(timesteps_item, bp_filename, bits, size)
 
 
-@tenacity.retry(
-    retry=tenacity.retry_if_exception_type(
-        aiohttp.client_exceptions.ServerConnectionError
-    ),
-    wait=tenacity.wait_exponential(max=10),
-    stop=tenacity.stop_after_attempt(10),
-)
-async def fetch_variables(session, upload_url, shot_name, run_name, timestep):
-    async with session.get(
-        "%s/shots/%s/%s/%d/variables.json"
-        % (upload_url, shot_name, run_name, timestep)
-    ) as r:
-        if r.status == 404:
-            return None
+async def fetch_variables(
+    source: UploadSource, upload_url, shot_name, run_name, timestep
+):
+    url = f"{upload_url}/shots/{shot_name}/{run_name}/{timestep}/variables.json"
 
-        r.raise_for_status()
-
-        return await r.json()
+    return await source.fetch_json(url)
 
 
-@tenacity.retry(
-    retry=tenacity.retry_if_exception_type(
-        aiohttp.client_exceptions.ServerConnectionError
-    ),
-    wait=tenacity.wait_exponential(max=10),
-    stop=tenacity.stop_after_attempt(10),
-)
-async def fetch_images_archive(session, upload_url, shot_name, run_name, timestep):
-    async with session.get(
-        "%s/shots/%s/%s/%d/images.tar.gz"
-        % (upload_url, shot_name, run_name, timestep)
-    ) as r:
-        if r.status == 404:
-            return None
+async def fetch_images_archive(
+    source: UploadSource, upload_url, shot_name, run_name, timestep
+):
+    url = f"{upload_url}/shots/{shot_name}/{run_name}/{timestep}/images.tar.gz"
 
-        r.raise_for_status()
-
-        return await r.read()
+    return await source.fetch_binary(url)
 
 
 async def fetch_images(
-    session,
+    source: UploadSource,
     gc,
     folder,
     upload_url,
@@ -361,9 +453,7 @@ async def fetch_images(
     log.info('Fetching variables.json for timestep: "%d".' % timestep)
 
     # Fetch variables.json
-    variables = await fetch_variables(
-        session, upload_url, shot_name, run_name, timestep
-    )
+    variables = await fetch_variables(source, upload_url, shot_name, run_name, timestep)
 
     if not variables:
         log.info('No variables for timestep "%d".' % timestep)
@@ -376,15 +466,13 @@ async def fetch_images(
     else:
         log.info('Fetching images.tar.gz for timestep: "%d".' % timestep)
         image_archive = await fetch_images_archive(
-            session, upload_url, shot_name, run_name, timestep
+            source, upload_url, shot_name, run_name, timestep
         )
         if image_archive is None:
             log.warning("Data archive not found")
             return
 
-        buffer = BytesIO(
-            image_archive
-        )
+        buffer = BytesIO(image_archive)
 
         with tarfile.open(fileobj=buffer) as images_tgz:
             bp_files_to_upload = set([v["file_name"] for v in variables])
@@ -483,26 +571,14 @@ async def fetch_images_scheduler(queue):
             log.exception("Exception occured fetching images.")
 
 
-@tenacity.retry(
-    retry=tenacity.retry_if_exception_type(
-        aiohttp.client_exceptions.ServerConnectionError
-    ),
-    wait=tenacity.wait_exponential(max=10),
-    stop=tenacity.stop_after_attempt(10),
-)
-async def fetch_run_time(session, upload_url, shot_name, run_name):
+async def fetch_run_time(source: UploadSource, upload_url, shot_name, run_name):
+    run_path = f"{upload_url}/shots/{shot_name}/{run_name}/time.json"
 
-    run_path = "shots/%s/%s/time.json" % (shot_name, run_name)
-    async with session.get(
-        "%s/%s" % (upload_url, run_path), raise_for_status=False
-    ) as r:
-        if r.status == 404:
-            return None
-        return await r.json()
+    return await source.fetch_json(run_path)
 
 
 async def watch_run(
-    session,
+    source: UploadSource,
     gc,
     folder,
     upload_url,
@@ -534,7 +610,7 @@ async def watch_run(
 
         # Now see where the simulation upload has got to
         run_path = "shots/%s/%s/time.json" % (shot_name, run_name)
-        time = await fetch_run_time(session, upload_url, shot_name, run_name)
+        time = await fetch_run_time(source, upload_url, shot_name, run_name)
         # Wait for time.json to appear
         if time is None:
             log.warn('Unable to fetch "%s", waiting for 1 sec.' % run_path)
@@ -560,7 +636,7 @@ async def watch_run(
             # exists ( this is the one that could be partially processed.
             fetch_images_queue.put_nowait(
                 fetch_images(
-                    session,
+                    source,
                     gc,
                     folder,
                     upload_url,
@@ -576,7 +652,7 @@ async def watch_run(
             for t in range(last_timestep + 2, new_timestep + 1):
                 fetch_images_queue.put_nowait(
                     fetch_images(
-                        session,
+                        source,
                         gc,
                         folder,
                         upload_url,
@@ -591,7 +667,7 @@ async def watch_run(
         elif delta == 1:
             fetch_images_queue.put_nowait(
                 fetch_images(
-                    session,
+                    source,
                     gc,
                     folder,
                     upload_url,
@@ -611,25 +687,13 @@ async def watch_run(
         await asyncio.sleep(run_poll_interval)
 
 
-@tenacity.retry(
-    retry=tenacity.retry_if_exception_type(
-        aiohttp.client_exceptions.ServerConnectionError
-    ),
-    wait=tenacity.wait_exponential(max=10),
-    stop=tenacity.stop_after_attempt(10),
-)
-async def fetch_shot_index(session, upload_url):
-    async with session.get("%s/shots/index.json" % upload_url) as r:
-        if r.status == 404:
-            return None
-        else:
-            r.raise_for_status()
-
-        return await r.json()
+async def fetch_shot_index(source: UploadSource, upload_url):
+    url = f"{upload_url}/shots/index.json"
+    return await source.fetch_json(url)
 
 
 async def watch_shots_index(
-    session,
+    source: UploadSource,
     gc,
     folder,
     upload_url,
@@ -649,7 +713,7 @@ async def watch_shots_index(
 
     while True:
         log.info("Fetching /shots/index.json")
-        index = await fetch_shot_index(session, upload_url)
+        index = await fetch_shot_index(source, upload_url)
         if index is None:
             # Just wait for index.json to appear
             log.warn('Unable to fetch "shots/index.json", waiting for 1 sec.')
@@ -670,7 +734,7 @@ async def watch_shots_index(
             if run_key not in runs:
                 asyncio.create_task(
                     watch_run(
-                        session,
+                        source,
                         gc,
                         folder,
                         upload_url,
@@ -692,72 +756,30 @@ async def watch_shots_index(
 async def watch(
     folder_id, upload_url, api_url, api_key, shot_poll_interval, run_poll_internval
 ):
-    def ignore_aiohttp_ssl_eror(loop, aiohttpversion="3.5.4"):
-        """Ignore aiohttp #3535 issue with SSL data after close
 
-        There appears to be an issue on Python 3.7 and aiohttp SSL that throws a
-        ssl.SSLError fatal error (ssl.SSLError: [SSL: KRB5_S_INIT] application data
-        after close notify (_ssl.c:2609)) after we are already done with the
-        connection. See GitHub issue aio-libs/aiohttp#3535
+    # Select the appropriate source class based on the URL
+    if upload_url.startswith("http"):
+        cls = HttpUploadSource
+    else:
+        raise ValueError("Unsupported URL")
 
-        Given a loop, this sets up a exception handler that ignores this specific
-        exception, but passes everything else on to the previous exception handler
-        this one replaces.
+    async with cls() as source:
+        print(source)
+        async with aiohttp.ClientSession() as session:
+            gc = AsyncGirderClient(session, api_url)
+            await gc.authenticate(api_key)
 
-        If the current aiohttp version is not exactly equal to aiohttpversion
-        nothing is done, assuming that the next version will have this bug fixed.
-        This can be disabled by setting this parameter to None
-
-        """
-        if aiohttpversion is not None and aiohttp.__version__ != aiohttpversion:
-            return
-
-        orig_handler = loop.get_exception_handler()
-
-        def ignore_ssl_error(loop, context):
-            if context.get("message") == "SSL error in data received":
-                # validate we have the right exception, transport and protocol
-                exception = context.get("exception")
-                protocol = context.get("protocol")
-                if (
-                    isinstance(exception, ssl.SSLError)
-                    and exception.reason == "KRB5_S_INIT"
-                    and isinstance(protocol, asyncio.sslproto.SSLProtocol)
-                    and isinstance(
-                        protocol._app_protocol, aiohttp.client_proto.ResponseHandler
-                    )
-                ):
-                    if loop.get_debug():
-                        asyncio.log.logger.debug(
-                            "Ignoring aiohttp SSL KRB5_S_INIT error"
-                        )
-                    return
-            if orig_handler is not None:
-                orig_handler(loop, context)
-            else:
-                loop.default_exception_handler(context)
-
-        loop.set_exception_handler(ignore_ssl_error)
-
-    ignore_aiohttp_ssl_eror(asyncio.get_running_loop())
-
-    async with aiohttp.ClientSession(
-        connector=aiohttp.TCPConnector(verify_ssl=False)
-    ) as session:
-        gc = AsyncGirderClient(session, api_url)
-        await gc.authenticate(api_key)
-
-        folder = {"_id": folder_id}
-        await watch_shots_index(
-            session,
-            gc,
-            folder,
-            upload_url,
-            api_url,
-            api_key,
-            shot_poll_interval,
-            run_poll_internval,
-        )
+            folder = {"_id": folder_id}
+            await watch_shots_index(
+                source,
+                gc,
+                folder,
+                upload_url,
+                api_url,
+                api_key,
+                shot_poll_interval,
+                run_poll_internval,
+            )
 
 
 @click.command("watch", help="Watch upload site and ingest data into Girder")
@@ -771,7 +793,8 @@ async def watch(
     "-r",
     "--upload_url",
     help="the URL to the upload location to watch. [default: UPLOAD_URL env. variable]",
-    envvar="UPLOAD_URL", required=True,
+    envvar="UPLOAD_URL",
+    required=True,
 )
 @click.option(
     "-u",
@@ -797,8 +820,13 @@ def main(
     folder_id, upload_url, api_url, api_key, shot_poll_interval, run_poll_interval
 ):
     # gc = GC(api_url=api_url, api_key=api_key)
-    if upload_url[-1] == "/":
+    if upload_url.startswith("http") and upload_url[-1] == "/":
         upload_url = upload_url[:-1]
+
+    url = urlparse(upload_url)
+    if url.scheme not in ["http", "https"]:
+        raise click.ClickException(f"'{url.scheme}' is not a supported URL scheme")
+
     log = logging.getLogger("esimmon")
     log.info("Watching: %s" % upload_url)
 
