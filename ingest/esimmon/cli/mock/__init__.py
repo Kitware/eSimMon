@@ -15,7 +15,7 @@ from faker.providers import internet
 from flask import Flask
 from flask import send_from_directory
 
-log = logging.getLogger("adash")
+log = logging.getLogger("esimmon")
 fake = Faker()
 fake.add_provider(internet)
 machines = ["summit", "titan", "frontier"]

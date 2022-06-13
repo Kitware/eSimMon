@@ -221,7 +221,7 @@ async def ensure_folders(gc, parent, folders):
 async def upload_image(
     gc, folder, shot_name, run_name, variable, timestep, bits, size, check_exists=False
 ):
-    log = logging.getLogger("adash")
+    log = logging.getLogger("esimmon")
     image_path = Path(variable["image_name"])
 
     image_folders = [shot_name, run_name, variable["group_name"]]
@@ -286,7 +286,7 @@ async def upload_timestep_bp_archive(
     size,
     check_exists=False,
 ):
-    log = logging.getLogger("adash")
+    log = logging.getLogger("esimmon")
 
     folders = [shot_name, run_name, "timesteps"]
     parent_folder = await ensure_folders(gc, folder, folders)
@@ -357,7 +357,7 @@ async def fetch_images(
     metadata_semaphore,
     check_exists=False,
 ):
-    log = logging.getLogger("adash")
+    log = logging.getLogger("esimmon")
     log.info('Fetching variables.json for timestep: "%d".' % timestep)
 
     # Fetch variables.json
@@ -466,7 +466,7 @@ async def fetch_images(
 # scheduler used to schedule fetch_images request inorder, so we fetch the images
 # in timestep order.
 async def fetch_images_scheduler(queue):
-    log = logging.getLogger("adash")
+    log = logging.getLogger("esimmon")
     while True:
         try:
             fetch = await queue.get()
@@ -507,7 +507,7 @@ async def watch_run(
     machine,
     run_poll_interval,
 ):
-    log = logging.getLogger("adash")
+    log = logging.getLogger("esimmon")
     log.info('Starting to watch run "%s" shot "%s".' % (run_name, shot_name))
     fetch_images_queue = asyncio.Queue()
     metadata_semaphore = asyncio.Semaphore()
@@ -633,7 +633,7 @@ async def watch_shots_index(
     shot_poll_interval,
     run_poll_internval,
 ):
-    log = logging.getLogger("adash")
+    log = logging.getLogger("esimmon")
     runs = set()
     shot_metadata_semaphore = asyncio.Semaphore()
 
@@ -794,7 +794,7 @@ def main(
     # gc = GC(api_url=api_url, api_key=api_key)
     if upload_site_url[-1] == "/":
         upload_site_url = upload_site_url[:-1]
-    log = logging.getLogger("adash")
+    log = logging.getLogger("esimmon")
     log.info("Watching: %s" % upload_site_url)
 
     asyncio.run(

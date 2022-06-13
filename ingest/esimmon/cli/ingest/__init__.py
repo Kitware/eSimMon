@@ -121,7 +121,7 @@ def main(folder, image_list_url, api_url, api_key):
     image_list_request = requests.get(image_list_url)
 
     # Do we have a retry file from a previous run?
-    retry_filename = ".%s.adash" % urlparse(image_list_url).path.replace("/", "_")
+    retry_filename = ".%s.esimmon" % urlparse(image_list_url).path.replace("/", "_")
     retry_file_path = Path.home() / retry_filename
     # The last file processed loaded from the retry file
     retry_last_processed = None
