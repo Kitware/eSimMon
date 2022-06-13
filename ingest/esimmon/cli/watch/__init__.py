@@ -313,10 +313,10 @@ async def upload_timestep_bp_archive(
     wait=tenacity.wait_exponential(max=10),
     stop=tenacity.stop_after_attempt(10),
 )
-async def fetch_variables(session, upload_site_url, shot_name, run_name, timestep):
+async def fetch_variables(session, upload_url, shot_name, run_name, timestep):
     async with session.get(
         "%s/shots/%s/%s/%d/variables.json"
-        % (upload_site_url, shot_name, run_name, timestep)
+        % (upload_url, shot_name, run_name, timestep)
     ) as r:
         if r.status == 404:
             return None
@@ -333,10 +333,10 @@ async def fetch_variables(session, upload_site_url, shot_name, run_name, timeste
     wait=tenacity.wait_exponential(max=10),
     stop=tenacity.stop_after_attempt(10),
 )
-async def fetch_images_archive(session, upload_site_url, shot_name, run_name, timestep):
+async def fetch_images_archive(session, upload_url, shot_name, run_name, timestep):
     async with session.get(
         "%s/shots/%s/%s/%d/images.tar.gz"
-        % (upload_site_url, shot_name, run_name, timestep)
+        % (upload_url, shot_name, run_name, timestep)
     ) as r:
         if r.status == 404:
             return None
@@ -350,7 +350,7 @@ async def fetch_images(
     session,
     gc,
     folder,
-    upload_site_url,
+    upload_url,
     shot_name,
     run_name,
     timestep,
@@ -362,7 +362,7 @@ async def fetch_images(
 
     # Fetch variables.json
     variables = await fetch_variables(
-        session, upload_site_url, shot_name, run_name, timestep
+        session, upload_url, shot_name, run_name, timestep
     )
 
     if not variables:
@@ -485,11 +485,11 @@ async def fetch_images_scheduler(queue):
     wait=tenacity.wait_exponential(max=10),
     stop=tenacity.stop_after_attempt(10),
 )
-async def fetch_run_time(session, upload_site_url, shot_name, run_name):
+async def fetch_run_time(session, upload_url, shot_name, run_name):
 
     run_path = "shots/%s/%s/time.json" % (shot_name, run_name)
     async with session.get(
-        "%s/%s" % (upload_site_url, run_path), raise_for_status=False
+        "%s/%s" % (upload_url, run_path), raise_for_status=False
     ) as r:
         if r.status == 404:
             return None
@@ -500,7 +500,7 @@ async def watch_run(
     session,
     gc,
     folder,
-    upload_site_url,
+    upload_url,
     shot_name,
     run_name,
     username,
@@ -529,7 +529,7 @@ async def watch_run(
 
         # Now see where the simulation upload has got to
         run_path = "shots/%s/%s/time.json" % (shot_name, run_name)
-        time = await fetch_run_time(session, upload_site_url, shot_name, run_name)
+        time = await fetch_run_time(session, upload_url, shot_name, run_name)
         # Wait for time.json to appear
         if time is None:
             log.warn('Unable to fetch "%s", waiting for 1 sec.' % run_path)
@@ -558,7 +558,7 @@ async def watch_run(
                     session,
                     gc,
                     folder,
-                    upload_site_url,
+                    upload_url,
                     shot_name,
                     run_name,
                     last_timestep + 1,
@@ -574,7 +574,7 @@ async def watch_run(
                         session,
                         gc,
                         folder,
-                        upload_site_url,
+                        upload_url,
                         shot_name,
                         run_name,
                         t,
@@ -589,7 +589,7 @@ async def watch_run(
                     session,
                     gc,
                     folder,
-                    upload_site_url,
+                    upload_url,
                     shot_name,
                     run_name,
                     new_timestep,
@@ -613,8 +613,8 @@ async def watch_run(
     wait=tenacity.wait_exponential(max=10),
     stop=tenacity.stop_after_attempt(10),
 )
-async def fetch_shot_index(session, upload_site_url):
-    async with session.get("%s/shots/index.json" % upload_site_url) as r:
+async def fetch_shot_index(session, upload_url):
+    async with session.get("%s/shots/index.json" % upload_url) as r:
         if r.status == 404:
             return None
         else:
@@ -627,7 +627,7 @@ async def watch_shots_index(
     session,
     gc,
     folder,
-    upload_site_url,
+    upload_url,
     api_url,
     api_key,
     shot_poll_interval,
@@ -644,7 +644,7 @@ async def watch_shots_index(
 
     while True:
         log.info("Fetching /shots/index.json")
-        index = await fetch_shot_index(session, upload_site_url)
+        index = await fetch_shot_index(session, upload_url)
         if index is None:
             # Just wait for index.json to appear
             log.warn('Unable to fetch "shots/index.json", waiting for 1 sec.')
@@ -668,7 +668,7 @@ async def watch_shots_index(
                         session,
                         gc,
                         folder,
-                        upload_site_url,
+                        upload_url,
                         shot_name,
                         run_name,
                         username,
@@ -685,7 +685,7 @@ async def watch_shots_index(
 
 
 async def watch(
-    folder_id, upload_site_url, api_url, api_key, shot_poll_interval, run_poll_internval
+    folder_id, upload_url, api_url, api_key, shot_poll_interval, run_poll_internval
 ):
     def ignore_aiohttp_ssl_eror(loop, aiohttpversion="3.5.4"):
         """Ignore aiohttp #3535 issue with SSL data after close
@@ -747,7 +747,7 @@ async def watch(
             session,
             gc,
             folder,
-            upload_site_url,
+            upload_url,
             api_url,
             api_key,
             shot_poll_interval,
@@ -764,9 +764,9 @@ async def watch(
 )
 @click.option(
     "-r",
-    "--upload-site_url",
-    help="the URL to the upload site to watch. [default: UPLOAD_SITE_URL env. variable]",
-    envvar="UPLOAD_SITE_URL",
+    "--upload_url",
+    help="the URL to the upload location to watch. [default: UPLOAD_URL env. variable]",
+    envvar="UPLOAD_URL", required=True,
 )
 @click.option(
     "-u",
@@ -789,18 +789,18 @@ async def watch(
     "-v", "--run-poll-interval", default=30, type=int, help="run poll interval (sec)"
 )
 def main(
-    folder_id, upload_site_url, api_url, api_key, shot_poll_interval, run_poll_interval
+    folder_id, upload_url, api_url, api_key, shot_poll_interval, run_poll_interval
 ):
     # gc = GC(api_url=api_url, api_key=api_key)
-    if upload_site_url[-1] == "/":
-        upload_site_url = upload_site_url[:-1]
+    if upload_url[-1] == "/":
+        upload_url = upload_url[:-1]
     log = logging.getLogger("esimmon")
-    log.info("Watching: %s" % upload_site_url)
+    log.info("Watching: %s" % upload_url)
 
     asyncio.run(
         watch(
             folder_id,
-            upload_site_url,
+            upload_url,
             api_url,
             api_key,
             shot_poll_interval,
