@@ -375,10 +375,15 @@ async def fetch_images(
         )
     else:
         log.info('Fetching images.tar.gz for timestep: "%d".' % timestep)
+        image_archive = await fetch_images_archive(
+            session, upload_url, shot_name, run_name, timestep
+        )
+        if image_archive is None:
+            log.warning("Data archive not found")
+            return
+
         buffer = BytesIO(
-            await fetch_images_archive(
-                session, upload_site_url, shot_name, run_name, timestep
-            )
+            image_archive
         )
 
         with tarfile.open(fileobj=buffer) as images_tgz:
