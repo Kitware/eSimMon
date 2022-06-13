@@ -1,5 +1,6 @@
 import abc
 import asyncio
+import json
 import logging
 import mimetypes
 import re
@@ -10,6 +11,7 @@ from pathlib import Path
 from typing import Union
 from urllib.parse import urlparse
 
+import aiofiles
 import aiohttp
 import click
 import tenacity
@@ -223,6 +225,12 @@ class UploadSource(abc.ABC):
     async def fetch_binary(self, url: str) -> Union[bytes, None]:
         pass
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        pass
+
 
 class HttpUploadSource(UploadSource):
     def __init__(self):
@@ -282,7 +290,7 @@ class HttpUploadSource(UploadSource):
             connector=aiohttp.TCPConnector(verify_ssl=False)
         )
 
-        return self
+        return await super().__aenter__()
 
     async def __aexit__(self, *args):
         if self.session is not None:
@@ -325,6 +333,23 @@ class HttpUploadSource(UploadSource):
             r.raise_for_status()
 
             return await r.read()
+
+
+class FileSystemUploadSource(UploadSource):
+    def _extract_path(self, url: str) -> str:
+        r = urlparse(url)
+        return r.path
+
+    async def fetch_json(self, url: str) -> Union[dict, None]:
+
+        async with aiofiles.open(self._extract_path(url), "r") as fp:
+            data = await fp.read()
+
+            return json.loads(data)
+
+    async def fetch_binary(self, url: str) -> Union[bytes, None]:
+        async with aiofiles.open(self._extract_path(url), "br") as fp:
+            return await fp.read()
 
 
 async def ensure_folders(gc, parent, folders):
@@ -760,6 +785,8 @@ async def watch(
     # Select the appropriate source class based on the URL
     if upload_url.startswith("http"):
         cls = HttpUploadSource
+    elif upload_url.startswith("file"):
+        cls = FileSystemUploadSource
     else:
         raise ValueError("Unsupported URL")
 
@@ -824,7 +851,7 @@ def main(
         upload_url = upload_url[:-1]
 
     url = urlparse(upload_url)
-    if url.scheme not in ["http", "https"]:
+    if url.scheme not in ["http", "https", "file"]:
         raise click.ClickException(f"'{url.scheme}' is not a supported URL scheme")
 
     log = logging.getLogger("esimmon")
