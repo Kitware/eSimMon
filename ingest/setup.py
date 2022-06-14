@@ -27,6 +27,7 @@ setup(
         "async_lru",
         "coloredlogs",
         "tenacity",
+        "aiofiles",
     ],
     entry_points={
         "console_scripts": ["esimmon=esimmon.cli:main"],
