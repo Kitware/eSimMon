@@ -32,7 +32,6 @@ setup(
     entry_points={
         "console_scripts": ["esimmon=esimmon.cli:main"],
         "esimmon.cli_plugins": [
-            "ingest = esimmon.cli.ingest:main",
             "mock = esimmon.cli.mock:main",
             "watch = esimmon.cli.watch:main",
         ],
