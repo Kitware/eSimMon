@@ -6,4 +6,4 @@ RUN pip install /ingest
 
 COPY ./devops/docker/wait-for-it.sh /wait-for-it.sh
 
-ENTRYPOINT ["/usr/local/bin/adash"]
+ENTRYPOINT ["/usr/local/bin/esimmon"]

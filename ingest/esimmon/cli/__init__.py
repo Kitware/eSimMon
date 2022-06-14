@@ -7,7 +7,7 @@ from click_plugins import with_plugins
 from pkg_resources import iter_entry_points
 
 
-@with_plugins(iter_entry_points("adash.cli_plugins"))
+@with_plugins(iter_entry_points("esimmon.cli_plugins"))
 @click.group()
 def main():
     root = logging.getLogger()

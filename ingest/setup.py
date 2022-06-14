@@ -2,11 +2,11 @@ from setuptools import find_packages
 from setuptools import setup
 
 setup(
-    name="adash",
-    version="0.0.1",
-    description="ADIOS dashboard.",
-    long_description="ADIOS dashboard.",
-    url="https://github.com/Kitware/adios-dashboard",
+    name="esimmon",
+    version="0.0.2",
+    description="eSimMon dashboard.",
+    long_description="eSimMon dashboard.",
+    url="https://github.com/Kitware/eSimMon",
     author="Kitware Inc",
     license="BSD 3-Clause",
     classifiers=[
@@ -27,13 +27,13 @@ setup(
         "async_lru",
         "coloredlogs",
         "tenacity",
+        "aiofiles",
     ],
     entry_points={
-        "console_scripts": ["adash=adash.cli:main"],
-        "adash.cli_plugins": [
-            "ingest = adash.cli.ingest:main",
-            "mock = adash.cli.mock:main",
-            "watch = adash.cli.watch:main",
+        "console_scripts": ["esimmon=esimmon.cli:main"],
+        "esimmon.cli_plugins": [
+            "mock = esimmon.cli.mock:main",
+            "watch = esimmon.cli.watch:main",
         ],
     },
 )
