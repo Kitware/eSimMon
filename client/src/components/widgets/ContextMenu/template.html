@@ -30,6 +30,12 @@
           <v-list-item-title> Download Movie as MPG </v-list-item-title>
         </v-list-item>
       </v-list>
+      <v-divider />
+      <v-list>
+        <v-list-item dense @click="downloadOptions()">
+          <v-list-item-title> Download Options </v-list-item-title>
+        </v-list-item>
+      </v-list>
     </v-card>
   </v-menu>
   <range-dialog
@@ -37,6 +43,12 @@
     :param="parameter"
     :id="itemInfo ? itemInfo.id : ''"
     @close="showRangeDialog=false"
+  />
+  <download-options
+    :param="parameter"
+    :id="itemInfo ? itemInfo.id : ''"
+    :fetchImages="fetchImages"
+    :fetchMovie="fetchMovie"
   />
   <v-snackbar v-model="downloading" timeout="-1" absolute bottom right>
     <v-navigation-drawer stateless value="true">

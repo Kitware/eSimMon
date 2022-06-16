@@ -1,4 +1,5 @@
 import RangeDialog from "../RangeDialog";
+import DownloadOptions from "../DownloadOptions";
 import { v4 as uuidv4 } from "uuid";
 import { mapGetters, mapMutations } from "vuex";
 
@@ -13,6 +14,7 @@ export default {
 
   components: {
     RangeDialog,
+    DownloadOptions,
   },
 
   data() {
@@ -55,15 +57,27 @@ export default {
     ...mapMutations({
       showContextMenu: "UI_SHOW_CONTEXT_MENU_SET",
       updateItemInfo: "UI_CONTEXT_MENU_ITEM_DATA_SET",
+      showDownloadOptions: "UI_SHOW_DOWNLOAD_OPTIONS_SET",
     }),
     fetchImage(format) {
       const { id, step } = this.itemInfo;
       const endpoint = `variables/${id}/timesteps/${step}/image?format=${format}`;
       this.downloadData(endpoint, format, "image");
     },
-    fetchMovie(format) {
+    fetchImages(format, timeSteps) {
       const { id } = this.itemInfo;
-      const endpoint = `variables/${id}/timesteps/movie?format=${format}`;
+      let endpoint = `variables/${id}/timesteps/image?format=${format}`;
+      if (timeSteps) {
+        endpoint = `${endpoint}&selectedTimeSteps=${JSON.stringify(timeSteps)}`;
+      }
+      this.downloadData(endpoint, "zip", "image");
+    },
+    fetchMovie(format, timeSteps = null) {
+      const { id } = this.itemInfo;
+      let endpoint = `variables/${id}/timesteps/movie?format=${format}`;
+      if (timeSteps) {
+        endpoint = `${endpoint}&selectedTimeSteps=${JSON.stringify(timeSteps)}`;
+      }
       this.downloadData(endpoint, format, "movie");
     },
     downloadData(endpoint, format, type) {
@@ -112,6 +126,9 @@ export default {
     },
     dismiss(idx) {
       this.downloads.splice(idx, 1);
+    },
+    downloadOptions() {
+      this.showDownloadOptions(true);
     },
   },
 };
