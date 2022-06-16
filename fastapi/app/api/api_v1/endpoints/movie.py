@@ -24,24 +24,29 @@ async def create_movie(
     id: str,
     format: str,
     details: Optional[str] = None,
+    selectedTimeSteps: Optional[str] = None,
     girder_token: str = Header(None),
 ):
     # Get all timesteps
     gc = get_girder_client(girder_token)
     item = gc.getItem(id)
     timesteps = item["meta"]["timesteps"]
+    selectedTimeSteps = (
+        json.loads(unquote(selectedTimeSteps)) if selectedTimeSteps else timesteps
+    )
     # Check if there are additional settings to apply
     details = json.loads(unquote(details)) if details else {}
     with tempfile.TemporaryDirectory() as tmpdir:
-        for step in timesteps:
-            # call generate plot response and get plot
-            plot = await get_timestep_plot(id, step, girder_token, as_image=True)
-            image = await get_timestep_image_data(plot, "png", details)
-            im = Image.open(io.BytesIO(image), "r", ["PNG"])
-            f = tempfile.NamedTemporaryFile(
-                dir=tmpdir, prefix=f"{step}_", suffix=".png", delete=False
-            )
-            im.save(f, "PNG")
+        for step in selectedTimeSteps:
+            if step in timesteps:
+                # call generate plot response and get plot
+                plot = await get_timestep_plot(id, step, girder_token, as_image=True)
+                image = await get_timestep_image_data(plot, "png", details)
+                im = Image.open(io.BytesIO(image), "r", ["PNG"])
+                f = tempfile.NamedTemporaryFile(
+                    dir=tmpdir, prefix=f"{step}_", suffix=".png", delete=False
+                )
+                im.save(f, "PNG")
         path_name = os.path.join(tmpdir, "*.png")
         output_file = tempfile.NamedTemporaryFile(suffix=f".{format}", delete=False)
         try:
@@ -53,5 +58,4 @@ async def create_movie(
             )
         except ffmpeg.Error as e:
             raise e
-
-    return FileResponse(path=output_file.name, media_type=f"video/{format}")
+        return FileResponse(path=output_file.name, media_type=f"video/{format}")

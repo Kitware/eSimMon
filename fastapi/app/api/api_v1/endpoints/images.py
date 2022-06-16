@@ -1,6 +1,7 @@
 import io
 import json
 import tempfile
+import zipfile
 from typing import Dict
 from typing import Optional
 from urllib.parse import unquote
@@ -13,6 +14,7 @@ import vtkmodules.vtkInteractionStyle  # noqa
 
 # noinspection PyUnresolvedReferences
 import vtkmodules.vtkRenderingOpenGL2  # noqa
+from fastapi.responses import FileResponse
 from PIL import Image
 from starlette.responses import StreamingResponse
 from vtk.util import numpy_support
@@ -298,3 +300,41 @@ async def get_timestep_image(
     plot = await get_timestep_plot(variable_id, timestep, girder_token, as_image=True)
     img_bytes = await get_timestep_image_data(plot, format, details)
     return StreamingResponse(io.BytesIO(img_bytes), media_type=f"image/{format}")
+
+
+@router.get("/{variable_id}/timesteps/image")
+async def get_timestep_images(
+    variable_id: str,
+    format: str,
+    selectedTimeSteps: str = None,
+    details: Optional[str] = None,
+    girder_token: str = Header(None),
+):
+    # Get all timesteps
+    gc = get_girder_client(girder_token)
+    item = gc.getItem(variable_id)
+    timesteps = item["meta"]["timesteps"]
+    selectedTimeSteps = json.loads(unquote(selectedTimeSteps))
+    # Check if there are additional settings to apply
+    details = json.loads(unquote(details)) if details else {}
+
+    output_file = tempfile.NamedTemporaryFile(suffix=f".zip", delete=False)
+    with zipfile.ZipFile(output_file, "w") as zip_obj:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for step in selectedTimeSteps:
+                if step in timesteps:
+                    # call generate plot response and get plot
+                    plot = await get_timestep_plot(
+                        variable_id, step, girder_token, as_image=True
+                    )
+                    image = await get_timestep_image_data(plot, "png", details)
+                    im = Image.open(io.BytesIO(image), "r", ["PNG"]).convert("RGB")
+                    f = tempfile.NamedTemporaryFile(
+                        dir=tmpdir, prefix=f"{step}_", suffix=f".{format}", delete=False
+                    )
+                    im.save(f.name, format.upper())
+                    zip_obj.write(f.name, f"{step}.{format}")
+
+        return FileResponse(
+            path=output_file.name, media_type=f"application/x-zip-compressed"
+        )
