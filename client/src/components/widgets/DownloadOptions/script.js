@@ -117,9 +117,7 @@ export default {
     },
     computeListOfTimeSteps() {
       if (this.rangeSelection === "selectAll") {
-        return [...Array(this.maxStep - this.minStep + 1).keys()].map(
-          (x) => x + this.minStep
-        );
+        return;
       }
       let timeSteps = [];
       let selections = this.rangeInput.split(",");

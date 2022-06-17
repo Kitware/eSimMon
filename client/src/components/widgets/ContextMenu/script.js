@@ -64,7 +64,7 @@ export default {
       const endpoint = `variables/${id}/timesteps/${step}/image?format=${format}`;
       this.downloadData(endpoint, format, "image");
     },
-    fetchImages(format, timeSteps) {
+    fetchImages(format, timeSteps = null) {
       const { id } = this.itemInfo;
       let endpoint = `variables/${id}/timesteps/image?format=${format}`;
       if (timeSteps) {

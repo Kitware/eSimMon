@@ -314,7 +314,11 @@ async def get_timestep_images(
     gc = get_girder_client(girder_token)
     item = gc.getItem(variable_id)
     timesteps = item["meta"]["timesteps"]
-    selectedTimeSteps = json.loads(unquote(selectedTimeSteps))
+    # Check if there are specific time steps to use
+    if selectedTimeSteps:
+        selectedTimeSteps = json.loads(unquote(selectedTimeSteps))
+    else:
+        selectedTimeSteps = timesteps
     # Check if there are additional settings to apply
     details = json.loads(unquote(details)) if details else {}
 
