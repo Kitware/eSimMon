@@ -1,0 +1,57 @@
+<v-dialog v-model="downloadsDialog" max-width="700px">
+  <v-tabs v-model="activeTab">
+    <v-tab :key="0">Movies</v-tab>
+    <v-tab :key="1">Images</v-tab>
+  </v-tabs>
+  <v-card>
+    <v-card-title style="justify-content: center">
+      <span class="text-h6">
+        {{ choice }} Generation for
+        <vue-mathjax :formula="param" :options="mathJaxOptions" />
+      </span>
+    </v-card-title>
+    <v-card-text>
+      <v-form>
+        <v-container>
+          <v-row>
+            <v-col cols="6">
+              <v-radio-group v-model="rangeSelection" row dense>
+                <template v-slot:label>
+                  <div>Time Step Selection</div>
+                </template>
+                <v-radio label="All" value="selectAll" />
+                <v-radio label="Range" value="selectSubset" />
+              </v-radio-group>
+            </v-col>
+            <v-col cols="6">
+              <v-radio-group v-model="formatSelection" row dense>
+                <template v-slot:label>
+                  <div>Set Selection</div>
+                </template>
+                <v-radio :label="formatOptions[0]" value="0" />
+                <v-radio :label="formatOptions[1]" value="1" />
+              </v-radio-group>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col cols="12">
+              <v-text-field
+                v-model="rangeInput"
+                label="Range (e.g. 1-10, 15, 20-25)"
+                :hint="hint"
+                persistent-hint
+                :disabled="disableInput"
+                dense
+              />
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-form>
+    </v-card-text>
+    <v-card-actions>
+      <v-spacer />
+      <v-btn text @click.stop="downloadsDialog=false"> Cancel </v-btn>
+      <v-btn text @click.stop="beginDownload()"> Download </v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>

@@ -21,6 +21,7 @@ export default {
         processEnvironments: true,
       },
     },
+    showDownloadOptions: false,
   },
   getters: {
     UI_AUTO_SAVE_DIALOG(state) {
@@ -59,6 +60,9 @@ export default {
     UI_MATH_JAX_OPTIONS(state) {
       return state.mathJaxOptions;
     },
+    UI_SHOW_DOWNLOAD_OPTIONS(state) {
+      return state.showDownloadOptions;
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {
@@ -93,6 +97,9 @@ export default {
     },
     UI_CONTEXT_MENU_ITEM_DATA_SET(state, val) {
       state.contextMenuItemData = val;
+    },
+    UI_SHOW_DOWNLOAD_OPTIONS_SET(state, val) {
+      state.showDownloadOptions = val;
     },
   },
   actions: {
