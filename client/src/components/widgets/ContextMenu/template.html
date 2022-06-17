@@ -15,25 +15,25 @@
       <v-divider v-if="itemInfo && !itemInfo.isVTK" />
       <v-list>
         <v-list-item dense @click="fetchImage('png')">
-          <v-list-item-title> Save Image as PNG </v-list-item-title>
+          <v-list-item-title> Save PNG Image </v-list-item-title>
         </v-list-item>
         <v-list-item dense @click="fetchImage('pdf')">
-          <v-list-item-title> Save Image as PDF </v-list-item-title>
+          <v-list-item-title> Save PDF Image </v-list-item-title>
         </v-list-item>
       </v-list>
       <v-divider />
       <v-list>
         <v-list-item dense @click="fetchMovie('mp4')">
-          <v-list-item-title> Download Movie as MP4 </v-list-item-title>
+          <v-list-item-title> Save MP4 Movie </v-list-item-title>
         </v-list-item>
         <v-list-item dense @click="fetchMovie('mpg')">
-          <v-list-item-title> Download Movie as MPG </v-list-item-title>
+          <v-list-item-title> Save MPG Movie </v-list-item-title>
         </v-list-item>
       </v-list>
       <v-divider />
       <v-list>
         <v-list-item dense @click="downloadOptions()">
-          <v-list-item-title> Download Options </v-list-item-title>
+          <v-list-item-title> Save As... </v-list-item-title>
         </v-list-item>
       </v-list>
     </v-card>
