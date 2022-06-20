@@ -3,20 +3,6 @@
 ## Running with the monitoring service with EFFIS data
 ------------------------------------------------------
 
-### Run local ingest script
-
-#### Clone
-
-```bash
-git clone git@github.com:Kitware/eSimMon.git
-```
-
-#### Install
-
-```bash
-pip install -e <eSimMon-dashboard-repo>/ingest
-```
-
 #### Run the watch ingester
 
 ```bash
@@ -56,4 +42,4 @@ adash watch -f 5eb01cc71eba106544dc5270 -r <url-to-data> -k <girder-api-key> -u 
 
 ### Automatic ingest
 
-Not yet available
+Coming soon.

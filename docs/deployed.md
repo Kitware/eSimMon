@@ -16,3 +16,5 @@ Navigate to [https://esimmon.kitware.com/](https://esimmon.kitware.com/) to acce
 3. Wait for admin approval. You will be notified via email once your account has been approved.
 
 4. The email verification will direct you to the Girder homepage. To access the dashboard you will need to navigate back to [https://esimmon.kitware.com/](https://esimmon.kitware.com/).
+
+If you have any questions or issues regarding account creation or setup please feel free to open an [issue](https://github.com/Kitware/eSimMon/issues/new) so that we can help you get started.
