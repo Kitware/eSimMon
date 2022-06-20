@@ -55,11 +55,11 @@ To bring up the stack each time run the following command:
 
 The ```docker-compose.demo.yml``` file is optional and only needs to be included if you would like to use the sample data. The dashboard will then be exposed on ```localhost:9090```. When you access the dashboard you will see the login prompt, which is where you will enter the ```esimmon``` username and ```ADMIN_PASSWORD``` set in the ```.env``` file.
 
-![Login Prompt](img/esimmon_login.png)
+![Login Prompt](img/esimmon_login.png){style="display: block; margin: 0 auto"}
 
 Once you have logged in, the dashboard should look like the following:
 
-![eSimMon Dashboard](img/esimmon_dashboard.png)
+![eSimMon Dashboard](img/esimmon_dashboard.png){style="display: block; margin: 0 auto"}
 
 
 ## Bringing up the monitoring service with the stack

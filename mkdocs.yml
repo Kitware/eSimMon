@@ -4,6 +4,7 @@ theme:
   logo: img/chart-multiline.png
   favicon: img/chart-multiline.png
 markdown_extensions:
+  - attr_list
   - pymdownx.snippets
 nav:
   - 'index.md'
