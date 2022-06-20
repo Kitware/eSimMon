@@ -813,7 +813,7 @@ async def watch(
 @click.option(
     "-f",
     "--folder-id",
-    help="the folder to ingest into. [default: GIRDER_FOLDER_IR env. variable]",
+    help="the folder to ingest into. [default: GIRDER_FOLDER_ID env. variable]",
     envvar="GIRDER_FOLDER_ID",
 )
 @click.option(
