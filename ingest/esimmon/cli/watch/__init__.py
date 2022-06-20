@@ -743,8 +743,10 @@ async def watch_shots_index(
         index = await fetch_shot_index(source, upload_url)
         if index is None:
             # Just wait for index.json to appear
-            log.warn('Unable to fetch "shots/index.json", waiting for 1 sec.')
-            await asyncio.sleep(1)
+            log.warn(
+                f'Unable to fetch "shots/index.json", waiting for {shot_poll_interval} sec.'
+            )
+            await asyncio.sleep(shot_poll_interval)
             continue
 
         for shot in index:
