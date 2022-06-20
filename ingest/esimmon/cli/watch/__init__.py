@@ -341,6 +341,8 @@ class FileSystemUploadSource(UploadSource):
         return r.path
 
     async def fetch_json(self, url: str) -> Union[dict, None]:
+        if not Path(self._extract_path(url)).exists():
+            return None
 
         async with aiofiles.open(self._extract_path(url), "r") as fp:
             data = await fp.read()
