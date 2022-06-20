@@ -795,7 +795,6 @@ async def watch(
         raise ValueError("Unsupported URL")
 
     async with cls() as source:
-        print(source)
         async with aiohttp.ClientSession() as session:
             gc = AsyncGirderClient(session, api_url)
             await gc.authenticate(api_key)
