@@ -107,14 +107,14 @@ export default {
       immediate: true,
       handler() {
         this.react();
-        this.$nextTick(this.updateViewPort());
+        this.$nextTick(this.updateViewPort);
       },
     },
     numcols: {
       immediate: true,
       handler() {
         this.react();
-        this.$nextTick(this.updateViewPort());
+        this.$nextTick(this.updateViewPort);
       },
     },
     range: {
@@ -193,17 +193,19 @@ export default {
     updateViewPort() {
       if (!this.renderer) return;
 
-      const parent = document
-        .getElementById("mainContent")
-        .getBoundingClientRect();
-      const { x, y, width, height } = this.$el.getBoundingClientRect();
-      const viewport = [
-        (x - parent.x) / parent.width,
-        1 - (y + height) / parent.height,
-        (x - parent.x + width) / parent.width,
-        1 - y / parent.height,
-      ];
-      this.renderer.setViewport(...viewport);
+      this.$nextTick(() => {
+        const parent = document
+          .getElementById("mainContent")
+          .getBoundingClientRect();
+        const { x, y, width, height } = this.$el.getBoundingClientRect();
+        const viewport = [
+          (x - parent.x) / parent.width,
+          1 - (y + height) / parent.height,
+          (x - parent.x + width) / parent.width,
+          1 - y / parent.height,
+        ];
+        this.renderer.setViewport(...viewport);
+      });
     },
     addRenderer(data) {
       if (this.renderer) return;

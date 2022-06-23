@@ -37,7 +37,7 @@ export default {
     };
   },
 
-  asyncComputed: {
+  computed: {
     ...mapGetters({
       currentTimeStep: "PLOT_TIME_STEP",
       numcols: "VIEW_COLUMNS",
