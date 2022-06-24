@@ -99,14 +99,14 @@ export default {
       immediate: true,
       handler() {
         this.react();
-        this.$nextTick(this.relayoutPlotly());
+        this.$nextTick(this.relayoutPlotly);
       },
     },
     numcols: {
       immediate: true,
       handler() {
         this.react();
-        this.$nextTick(this.relayoutPlotly());
+        this.$nextTick(this.relayoutPlotly);
       },
     },
     logScaling: {
@@ -139,20 +139,19 @@ export default {
       updateNumReady: "PLOT_NUM_READY_SET",
     }),
     relayoutPlotly() {
-      const node = this.$refs.plotly;
-      const elems = node?.getElementsByClassName("plot-container");
-      if (node !== undefined && elems.length > 0) {
-        Plotly.relayout(this.$refs.plotly, {
-          "xaxis.autorange": true,
-          "yaxis.autorange": true,
-        });
-      }
-    },
-    resize() {
       if (this.zoom) {
         return;
       }
-      this.relayoutPlotly();
+      this.$nextTick(() => {
+        const node = this.$refs.plotly;
+        const elems = node?.getElementsByClassName("plot-container");
+        if (node !== undefined && elems.length > 0) {
+          Plotly.relayout(this.$refs.plotly, {
+            "xaxis.autorange": true,
+            "yaxis.autorange": true,
+          });
+        }
+      });
     },
     react: function () {
       let nextImage = this.loadedTimeStepData.find(
@@ -295,6 +294,6 @@ export default {
   },
 
   mounted() {
-    window.addEventListener("resize", this.resize);
+    window.addEventListener("resize", this.relayoutPlotly);
   },
 };

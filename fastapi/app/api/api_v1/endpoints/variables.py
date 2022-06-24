@@ -10,6 +10,7 @@ from fastapi import APIRouter
 from fastapi import Header
 from fastapi import HTTPException
 
+from .colormap import generate_colormap_data
 from .colormap import generate_colormap_response
 from .mesh import generate_mesh_data
 from .mesh import generate_mesh_response
@@ -109,6 +110,8 @@ async def generate_plot_data(bp, variable: str):
         return await generate_plotly_data(plot_config, bp, variable)
     elif plot_type == PlotFormat.mesh:
         return await generate_mesh_data(plot_config, bp, variable)
+    elif plot_type == PlotFormat.colormap:
+        return await generate_colormap_data(plot_config, bp, variable)
 
     raise HTTPException(status_code=400, detail="Unsupported plot type.")
 

@@ -3,6 +3,7 @@ import { mapGetters, mapActions, mapMutations } from "vuex";
 import { decode } from "@msgpack/msgpack";
 import PlotlyPlot from "../PlotlyPlot";
 import VtkPlot from "../VTKPlot";
+import { PlotType } from "../../../utils/constants";
 
 // Number of timesteps to prefetch data for.
 const TIMESTEPS_TO_PREFETCH = 3;
@@ -33,11 +34,11 @@ export default {
       // Set of the current timesteps we are fetching data for, used to prevent
       // duplicate prefetching.
       prefetchRequested: new Set(),
-      plotType: "plotly",
+      plotType: PlotType.Plotly,
     };
   },
 
-  asyncComputed: {
+  computed: {
     ...mapGetters({
       currentTimeStep: "PLOT_TIME_STEP",
       numcols: "VIEW_COLUMNS",
@@ -122,15 +123,16 @@ export default {
         const reader = new FileReader();
         if (response.type === "application/msgpack") {
           reader.readAsArrayBuffer(response);
-          this.plotType = "vtk";
+          this.plotType = PlotType.VTK;
         } else {
           reader.readAsText(response);
+          this.plotType = PlotType.Plotly;
         }
         return new Promise((resolve) => {
           reader.onload = () => {
             let img;
             const ltsd = this.loadedTimeStepData();
-            if (this.plotType === "vtk") {
+            if (this.plotType === PlotType.VTK) {
               img = decode(reader.result);
               this.$refs[`${this.row}-${this.col}`].addRenderer(img);
               this.setLoadedTimeStepData({
@@ -139,7 +141,6 @@ export default {
                   {
                     timestep: timeStep,
                     data: img,
-                    type: this.plotType,
                   },
                 ],
               });
@@ -152,7 +153,6 @@ export default {
                     timestep: timeStep,
                     data: img.data,
                     layout: img.layout,
-                    type: this.plotType,
                   },
                 ],
               });
@@ -360,7 +360,7 @@ export default {
         name: response.name,
         event: e,
         step: this.currentTimeStep,
-        isVTK: this.plotType === "vtk",
+        isPlotly: this.plotType === PlotType.Plotly,
       };
       this.setCurrentItemId(this.itemId);
       this.setContextMenuItemData(data);

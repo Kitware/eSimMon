@@ -3,7 +3,7 @@ from typing import Dict
 from .utils import MsgpackResponse
 
 
-async def generate_colormap_response(plot_config: Dict, bp_file, variable: str):
+async def generate_colormap_data(plot_config: Dict, bp_file, variable: str):
     x_variable = plot_config["x"]
     y_variable = plot_config["y"]
     color_variable = plot_config["color"]
@@ -15,7 +15,7 @@ async def generate_colormap_response(plot_config: Dict, bp_file, variable: str):
     y = bp_file.read(y_variable).data
     color = bp_file.read(color_variable).data
 
-    mesh_json = {
+    return {
         "x": x,
         "y": y,
         "color": color,
@@ -23,6 +23,10 @@ async def generate_colormap_response(plot_config: Dict, bp_file, variable: str):
         "yLabel": y_label,
         "colorLabel": color_variable,
         "title": title,
+        "type": "colormap",
     }
 
+
+async def generate_colormap_response(plot_config: Dict, bp_file, variable: str):
+    mesh_json = await generate_colormap_data(plot_config, bp_file, variable)
     return MsgpackResponse(content=mesh_json)
