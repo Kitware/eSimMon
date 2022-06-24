@@ -14,8 +14,8 @@ import vtkmodules.vtkInteractionStyle  # noqa
 
 # noinspection PyUnresolvedReferences
 import vtkmodules.vtkRenderingOpenGL2  # noqa
-from fastapi.responses import FileResponse
 from app.schemas.format import PlotFormat
+from fastapi.responses import FileResponse
 from PIL import Image
 from starlette.responses import StreamingResponse
 from vtk.util import numpy_support
