@@ -12,9 +12,8 @@
     />
     <vtk-plot
       :ref="row+'-'+col"
-      v-if="plotType !== 'plotly'"
+      v-if="plotType === 'vtk'"
       v-bind:itemId="itemId"
-      v-bind:plotType="plotType"
     />
   </v-card>
 </div>

@@ -4,6 +4,7 @@ import {
   setAxesStyling,
   scalarBarAutoLayout,
 } from "../../../utils/vtkPlotStyling";
+import { PlotType } from "../../../utils/constants";
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import "@kitware/vtk.js/Rendering/Profiles/Geometry";
@@ -30,10 +31,6 @@ export default {
       type: String,
       required: true,
     },
-    plotType: {
-      type: String,
-      required: true,
-    },
   },
 
   data() {
@@ -51,6 +48,7 @@ export default {
       scale: 0,
       position: null,
       rangeText: [],
+      plotType: null,
     };
   },
 
@@ -137,15 +135,6 @@ export default {
         this.updateZoomedView();
       },
     },
-    plotType: {
-      handler(newVal, oldVal) {
-        if (newVal !== "vtk" && oldVal !== "vtk") {
-          // Connectivity is handled differently for different plots
-          // Recreate the renderer for new plot types
-          this.removeRenderer();
-        }
-      },
-    },
   },
 
   methods: {
@@ -208,7 +197,17 @@ export default {
       });
     },
     addRenderer(data) {
-      if (this.renderer) return;
+      if (this.renderer) {
+        if (this.plotType !== data.type) {
+          // Connectivity is handled differently for different plots
+          // Recreate the renderer for new plot types
+          this.removeRenderer();
+          this.plotType = data.type;
+        } else {
+          // We've already created a renderer, just re-use it
+          return;
+        }
+      }
       // Create the building blocks we will need for the polydata
       this.renderer = vtkRenderer.newInstance({ background: [1, 1, 1] });
       this.mesh = vtkPolyData.newInstance();
@@ -218,7 +217,7 @@ export default {
       this.renderWindow.addRenderer(this.renderer);
       this.updateRendererCount(this.renderWindow.getRenderers().length);
 
-      if (this.plotType === "mesh") {
+      if (this.plotType === PlotType.Mesh) {
         // Load the cell attributes
         // Create a view of the data
         const connectivityView = new DataView(
@@ -263,7 +262,7 @@ export default {
       this.axes.setAxisLabels(data.xLabel, data.yLabel, "");
       this.axes.getGridActor().getProperty().setColor("black");
       this.axes.getGridActor().getProperty().setLineWidth(0.1);
-      if (this.plotType === "colormap") {
+      if (this.plotType === PlotType.ColorMap) {
         this.axes.setGridLines(false);
       }
       this.renderer.addActor(this.axes);
@@ -285,7 +284,7 @@ export default {
     updateRenderer(data) {
       if (!this.renderer) return;
 
-      if (this.plotType === "mesh") {
+      if (this.plotType === PlotType.Mesh) {
         this.updateMeshRenderer(data);
       } else {
         this.updateGridRenderer(data);
@@ -347,7 +346,7 @@ export default {
       if (!this.zoom) {
         // TODO: Remove this when we have more functionality in VTK charts
         // Hack to adjust the bounds to include the x label
-        if (this.plotType === "mesh") {
+        if (this.plotType === PlotType.Mesh) {
           bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT;
         }
         this.renderer.resetCamera(bounds);
@@ -535,7 +534,7 @@ export default {
       }
       if (!this.zoom) {
         const bounds = [...this.actor.getBounds()];
-        if (this.plotType === "mesh") {
+        if (this.plotType === PlotType.Mesh) {
           this.camera.setPosition(...this.position);
           // Hack to adjust the bounds to include the x label
           // This can be removed when vtk.js include the text labels in its bounds.
