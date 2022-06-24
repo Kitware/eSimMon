@@ -89,11 +89,11 @@ def _mkVtkIdList(it):
 
 
 class MeshImagePipeline:
-    def render_image(self, plot_data: Dict, format: str, details: Dict):
-        plot_type = plot_data["type"]
+    def _retrieve_mesh_data(self, plot_type: str, plot_data: Dict):
         if plot_type == PlotFormat.mesh:
             nodes = np.asarray(plot_data["nodes"])
             connectivity = np.asarray(plot_data["connectivity"])
+            scale = 1
         elif plot_type == PlotFormat.colormap:
             xpoints, ypoints = plot_data["x"], plot_data["y"]
             nodes, connectivity = [], []
@@ -114,8 +114,17 @@ class MeshImagePipeline:
                     idx += 1
             nodes = np.array(nodes)
             connectivity = np.array(connectivity)
+            # TODO: Remove this when we have more functionality in VTK charts
+            # Manipulate actor scale to ensure the plot remains square
+            scale = (max(ypoints) - min(ypoints)) / (max(xpoints) - min(xpoints))
 
+        return nodes, connectivity, scale
+
+    def render_image(self, plot_data: Dict, format: str, details: Dict):
+        plot_type = plot_data["type"]
+        nodes, connectivity, scale = self._retrieve_mesh_data(plot_type, plot_data)
         color = np.asarray(plot_data["color"])
+
         if color.ndim > 1:
             color = color.flatten()
         xLabel = plot_data["xLabel"]
@@ -135,24 +144,14 @@ class MeshImagePipeline:
                 self.cells.InsertNextCell(_mkVtkIdList(pt))
             self.mesh.SetPolys(self.cells)
 
-        if plot_type == PlotFormat.colormap:
-            # TODO: Remove this when we have more functionality in VTK charts
-            # Manipulate actor scale to ensure the plot remains square
-            scale = (max(ypoints) - min(ypoints)) / (max(xpoints) - min(xpoints))
-            self.mesh_actor.SetScale(scale, 1, 1)
+        # TODO: Remove this when we have more functionality in VTK charts
+        # Manipulate actor scale to ensure the plot remains square
+        self.mesh_actor.SetScale(scale, 1, 1)
 
         scalars = numpy_support.numpy_to_vtk(color)
 
         # We now assign the pieces to the vtkPolyData.
         self.mesh.GetPointData().SetScalars(scalars)
-
-        if plot_type == PlotFormat.colormap:
-            # TODO: Remove this when we have more functionality in VTK charts
-            # Manipulate actor scale to ensure the plot remains square
-            scale = (max(ypoints) - min(ypoints)) / (max(xpoints) - min(xpoints))
-            self.mesh_actor.SetScale(scale, 1, 1)
-        elif plot_type == PlotFormat.mesh:
-            self.mesh_actor.SetScale(1, 1, 1)
 
         # Setup mapper and actor
         self.mesh_mapper.SetInputData(self.mesh)
