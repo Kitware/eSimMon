@@ -2,6 +2,6 @@ from enum import Enum
 
 
 class PlotFormat(str, Enum):
-    plotly = "lines"
+    plotly = ["lines", "bar", "scatter"]
     mesh = "mesh-colormap"
     colormap = "colormap"

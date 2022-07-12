@@ -89,8 +89,7 @@ async def generate_plot_response(bp, variable: str):
     plot_config = json.loads(plot_config[0])
 
     plot_type = plot_config["type"]
-
-    if plot_type == PlotFormat.plotly:
+    if plot_type in PlotFormat.plotly:
         return await generate_plotly_response(plot_config, bp, variable)
     elif plot_type == PlotFormat.mesh:
         return await generate_mesh_response(plot_config, bp, variable)
@@ -106,7 +105,7 @@ async def generate_plot_data(bp, variable: str):
 
     plot_type = plot_config["type"]
 
-    if plot_type == PlotFormat.plotly:
+    if plot_type in PlotFormat.plotly:
         return await generate_plotly_data(plot_config, bp, variable)
     elif plot_type == PlotFormat.mesh:
         return await generate_mesh_data(plot_config, bp, variable)
