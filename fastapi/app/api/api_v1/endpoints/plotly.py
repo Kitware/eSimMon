@@ -4,28 +4,28 @@ import numpy as np
 from fastapi.responses import JSONResponse
 
 
-def generate_js_data(x: np.ndarray, y: np.ndarray, name: str):
-    return {
+def generate_data(x: np.ndarray, y: np.ndarray, name: str, plot_type: str):
+    data = {
         "name": name,
-        "mode": "line",
         "type": "scatter",
         "x": x,
         "y": y,
     }
+    if plot_type == "bar":
+        data["type"] = "bar"
+    else:
+        if plot_type == "lines":
+            mode = "lines"
+        elif plot_type == "scatter":
+            mode = "markers"
+        data["mode"] = mode
+    return data
 
 
-def generate_python_data(x: np.ndarray, y: np.ndarray, name: str):
-    return {
-        "name": name,
-        "mode": "lines",
-        "type": "scatter",
-        "x": x,
-        "y": y,
-    }
-
-
-def generate_js_layout(title: str, x_label: str, y_label: str, name: str):
-    return {
+def generate_js_layout(
+    title: str, x_label: str, y_label: str, name: str, plot_type: str
+):
+    layout = {
         "autosize": "true",
         "hovermode": "closest",
         "margin": {"l": 60, "t": 30, "b": 30, "r": 10},
@@ -42,11 +42,16 @@ def generate_js_layout(title: str, x_label: str, y_label: str, name: str):
         },
         "frames": [],
         "name": name,
+        "legend": {"display": "false"},
+        "showlegend": "false",
     }
+    if plot_type == "bar":
+        layout["barmode"] = "stack"
+    return layout
 
 
-def generate_python_layout(title: str, x_label: str, y_label: str):
-    return {
+def generate_python_layout(title: str, x_label: str, y_label: str, plot_type: str):
+    layout = {
         "autosize": True,
         "hovermode": "closest",
         "margin": {"l": 60, "t": 30, "b": 30, "r": 10},
@@ -62,6 +67,9 @@ def generate_python_layout(title: str, x_label: str, y_label: str):
             "automargin": True,
         },
     }
+    if plot_type == "bar":
+        layout["barmode"] = "stack"
+    return layout
 
 
 async def generate_plotly_response(plot_config: Dict, bp_file, variable: str):
@@ -70,18 +78,23 @@ async def generate_plotly_response(plot_config: Dict, bp_file, variable: str):
     y_variables = plot_config["y"]
     y_names = plot_config["yname"]
     y_label = plot_config["ylabel"]
+    plot_type = plot_config["type"]
 
     data = []
     x = bp_file.read(x_variable).tolist()
 
     for (y_variable, y_name) in zip(y_variables, y_names):
         y = bp_file.read(y_variable).tolist()
-        data.append(generate_js_data(x, y, y_name)),
+        data.append(generate_data(x, y, y_name, plot_type)),
 
     plotly_json = {
         "data": data,
         "layout": generate_js_layout(
-            title=variable, x_label=x_label, y_label=y_label, name=variable
+            title=variable,
+            x_label=x_label,
+            y_label=y_label,
+            name=variable,
+            plot_type=plot_type,
         ),
     }
 
@@ -96,20 +109,21 @@ async def generate_plotly_data(plot_config: Dict, bp_file, variable: str):
     y_variables = plot_config["y"]
     y_names = plot_config["yname"]
     y_label = plot_config["ylabel"]
+    plot_type = plot_config["type"]
 
     data = []
     x = bp_file.read(x_variable).tolist()
 
     for (y_variable, y_name) in zip(y_variables, y_names):
         y = bp_file.read(y_variable).tolist()
-        data.append(generate_python_data(x, y, y_name)),
+        data.append(generate_data(x, y, y_name, plot_type)),
 
     plotly_json = {
         "data": data,
         "layout": generate_python_layout(
-            title=variable, x_label=x_label, y_label=y_label
+            title=variable, x_label=x_label, y_label=y_label, plot_type=plot_type
         ),
-        "type": "plotly",
+        "type": plot_type,
     }
 
     return plotly_json

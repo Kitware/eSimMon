@@ -48,12 +48,18 @@ router = APIRouter()
 
 def create_plotly_image(plot_data: dict, format: str, details: dict):
     # The json contains Javascript syntax. Update values for Python
-    for data in plot_data["data"]:
-        data["mode"] = "lines"
+    plot_type = plot_data["type"]
+    if plot_type != "bar":
+        mode = "lines" if plot_type == "lines" else "markers"
+        for data in plot_data["data"]:
+            data["mode"] = mode
+
     plot_data["layout"]["autosize"] = True
     plot_data["layout"]["xaxis"]["automargin"] = True
     plot_data["layout"]["yaxis"]["automargin"] = True
     plot_data["layout"]["title"]["x"] = 0.5
+    # TODO: Find the best solution for legengs that take up too much space
+    # plot_data["layout"]["showlegend"] = False
     plot_data["layout"].pop("name", None)
     plot_data["layout"].pop("frames", None)
     if details:
@@ -324,7 +330,7 @@ def create_mesh_image(plot_data: dict, format: str, details: dict):
 
 
 async def get_timestep_image_data(plot: dict, format: str, details: dict):
-    if plot["type"] == PlotFormat.plotly:
+    if plot["type"] in PlotFormat.plotly:
         image = create_plotly_image(plot, format, details)
     elif plot["type"] == PlotFormat.mesh or plot["type"] == PlotFormat.colormap:
         image = create_mesh_image(plot, format, details)
