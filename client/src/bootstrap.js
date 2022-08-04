@@ -5,8 +5,10 @@ import Girder, { RestClient, vuetify } from "@girder/components/src";
 import { isNil } from "lodash";
 import VueMathjax from "vue-mathjax";
 import store from "./store";
+import VueCompositionAPI from "@vue/composition-api";
 
 export function bootstrap() {
+  Vue.use(VueCompositionAPI);
   Vue.use(Girder);
   Vue.use(VueMathjax);
 
