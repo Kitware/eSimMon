@@ -452,7 +452,8 @@ async def upload_timestep_bp_archive(
 async def fetch_variables(
     source: UploadSource, upload_url, shot_name, run_name, timestep
 ):
-    url = f"{upload_url}/shots/{shot_name}/{run_name}/{timestep}/variables.json"
+    # FIXME: Temp hack to handle wrong path. Revert once path is fixed.
+    url = f"{upload_url}/{shot_name}/{run_name}/{timestep}/variables.json"
 
     return await source.fetch_json(url)
 
@@ -460,7 +461,8 @@ async def fetch_variables(
 async def fetch_images_archive(
     source: UploadSource, upload_url, shot_name, run_name, timestep
 ):
-    url = f"{upload_url}/shots/{shot_name}/{run_name}/{timestep}/images.tar.gz"
+    # FIXME: Temp hack to handle wrong path. Revert once path is fixed.
+    url = f"{upload_url}/{shot_name}/{run_name}/{timestep}/images.tar.gz"
 
     return await source.fetch_binary(url)
 
@@ -599,7 +601,8 @@ async def fetch_images_scheduler(queue):
 
 
 async def fetch_run_time(source: UploadSource, upload_url, shot_name, run_name):
-    run_path = f"{upload_url}/shots/{shot_name}/{run_name}/time.json"
+    # FIXME: Temp hack to handle wrong path. Revert once path is fixed.
+    run_path = f"{upload_url}/{shot_name}/{run_name}/time.json"
 
     return await source.fetch_json(run_path)
 
@@ -636,7 +639,8 @@ async def watch_run(
                 last_timestep = 0
 
         # Now see where the simulation upload has got to
-        run_path = "shots/%s/%s/time.json" % (shot_name, run_name)
+        # FIXME: Temp hack to handle wrong path. Revert once path is fixed.
+        run_path = "%s/%s/time.json" % (shot_name, run_name)
         time = await fetch_run_time(source, upload_url, shot_name, run_name)
         # Wait for time.json to appear
         if time is None:
@@ -715,7 +719,8 @@ async def watch_run(
 
 
 async def fetch_shot_index(source: UploadSource, upload_url):
-    url = f"{upload_url}/shots/index.json"
+    # FIXME: Temp hack to handle wrong path. Revert once path is fixed.
+    url = f"{upload_url}/index.json"
     return await source.fetch_json(url)
 
 
