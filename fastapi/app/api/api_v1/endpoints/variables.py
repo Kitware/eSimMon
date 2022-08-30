@@ -56,8 +56,6 @@ def get_timestep_item(gc, group_folder_id, timestep):
 
 
 def get_timestep_bp_file_id(gc, group_folder_id, group_name, timestep):
-    filename = f"{group_name}.bp.tgz"
-
     timestep_item = get_timestep_item(gc, group_folder_id, timestep)
 
     for bp_file in gc.listFile(timestep_item["_id"]):
