@@ -109,7 +109,7 @@ async def generate_plotly_data(plot_config: Dict, bp_file, variable: str):
         "layout": generate_python_layout(
             title=variable, x_label=x_label, y_label=y_label
         ),
-        "type": "plotly",
+        "type": "lines",
     }
 
     return plotly_json
