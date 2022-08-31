@@ -282,7 +282,7 @@ export default {
       this.$nextTick(this.updateViewPort);
     },
     updateRenderer(data) {
-      if (!this.renderer) return;
+      if (!this.renderer || !this.plotType) return;
 
       if (this.plotType === PlotType.Mesh) {
         this.updateMeshRenderer(data);
