@@ -99,4 +99,4 @@ WORKDIR /app/
 
 COPY fastapi/ /app/
 
-ENTRYPOINT ["gunicorn", "-w",  "4", "--worker-class", "uvicorn.workers.UvicornWorker", "-t", "600", "app.main:app", "-b", "0.0.0.0:5000"]
+ENTRYPOINT ["gunicorn", "-w",  "4", "--worker-class", "uvicorn.workers.UvicornWorker", "-t", "600", "--keep-alive", "30", "app.main:app", "-b", "0.0.0.0:5000"]
