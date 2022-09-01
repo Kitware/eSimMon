@@ -170,7 +170,9 @@ export default {
           (img) => img.timestep === prevTimeStep
         );
       }
-      if (!isNil(nextImage)) {
+      // Plots can be added faster than the data can update. Make sure that the
+      // nextImage is the correct plot type.
+      if (!isNil(nextImage) && !Array.isArray(nextImage.data)) {
         if (!this.xaxis) {
           let xAxis = nextImage.data.xLabel;
           this.updatePlotDetails({ [`${this.itemId}`]: { xAxis } });

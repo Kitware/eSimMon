@@ -83,6 +83,7 @@ async def generate_plotly_response(plot_config: Dict, bp_file, variable: str):
         "layout": generate_js_layout(
             title=variable, x_label=x_label, y_label=y_label, name=variable
         ),
+        "type": "plotly",
     }
 
     return JSONResponse(

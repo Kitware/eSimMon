@@ -15,6 +15,7 @@ export default {
   props: {
     allPlots: {
       type: Object,
+      // eslint-disable-next-line
       default: () => {},
     },
     id: {
@@ -27,10 +28,12 @@ export default {
     },
     fetchImages: {
       type: Function,
+      // eslint-disable-next-line
       default: () => {},
     },
     fetchMovie: {
       type: Function,
+      // eslint-disable-next-line
       default: () => {},
     },
   },
