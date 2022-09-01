@@ -153,6 +153,7 @@ export default {
                     timestep: timeStep,
                     data: img.data,
                     layout: img.layout,
+                    type: img.type,
                   },
                 ],
               });

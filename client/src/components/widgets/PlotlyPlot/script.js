@@ -1,6 +1,7 @@
 import Plotly from "plotly.js-basic-dist-min";
 import { isNil } from "lodash";
 import { mapGetters, mapActions, mapMutations } from "vuex";
+import { PlotType } from "../../../utils/constants";
 
 //-----------------------------------------------------------------------------
 // Utility Functions
@@ -167,7 +168,14 @@ export default {
           (img) => img.timestep === prevTimeStep
         );
       }
-      if (!isNil(nextImage)) {
+      // Plots can be added faster than the data can update. Make sure we have
+      // a nextImage, that the DOM element has been created, and that the
+      // nextImage is the correct plot type.
+      const plotReadyForUpdate =
+        !isNil(nextImage) &&
+        !isNil(this.$refs.plotly) &&
+        nextImage.type === PlotType.Plotly;
+      if (plotReadyForUpdate) {
         if (!this.xAxis) {
           let xAxis = nextImage.layout.xaxis.title.text;
           this.updatePlotDetails({ [`${this.itemId}`]: { xAxis } });
@@ -295,5 +303,9 @@ export default {
 
   mounted() {
     window.addEventListener("resize", this.relayoutPlotly);
+  },
+
+  beforeDestroy() {
+    this.removePlotly();
   },
 };
