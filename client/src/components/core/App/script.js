@@ -290,6 +290,13 @@ export default {
     loadAutoSavedView() {
       this.loadAutoSave();
     },
+
+    adjustRenderWindowWidth(event) {
+      const navPanel = event[0].size;
+      const rw = document.getElementById("renderWindow");
+      rw.style.width = `${100 - navPanel}%`;
+      this.$refs.renderWindow.resize();
+    },
   },
 
   asyncComputed: {

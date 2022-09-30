@@ -7,7 +7,7 @@
     />
   </v-dialog>
   <context-menu />
-  <splitpanes>
+  <splitpanes @resize="adjustRenderWindowWidth">
     <pane min-size="15" :size="25">
       <v-row v-bind:style="{height: '100vh'}">
         <!-- Navigation panel on the left. -->
@@ -140,7 +140,7 @@
       v-on:mouseover.native="hoverOut"
     >
       <!-- image gallery grid. -->
-      <render-window class="plots" />
+      <render-window ref="renderWindow" id="renderWindow" class="plots" />
       <v-container v-bind:style="{padding: '0', maxWidth: '100%'}">
         <template v-for="i in numrows">
           <v-row v-bind:key="i">
