@@ -16,6 +16,8 @@ from .mesh import generate_mesh_data
 from .mesh import generate_mesh_response
 from .plotly import generate_plotly_data
 from .plotly import generate_plotly_response
+from .scatter import generate_scatter_data
+from .scatter import generate_scatter_response
 from .utils import get_girder_client
 
 router = APIRouter()
@@ -58,6 +60,13 @@ def get_timestep_item(gc, group_folder_id, timestep):
 def get_timestep_bp_file_id(gc, group_folder_id, group_name, timestep):
     timestep_item = get_timestep_item(gc, group_folder_id, timestep)
 
+    # FIXME: This is a temporary hack to allow us to test the performance plots
+    # This block should be removed once those bp filenames are fixed.
+    if group_name == "HeatLoad" or group_name == "Poincare":
+        filename = f"{group_name}-{timestep_item['name'].lstrip('0')}.bp.tgz"
+    else:
+        filename = f"{group_name}.bp.tgz"
+
     for bp_file in gc.listFile(timestep_item["_id"]):
         if bp_file["name"] == filename:
             return bp_file["_id"]
@@ -93,6 +102,8 @@ async def generate_plot_response(bp, variable: str):
         return await generate_mesh_response(plot_config, bp, variable)
     elif plot_type == PlotFormat.colormap:
         return await generate_colormap_response(plot_config, bp, variable)
+    elif plot_type == PlotFormat.scatter:
+        return await generate_scatter_response(plot_config, bp, variable)
 
     raise HTTPException(status_code=400, detail="Unsupported plot type.")
 
@@ -109,6 +120,8 @@ async def generate_plot_data(bp, variable: str):
         return await generate_mesh_data(plot_config, bp, variable)
     elif plot_type == PlotFormat.colormap:
         return await generate_colormap_data(plot_config, bp, variable)
+    elif plot_type == PlotFormat.scatter:
+        return await generate_scatter_data(plot_config, bp, variable)
 
     raise HTTPException(status_code=400, detail="Unsupported plot type.")
 

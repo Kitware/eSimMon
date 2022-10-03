@@ -233,6 +233,8 @@ export default {
           return;
         }
       }
+
+      this.plotType = data.type;
       // Create the building blocks we will need for the polydata
       this.renderer = vtkRenderer.newInstance({ background: [1, 1, 1] });
       this.mesh = vtkPolyData.newInstance();
@@ -243,28 +245,7 @@ export default {
       this.updateRendererCount(this.renderWindow.getRenderers().length);
 
       if (this.plotType === PlotType.Mesh) {
-        // Load the cell attributes
-        // Create a view of the data
-        const connectivityView = new DataView(
-          data.connectivity.buffer,
-          data.connectivity.byteOffset,
-          data.connectivity.byteLength
-        );
-        const numberOfNodes =
-          data.connectivity.length / Int32Array.BYTES_PER_ELEMENT / 3;
-        const cells = new Int32Array(numberOfNodes * 4);
-        var idx = 0;
-        const rowSize = 3 * Int32Array.BYTES_PER_ELEMENT; // 3 => columns
-        for (let i = 0; i < data.connectivity.length; i += rowSize) {
-          cells[idx++] = 3;
-          let index = i;
-          cells[idx++] = connectivityView.getInt32(index, true);
-          index += 4;
-          cells[idx++] = connectivityView.getInt32(index, true);
-          index += 4;
-          cells[idx++] = connectivityView.getInt32(index, true);
-        }
-        this.mesh.getPolys().setData(cells);
+        this.addMeshRenderer(data);
       }
 
       // Setup colormap
@@ -302,48 +283,84 @@ export default {
       this.scalarBar.setAutoLayout(scalarBarAutoLayout(this.scalarBar));
       this.renderer.addActor2D(this.scalarBar);
 
+      if (this.plotType === PlotType.Scatter) {
+        this.scalarBar.setVisibility(false);
+      }
+
       // Setup picker
       this.setupPointPicker();
 
       this.$nextTick(this.updateViewPort);
+    },
+    addMeshRenderer(data) {
+      // Load the cell attributes
+      // Create a view of the data
+      const connectivityView = new DataView(
+        data.connectivity.buffer,
+        data.connectivity.byteOffset,
+        data.connectivity.byteLength
+      );
+      const numberOfNodes =
+        data.connectivity.length / Int32Array.BYTES_PER_ELEMENT / 3;
+      const cells = new Int32Array(numberOfNodes * 4);
+      var idx = 0;
+      const rowSize = 3 * Int32Array.BYTES_PER_ELEMENT; // 3 => columns
+      for (let i = 0; i < data.connectivity.length; i += rowSize) {
+        cells[idx++] = 3;
+        let index = i;
+        cells[idx++] = connectivityView.getInt32(index, true);
+        index += 4;
+        cells[idx++] = connectivityView.getInt32(index, true);
+        index += 4;
+        cells[idx++] = connectivityView.getInt32(index, true);
+      }
+      this.mesh.getPolys().setData(cells);
     },
     updateRenderer(data) {
       if (!this.renderer || !this.plotType) return;
 
       if (this.plotType === PlotType.Mesh) {
         this.updateMeshRenderer(data);
-      } else {
+      } else if (this.plotType === PlotType.ColorMap) {
         this.updateGridRenderer(data);
+      } else {
+        this.updateScatterRenderer(data);
       }
 
-      // Set the scalars
-      // As we need a typed array we have to copy the data as its unaligned, so we have an aligned buffer to
-      // use to create the typed array
-      const buffer = data.color.buffer.slice(
-        data.color.byteOffset,
-        data.color.byteOffset + data.color.byteLength
-      );
-      const color = new Float64Array(
-        buffer,
-        0,
-        buffer.byteLength / Float64Array.BYTES_PER_ELEMENT
-      );
-      const scalars = vtkDataArray.newInstance({
-        name: "scalars",
-        values: color,
-      });
+      if (data.color) {
+        // Set the scalars
+        // As we need a typed array we have to copy the data as its unaligned, so we have an aligned buffer to
+        // use to create the typed array
+        const buffer = data.color.buffer.slice(
+          data.color.byteOffset,
+          data.color.byteOffset + data.color.byteLength
+        );
+        const color = new Float64Array(
+          buffer,
+          0,
+          buffer.byteLength / Float64Array.BYTES_PER_ELEMENT
+        );
+        const scalars = vtkDataArray.newInstance({
+          name: "scalars",
+          values: color,
+        });
 
-      // Build the polydata
-      this.mesh.getPointData().setScalars(scalars);
+        // Build the polydata
+        this.mesh.getPointData().setScalars(scalars);
+        this.mapper.setScalarRange(...scalars.getRange());
 
-      // Setup colormap
-      const lut = this.mapper.getLookupTable();
-      lut.setMappingRange(...scalars.getRange());
-      lut.updateRange();
+        // Setup colormap
+        const lut = this.mapper.getLookupTable();
+        lut.setMappingRange(...scalars.getRange());
+        lut.updateRange();
+
+        // Update color bar
+        this.scalarBar.setScalarsToColors(lut);
+        this.scalarBar.setAutoLayout(scalarBarAutoLayout(this.scalarBar));
+      }
 
       // Setup mapper and actor
       this.mapper.setInputData(this.mesh);
-      this.mapper.setScalarRange(...scalars.getRange());
 
       // Update axes
       // TODO: Remove this when we have more functionality in VTK charts
@@ -363,10 +380,6 @@ export default {
       // TODO: Remove this when we have more functionality in VTK charts
       // Hack to adjust the bounds to include the x label
       const bounds = [...this.actor.getBounds()];
-
-      // Update color bar
-      this.scalarBar.setScalarsToColors(lut);
-      this.scalarBar.setAutoLayout(scalarBarAutoLayout(this.scalarBar));
 
       // Update camera
       if (!this.zoom) {
@@ -452,6 +465,47 @@ export default {
         points[idx++] = 0.0;
       }
       this.mesh.getPoints().setData(points, 3);
+    },
+    updateScatterRenderer(data) {
+      // Load the point attributes
+      // Create a view of the data
+      const xBuffer = data.x.buffer.slice(
+        data.x.byteOffset,
+        data.x.byteOffset + data.x.byteLength
+      );
+      const x = new Float64Array(
+        xBuffer,
+        0,
+        xBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT
+      );
+      const yBuffer = data.y.buffer.slice(
+        data.y.byteOffset,
+        data.y.byteOffset + data.y.byteLength
+      );
+      const y = new Float64Array(
+        yBuffer,
+        0,
+        yBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT
+      );
+
+      const points = [];
+      const vertices = [];
+      for (let i = 0; i < x.length; i++) {
+        points.push(x[i], y[i], 0.0);
+        vertices.push(1, i);
+      }
+      this.mesh.getVerts().setData(vertices);
+      this.actor.getProperty().setColor(0, 0, 1);
+
+      this.mesh.getPoints().setData(points, 3);
+      // FIXME: This is a hack to attempt to keep
+      // the plot ratio relatively square
+      const yRange = Math.max(...y) - Math.min(...y);
+      const xRange = Math.max(...x) - Math.min(...x);
+      const actorScale = yRange / xRange;
+      if (!this.zoom) {
+        this.actor.setScale(actorScale, 1, 1);
+      }
     },
     removeRenderer() {
       // Remove the renderer if it exists, we're about to load a Plotly plot

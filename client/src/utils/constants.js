@@ -3,4 +3,5 @@ export const PlotType = {
   VTK: "vtk",
   Mesh: "mesh-colormap",
   ColorMap: "colormap",
+  Scatter: "scatter",
 };
