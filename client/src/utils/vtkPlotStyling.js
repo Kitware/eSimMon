@@ -83,20 +83,9 @@ export function scalarBarAutoLayout(model) {
       (2.0 * (textSizes.titleHeight + helper.getAxisTitlePixelOffset())) /
       lastSize[0];
 
-    // if the title will fit within the width of the bar then that looks
-    // nicer to put it at the top (helper.topTitle), otherwise rotate it
-    // and place it sideways
-    if (
-      tickWidth + 0.4 * titleWidth >
-      (2.0 * textSizes.titleWidth) / lastSize[0]
-    ) {
-      helper.setTopTitle(true);
-      boxSize[0] = tickWidth + 0.4 * titleWidth;
-      helper.setBoxPosition([0.98 - boxSize[0], -0.92]);
-    } else {
-      boxSize[0] = tickWidth + 1.4 * titleWidth;
-      helper.setBoxPosition([0.99 - boxSize[0], -0.92]);
-    }
+    // Rotate the title and place it sideways
+    boxSize[0] = tickWidth + 1.4 * titleWidth;
+    helper.setBoxPosition([0.99 - boxSize[0], -0.92]);
     boxSize[1] = Math.max(1.2, Math.min(1.84 / yAxisAdjust, 1.84));
 
     // recomute bar segments based on positioning

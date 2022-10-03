@@ -291,6 +291,7 @@ export default {
       this.scalarBar.setAxisTextStyle({ fontColor: "black" });
       this.scalarBar.setTickTextStyle({ fontColor: "black" });
       this.scalarBar.setDrawNanAnnotation(false);
+      this.scalarBar.setAutoLayout(scalarBarAutoLayout(this.scalarBar));
       this.renderer.addActor2D(this.scalarBar);
 
       // Setup picker
