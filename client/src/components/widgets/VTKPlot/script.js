@@ -49,6 +49,7 @@ export default {
       position: null,
       rangeText: [],
       plotType: null,
+      newPlotLoaded: false,
     };
   },
 
@@ -137,10 +138,11 @@ export default {
     },
     itemId: {
       immediate: true,
-      handler(val) {
-        if (!val) {
+      handler(new_id, old_id) {
+        if (!new_id) {
           this.removeRenderer();
         }
+        this.newPlotLoaded = new_id !== old_id;
       },
     },
   },
@@ -222,16 +224,16 @@ export default {
       });
     },
     addRenderer(data) {
+      if (this.renderer && !this.newPlotLoaded) {
+        // We've already created a renderer, just re-use it
+        return;
+      }
+
       if (this.renderer) {
-        if (this.plotType !== data.type) {
-          // Connectivity is handled differently for different plots
-          // Recreate the renderer for new plot types
-          this.removeRenderer();
-          this.plotType = data.type;
-        } else {
-          // We've already created a renderer, just re-use it
-          return;
-        }
+        // Connectivity is handled differently for different plots
+        // Recreate the renderer for new plot types
+        this.removeRenderer();
+        this.newPlotLoaded = false;
       }
 
       this.plotType = data.type;
