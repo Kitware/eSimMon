@@ -20,7 +20,8 @@ import vtkPolyData from "@kitware/vtk.js/Common/DataModel/PolyData";
 import vtkRenderer from "@kitware/vtk.js/Rendering/Core/Renderer";
 import vtkScalarBarActor from "@kitware/vtk.js/Rendering/Core/ScalarBarActor";
 
-const AXES_LABEL_BOUNDS_ADJUSTMENT = 0.3;
+const X_AXES_LABEL_BOUNDS_ADJUSTMENT = 0.3;
+const Y_AXES_LABEL_BOUNDS_ADJUSTMENT = 0.001;
 
 export default {
   name: "VTKPlot",
@@ -386,9 +387,12 @@ export default {
       // Update camera
       if (!this.zoom) {
         // TODO: Remove this when we have more functionality in VTK charts
-        // Hack to adjust the bounds to include the x label
         if (this.plotType === PlotType.Mesh) {
-          bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT;
+          // Hack to adjust the bounds to include the x label
+          bounds[2] -= X_AXES_LABEL_BOUNDS_ADJUSTMENT;
+        } else if (this.plotType === PlotType.Scatter) {
+          // Hack to adjust the bounds to include the y label
+          bounds[1] -= Y_AXES_LABEL_BOUNDS_ADJUSTMENT;
         }
         this.renderer.resetCamera(bounds);
         if (!this.position) {
@@ -616,11 +620,16 @@ export default {
       }
       if (!this.zoom) {
         const bounds = [...this.actor.getBounds()];
-        if (this.plotType === PlotType.Mesh) {
+        if (this.plotType !== PlotType.ColorMap) {
           this.camera.setPosition(...this.position);
           // Hack to adjust the bounds to include the x label
-          // This can be removed when vtk.js include the text labels in its bounds.
-          bounds[2] -= AXES_LABEL_BOUNDS_ADJUSTMENT;
+          if (this.plotType === PlotType.Mesh) {
+            // This can be removed when vtk.js include the text labels in its bounds.
+            bounds[2] -= X_AXES_LABEL_BOUNDS_ADJUSTMENT;
+          } else if (this.plotType === PlotType.Scatter) {
+            // This can be removed when vtk.js include the text labels in its bounds.
+            bounds[1] -= Y_AXES_LABEL_BOUNDS_ADJUSTMENT;
+          }
         }
         this.renderer.resetCamera(bounds);
         this.rangeText = [];
