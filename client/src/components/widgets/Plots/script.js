@@ -206,7 +206,13 @@ export default {
       );
       this.itemId = items[0]._id;
       this.updatePlotDetails({
-        [`${this.itemId}`]: { zoom: null, log: false, xAxis: "", range: null },
+        [`${this.itemId}`]: {
+          zoom: null,
+          log: false,
+          xAxis: "",
+          range: null,
+          legend: false,
+        },
       });
       this.setLoadedFromView(false);
       this.setRun();
@@ -222,6 +228,7 @@ export default {
           log: item.log,
           xAxis: item.xAxis,
           range: item.range,
+          legend: item.legend,
         },
       });
     },

@@ -182,8 +182,16 @@ export default {
       const plotDetails = getters.PLOT_DETAILS;
       layout.forEach((item) => {
         const { row, col } = item;
-        const { log, range, xAxis, zoom } = plotDetails[`${item.itemId}`];
-        items[`${row}::${col}`] = { id: item.itemId, log, range, xAxis, zoom };
+        const { legend, log, range, xAxis, zoom } =
+          plotDetails[`${item.itemId}`];
+        items[`${row}::${col}`] = {
+          id: item.itemId,
+          legend,
+          log,
+          range,
+          xAxis,
+          zoom,
+        };
       });
       commit("VIEW_ITEMS_SET", items);
     },

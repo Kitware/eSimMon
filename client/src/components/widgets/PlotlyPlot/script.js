@@ -60,6 +60,12 @@ export default {
       }
       return this.allAvailableTimeSteps[`${this.itemId}`] || [];
     },
+    legendVisibility() {
+      if (!this.itemId || !this.plotDetails) {
+        return false;
+      }
+      return this.plotDetails[`${this.itemId}`]?.legend;
+    },
     loadedTimeStepData() {
       if (!this.allLoadedTimeStepData) {
         return [];
@@ -108,6 +114,12 @@ export default {
       handler() {
         this.react();
         this.$nextTick(this.relayoutPlotly);
+      },
+    },
+    legendVisibility: {
+      immediate: true,
+      handler() {
+        this.react();
       },
     },
     logScaling: {
@@ -183,6 +195,7 @@ export default {
         nextImage.layout.xaxis.type = this.logScaling ? "log" : "linear";
         nextImage.layout.yaxis.type = this.logScaling ? "log" : "linear";
         nextImage.layout.yaxis.autorange = true;
+        nextImage.layout.showlegend = this.legendVisibility;
         if (this.zoom) {
           nextImage.layout.xaxis.range = this.zoom.xAxis;
           nextImage.layout.yaxis.range = this.zoom.yAxis;
@@ -201,8 +214,13 @@ export default {
               icon: Plotly.Icons["3d_rotate"],
               click: this.toggleLogScale,
             },
+            {
+              name: "toggle legend visibility",
+              icon: Plotly.Icons["autoscale"],
+              click: this.toggleLegendVisibility,
+            },
           ],
-          modeBarButtonsToRemove: ["toImage"],
+          modeBarButtonsToRemove: ["toImage", "autoScale2d"],
         });
         if (!this.eventHandlersSet) this.setEventHandlers();
         this.updateNumReady(this.numReady + 1);
@@ -298,6 +316,11 @@ export default {
     },
     toggleLogScale() {
       this.updatePlotDetails({ [`${this.itemId}`]: { log: !this.logScaling } });
+    },
+    toggleLegendVisibility() {
+      this.updatePlotDetails({
+        [`${this.itemId}`]: { legend: !this.legendVisibility },
+      });
     },
   },
 
