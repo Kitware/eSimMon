@@ -1,65 +1,63 @@
-import { mapActions } from "vuex";
+import { ref, computed } from "@vue/composition-api";
+import { useActions } from "vuex-composition-helpers";
 
 export default {
-  inject: ["girderRest"],
-
-  data() {
-    return {
-      newStart: 0.0,
-      newEnd: 0.0,
-      invalidInput: true,
-    };
-  },
   props: {
-    param: {
-      type: String,
-      default: "",
-    },
-    visible: {
-      type: Boolean,
-      default: false,
-    },
-    id: {
-      type: String,
-      default: "",
-    },
+    param: String,
+    visible: Boolean,
+    id: String,
   },
-  computed: {
-    settingsDialog: {
-      get() {
-        if (this.visible) {
-          this.checkValidity();
-        }
-        return this.visible;
-      },
-      set(value) {
-        if (!value) {
-          this.$emit("close");
-        }
-      },
-    },
-  },
-  methods: {
-    ...mapActions({
+
+  setup(props, { emit }) {
+    const { updatePlotDetails } = useActions({
       updatePlotDetails: "PLOT_DETAILS_UPDATED",
-    }),
-    save() {
-      const min = parseFloat(this.newStart);
-      const max = parseFloat(this.newEnd);
+    });
+
+    const settingsDialog = computed({
+      get: () => {
+        if (props.visible) {
+          checkValidity();
+        }
+        return props.visible;
+      },
+      set: (value) => {
+        if (!value) {
+          emit("close");
+        }
+      },
+    });
+
+    const newStart = ref(0.0);
+    const newEnd = ref(0.0);
+    function save() {
+      const min = parseFloat(newStart.value);
+      const max = parseFloat(newEnd.value);
       const range = max - min < 1 ? null : [min, max];
-      this.updatePlotDetails({ [`${this.id}`]: { range } });
-      this.settingsDialog = false;
-    },
-    clear() {
-      this.newStart = 0.0;
-      this.newEnd = 0.0;
-    },
-    checkValidity() {
-      if (parseFloat(this.newStart) <= parseFloat(this.newEnd)) {
-        this.invalidInput = false;
+      updatePlotDetails({ [`${props.id}`]: { range } });
+      settingsDialog.value = false;
+    }
+    function clear() {
+      newStart.value = 0.0;
+      newEnd.value = 0.0;
+    }
+
+    const invalidInput = ref(true);
+    function checkValidity() {
+      if (parseFloat(newStart.value) <= parseFloat(newEnd.value)) {
+        invalidInput.value = false;
       } else {
-        this.invalidInput = true;
+        invalidInput.value = true;
       }
-    },
+    }
+
+    return {
+      newStart,
+      newEnd,
+      invalidInput,
+      settingsDialog,
+      save,
+      clear,
+      checkValidity,
+    };
   },
 };

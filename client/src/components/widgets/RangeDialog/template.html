@@ -49,7 +49,7 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer />
-      <v-btn text @click.stop="settingsDialog=false"> Cancel </v-btn>
+      <v-btn text @click.stop="settingsDialog.value=false"> Cancel </v-btn>
       <v-btn text :disabled="invalidInput" @click.stop="save()"> Save </v-btn>
     </v-card-actions>
   </v-card>
