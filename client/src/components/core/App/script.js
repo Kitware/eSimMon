@@ -435,11 +435,6 @@ export default {
 
       // Setup polling to autosave view
       this.autosave();
-
-      if (!this.loadedFromView) {
-        // Default to playing once a parameter has been selected
-        this.setPaused(false);
-      }
     },
   },
 };
