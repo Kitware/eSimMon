@@ -217,7 +217,7 @@ export default {
     loadTemplateGallery: function (item) {
       this.cleanUpOldPlotData();
       const oldId = this.itemId;
-      this.itemId = item.id;
+      this.itemId = item.id || "";
       this.setLoadedTimeStepData({ [`${this.itemId}`]: [] });
       this.setLoadedFromView(true);
       this.updatePlotDetails({

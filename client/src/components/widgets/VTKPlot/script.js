@@ -135,6 +135,14 @@ export default {
         this.updateZoomedView();
       },
     },
+    itemId: {
+      immediate: true,
+      handler(val) {
+        if (!val) {
+          this.removeRenderer();
+        }
+      },
+    },
   },
 
   methods: {
