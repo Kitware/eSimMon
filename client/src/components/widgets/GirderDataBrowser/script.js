@@ -6,8 +6,13 @@ import {
   getLocationType,
   getSingularLocationTypeName,
 } from "@girder/components/src/utils";
+import GirderDataTable from "../GirderDataTable";
 
 export default {
+  components: {
+    GirderDataTable,
+  },
+
   mixins: [GirderDataBrowser],
 
   inject: ["girderRest"],
