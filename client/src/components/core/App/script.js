@@ -314,6 +314,7 @@ export default {
       minTimeStep: "PLOT_MIN_TIME_STEP",
       viewTimeStep: "PLOT_VIEW_TIME_STEP",
       numReady: "PLOT_NUM_READY",
+      selectedPlots: "PLOT_SELECTIONS",
     }),
 
     location: {
@@ -440,6 +441,22 @@ export default {
         // Default to playing once a parameter has been selected
         this.setPaused(false);
       }
+    },
+
+    selectedPlots(selections) {
+      const dataTable = document.getElementById("data-table");
+      if (!dataTable) {
+        return;
+      }
+      const tableBody = dataTable.getElementsByTagName("tbody")[0];
+      const children = tableBody.childNodes;
+      children.forEach((child) => {
+        if (selections.includes(child.id)) {
+          child.style.color = "lightgray";
+        } else {
+          child.style.color = "black";
+        }
+      });
     },
   },
 };

@@ -16,6 +16,7 @@ export default {
     loadedTimeStepData: null,
     availableTimeSteps: null,
     details: null,
+    selectedPlots: [],
   },
   getters: {
     PLOT_TIME_STEP(state) {
@@ -65,6 +66,9 @@ export default {
     },
     PLOT_DETAILS(state) {
       return state.details;
+    },
+    PLOT_SELECTIONS(state) {
+      return state.selectedPlots;
     },
   },
   mutations: {
@@ -116,6 +120,9 @@ export default {
     PLOT_DETAILS_SET(state, val) {
       state.details = val;
     },
+    PLOT_SELECTIONS_SET(state, val) {
+      return (state.selectedPlots = val);
+    },
   },
   actions: {
     PLOT_MIN_TIME_STEP_CHANGED({ state, commit }, val) {
@@ -161,6 +168,14 @@ export default {
       let newData = Object.values(data)[0];
       let updated = { ...oldData, ...newData };
       commit("PLOT_DETAILS_SET", { ...state.details, [`${itemId}`]: updated });
+    },
+    PLOT_SELECTIONS_UPDATED({ state }, data) {
+      const { newId, oldId } = data;
+      const pos = state.selectedPlots.findIndex((id) => id === oldId);
+      if (pos !== -1) {
+        state.selectedPlots.splice(pos, 1);
+      }
+      state.selectedPlots.push(newId);
     },
   },
 };
