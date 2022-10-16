@@ -1,129 +1,103 @@
-import { mapActions, mapGetters, mapMutations } from "vuex";
+// TODO:
+// - Test download all images
+// - Test download range of images
+// - Test download all as movie
+// - Test download range as movie
+// - Try to input invalid range
+import { ref, computed } from "@vue/composition-api";
+import { useGetters, useMutations } from "vuex-composition-helpers";
 
 export default {
-  inject: ["girderRest"],
-
-  data() {
-    return {
-      activeTab: 0,
-      rangeInput: "",
-      rangeSelection: "selectAll",
-      formatSelection: "0",
-      hint: "",
-    };
-  },
   props: {
-    allPlots: {
-      type: Object,
-      // eslint-disable-next-line
-      default: () => {},
-    },
-    id: {
-      type: String,
-      default: "",
-    },
-    param: {
-      type: String,
-      default: "",
-    },
-    fetchImages: {
-      type: Function,
-      // eslint-disable-next-line
-      default: () => {},
-    },
-    fetchMovie: {
-      type: Function,
-      // eslint-disable-next-line
-      default: () => {},
-    },
+    id: String,
+    param: String,
+    fetchImages: Function,
+    fetchMovie: Function,
   },
-  computed: {
-    ...mapGetters({
-      availableTimeSteps: "PLOT_AVAILABLE_TIME_STEPS",
-      visible: "UI_SHOW_DOWNLOAD_OPTIONS",
+
+  setup(props) {
+    // Template params ====================================================
+    const { mathJaxOptions } = useGetters({
       mathJaxOptions: "UI_MATH_JAX_OPTIONS",
-    }),
-    downloadsDialog: {
-      get() {
-        return this.visible;
+    });
+
+    // Set up dialog ======================================================
+    const { visible } = useGetters({ visible: "UI_SHOW_DOWNLOAD_OPTIONS" });
+    const { showDownloadOptions } = useMutations({
+      showDownloadOptions: "UI_SHOW_DOWNLOAD_OPTIONS_SET",
+    });
+    const downloadsDialog = computed({
+      get: () => {
+        if (visible.value) {
+          updateHint();
+        }
+        return visible.value;
       },
-      set(value) {
-        this.showDownloadOptions(value);
+      set: (value) => {
+        showDownloadOptions(value);
         if (value) {
-          this.updateHint();
+          updateHint();
         }
       },
-    },
-    disableInput() {
-      return this.rangeSelection === "selectAll";
-    },
-    minStep() {
-      if (this.id) {
-        return Math.min(...this.availableTimeSteps[`${this.id}`]) || 0;
+    });
+
+    // Dialog Values and behavior =========================================
+    const rangeSelection = ref("selectAll");
+    const rangeInput = ref("");
+    const hint = ref("");
+    const { availableTimeSteps } = useGetters({
+      availableTimeSteps: "PLOT_AVAILABLE_TIME_STEPS",
+    });
+
+    const minStep = computed(() => {
+      if (props.id) {
+        return Math.min(...availableTimeSteps.value[`${props.id}`]) || 0;
       }
       return 0;
-    },
-    maxStep() {
-      if (this.id) {
-        return Math.max(...this.availableTimeSteps[`${this.id}`]) || 0;
+    });
+    const maxStep = computed(() => {
+      if (props.id) {
+        return Math.max(...availableTimeSteps.value[`${props.id}`]) || 0;
       }
       return 0;
-    },
-    choice() {
-      return this.activeTab === 0 ? "Movie" : "Image";
-    },
-    formatOptions() {
-      const movieOptions = ["mp4", "mpg"];
-      const imageOptions = ["png", "pdf"];
-      return this.choice === "Movie" ? movieOptions : imageOptions;
-    },
-    format() {
-      return this.formatOptions[this.formatSelection];
-    },
-    invalidInput() {
-      if (this.rangeSelection == "selectAll") {
+    });
+    const invalidInput = computed(() => {
+      if (rangeSelection.value == "selectAll") {
         return false;
       }
       const regex = /^[0-9](?:-[0-9])?(?:,\s?[0-9](?:-[0-9])?)*$/g;
-      let validFormat = this.rangeInput.match(regex) === null;
+      let validFormat = rangeInput.value.match(regex) === null;
       if (validFormat) {
-        let selectedTimeSteps = this.rangeInput.split(/[-,]+/);
+        let selectedTimeSteps = rangeInput.value.split(/[-,]+/);
         // Make sure values are acceptable
         let containsInvalidTimeSteps = selectedTimeSteps.some((timeStep) => {
-          return timeStep < this.minStep || timeStep > this.maxStep;
+          return timeStep < minStep.value || timeStep > maxStep.value;
         });
         return containsInvalidTimeSteps;
       }
       return true;
-    },
-  },
-  methods: {
-    ...mapActions({
-      updatePlotDetails: "PLOT_DETAILS_UPDATED",
-    }),
-    ...mapMutations({
-      showDownloadOptions: "UI_SHOW_DOWNLOAD_OPTIONS_SET",
-    }),
-    beginDownload() {
-      const valid = this.validate();
-      if (!valid) {
-        this.updateHint();
-        return;
-      }
-      const timeSteps = this.computeListOfTimeSteps();
-      if (this.activeTab === 0) {
-        this.fetchMovie(this.format, timeSteps);
+    });
+    const disableInput = computed(() => rangeSelection.value === "selectAll");
+    const choice = computed(() => (activeTab.value === 0 ? "Movie" : "Image"));
+
+    function validate() {
+      return !invalidInput.value;
+    }
+    function updateHint() {
+      if (invalidInput.value) {
+        hint.value = `Input must be ranges(start-stop) or values seperated by
+                            commas. Values must be within available range of time steps
+                            (${minStep.value}-${maxStep.value})`;
       } else {
-        this.fetchImages(this.format, timeSteps);
+        hint.value = `Available Range: ${minStep.value} - ${maxStep.value}`;
       }
-      this.downloadsDialog = false;
-    },
-    computeListOfTimeSteps() {
-      if (this.rangeSelection === "selectAll") {
+    }
+    function computeListOfTimeSteps() {
+      if (rangeSelection.value === "selectAll") {
         return;
       }
       let timeSteps = [];
-      let selections = this.rangeInput.split(",");
+      let selections = rangeInput.value.split(",");
       selections.forEach((selection) => {
         let vals = selection.split("-");
         if (vals.length > 1) {
@@ -138,33 +112,46 @@ export default {
         }
       });
       return timeSteps;
-    },
-    validate() {
-      return !this.invalidInput;
-    },
-    updateHint() {
-      if (this.invalidInput) {
-        this.hint = `Input must be ranges(start-stop) or values seperated by
-                    commas. Values must be within available range of time steps
-                    (${this.minStep}-${this.maxStep})`;
+    }
+
+    // Downloading ========================================================
+    const activeTab = ref(0);
+    const formatSelection = ref("0");
+
+    const formatOptions = computed(() => {
+      const movieOptions = ["mp4", "mpg"];
+      const imageOptions = ["png", "pdf"];
+      return choice.value === "Movie" ? movieOptions : imageOptions;
+    });
+    const format = computed(() => formatOptions[formatSelection.value]);
+
+    function beginDownload() {
+      const valid = validate();
+      if (!valid) {
+        updateHint();
+        return;
+      }
+      const timeSteps = computeListOfTimeSteps();
+      if (activeTab.value === 0) {
+        props.fetchMovie(format.value, timeSteps);
       } else {
-        this.hint = `Available Range: ${this.minStep} - ${this.maxStep}`;
+        props.fetchImages(format.value, timeSteps);
       }
-    },
-  },
-  watch: {
-    rangeInput() {
-      if (this.hint.startsWith("Input")) {
-        // We're in error mode but the user has changed their input.
-        // Clear the error message if the input is now valid
-        this.updateHint();
-      }
-    },
-    minStep() {
-      this.updateHint();
-    },
-    maxStep() {
-      this.updateHint();
-    },
+      downloadsDialog.value = false;
+    }
+
+    return {
+      activeTab,
+      beginDownload,
+      disableInput,
+      downloadsDialog,
+      formatOptions,
+      formatSelection,
+      hint,
+      mathJaxOptions,
+      props,
+      rangeInput,
+      rangeSelection,
+    };
   },
 };
