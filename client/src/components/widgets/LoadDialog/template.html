@@ -45,7 +45,7 @@
                         v-on="on"
                         v-show="viewCreatedByUser(item)"
                         small
-                        @click="dialogDelete=true"
+                        @click="dialogDelete.value=true"
                       >
                         mdi-delete
                       </v-icon>
@@ -58,7 +58,7 @@
                         v-on="on"
                         v-show="viewCreatedByUser(item) && viewIsPublic(item)"
                         small
-                        @click="dialogTogglePublic=true"
+                        @click="dialogTogglePublic.value=true"
                       >
                         mdi-earth
                       </v-icon>
@@ -71,7 +71,7 @@
                         v-on="on"
                         v-show="viewCreatedByUser(item) && !viewIsPublic(item)"
                         small
-                        @click="dialogTogglePublic=true"
+                        @click="dialogTogglePublic.value=true"
                       >
                         mdi-lock
                       </v-icon>
@@ -89,7 +89,7 @@
               >
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn text @click="dialogDelete=false">Cancel</v-btn>
+                <v-btn text @click="dialogDelete.value=false">Cancel</v-btn>
                 <v-btn text @click="deleteView">OK</v-btn>
                 <v-spacer></v-spacer>
               </v-card-actions>
@@ -105,7 +105,9 @@
               </v-card-title>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn text @click="dialogTogglePublic=false">Cancel</v-btn>
+                <v-btn text @click="dialogTogglePublic.value=false"
+                  >Cancel</v-btn
+                >
                 <v-btn text @click="toggleViewStatus">OK</v-btn>
                 <v-spacer></v-spacer>
               </v-card-actions>
@@ -117,10 +119,14 @@
     <v-card-actions>
       <v-spacer />
       <v-btn text @click.stop="clearSelection()"> Cancel </v-btn>
-      <v-btn :disabled="!canBeTemplate()" text @click.stop="loadAsTemplate()">
+      <v-btn :disabled="!canBeTemplate" text @click.stop="loadAsTemplate()">
         Load as Template
       </v-btn>
-      <v-btn text :disabled="selection===null" @click.stop="load()">
+      <v-btn
+        text
+        :disabled="!selection || !selection.value"
+        @click.stop="load()"
+      >
         Load
       </v-btn>
     </v-card-actions>
