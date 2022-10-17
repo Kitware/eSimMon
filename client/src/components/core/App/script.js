@@ -192,7 +192,7 @@ export default {
       this._poller = setTimeout(async () => {
         try {
           const { data } = await this.girderRest.get(`/folder/${this.runId}`);
-          if ("meta" in data && "currentTimeStep" in data.meta) {
+          if ("meta" in data && "currentTimestep" in data.meta) {
             var new_timestep = data.meta.currentTimeStep;
             if (new_timestep > this.maxTimeStep) {
               this.setMaxTimeStep(new_timestep);
@@ -382,7 +382,7 @@ export default {
         simFolder = data[data.length - 2]?.object;
       }
 
-      if ("meta" in runFolder && "currentTimeStep" in runFolder.meta) {
+      if ("meta" in runFolder && "currentTimestep" in runFolder.meta) {
         // This is a run folder. Check for auto-saved view to load and
         // update simulation and run id.
         this.setSimulation(simFolder._id);

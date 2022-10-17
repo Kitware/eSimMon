@@ -140,6 +140,14 @@ export default {
         this.react();
       },
     },
+    itemId: {
+      immediate: true,
+      handler(val) {
+        if (!val) {
+          this.removePlotly();
+        }
+      },
+    },
   },
 
   methods: {
