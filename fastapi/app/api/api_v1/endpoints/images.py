@@ -65,6 +65,8 @@ def create_plotly_image(plot_data: dict, format: str, details: dict):
         if zoom:
             plot_data["layout"]["xaxis"]["range"] = details["zoom"]["xAxis"]
             plot_data["layout"]["yaxis"]["range"] = details["zoom"]["yAxis"]
+        legend = details.get("legend", False)
+        plot_data["layout"]["showlegend"] = legend
 
     # Get image as bytes
     fig = go.Figure(plot_data["data"], plot_data["layout"])

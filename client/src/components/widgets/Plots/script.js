@@ -208,7 +208,13 @@ export default {
       const oldId = this.itemId;
       this.itemId = items[0]._id;
       this.updatePlotDetails({
-        [`${this.itemId}`]: { zoom: null, log: false, xAxis: "", range: null },
+        [`${this.itemId}`]: {
+          zoom: null,
+          log: false,
+          xAxis: "",
+          range: null,
+          legend: false,
+        },
       });
       this.updateVisiblePlots({ newId: this.itemId, oldId });
       this.setLoadedFromView(false);
@@ -226,6 +232,7 @@ export default {
           log: item.log,
           xAxis: item.xAxis,
           range: item.range,
+          legend: item.legend,
         },
       });
       this.updateVisiblePlots({ newId: this.itemId, oldId });
