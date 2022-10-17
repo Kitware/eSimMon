@@ -105,48 +105,6 @@ export default {
       }
     }, 100),
 
-    async getRangeData(event = null) {
-      if (_.isNull(this.location) || this.location._modelType != "folder")
-        return;
-
-      const folderId = this.location._id;
-      let img = null;
-      if (!this.cancel) {
-        if (event && !event.target.textContent) {
-          this.cancel = true;
-          return;
-        } else if (
-          !event ||
-          event.target.textContent.trim() == this.parameter
-        ) {
-          img = await this.callEndpoints(folderId);
-          if (img && img.data.data) this.updateRange(img.data.data[0].y, event);
-        }
-      }
-    },
-
-    async callEndpoints(folderId) {
-      if (!folderId) return;
-
-      var data = null;
-      var endpoint = `item?folderId=${folderId}&name=${this.parameter}&limit=50&sort=lowerName&sortdir=1`;
-      const itemId = await this.girderRest
-        .get(endpoint)
-        .then((result) => result.data[0]?._id);
-      if (itemId) {
-        var timeSteps = await this.girderRest
-          .get(`${this.fastRestUrl}/variables/${itemId}/timesteps`)
-          .then((results) => results.data.steps);
-        if (timeSteps.find((step) => step === this.currentTimeStep)) {
-          endpoint = `${this.fastRestUrl}/variables/${itemId}/timesteps/${this.currentTimeStep}/plot`;
-          data = await this.girderRest
-            .get(endpoint)
-            .then((response) => response.data);
-        }
-      }
-      return data;
-    },
-
     updateRange(yVals, event) {
       this.pos = event ? [event.clientX, event.clientY] : this.pos;
       this.range =

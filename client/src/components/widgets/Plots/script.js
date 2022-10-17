@@ -63,7 +63,6 @@ export default {
     itemId: {
       immediate: true,
       handler() {
-        this.setLoadedTimeStepData({ [`${this.itemId}`]: [] });
         this.prefetchRequested.clear();
         this.loadVariable();
       },
