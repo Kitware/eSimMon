@@ -84,6 +84,7 @@ export default {
       setLoadedTimeStepData: "PLOT_UPDATE_LOADED_TIME_STEPS",
       setAvailableTimeSteps: "PLOT_UPDATE_AVAILABLE_TIME_STEPS",
       updatePlotDetails: "PLOT_DETAILS_UPDATED",
+      updateVisiblePlots: "PLOT_SELECTIONS_UPDATED",
     }),
     ...mapMutations({
       updateCellCount: "PLOT_VISIBLE_CELL_COUNT_SET",
@@ -204,15 +205,18 @@ export default {
       var items = JSON.parse(
         event.dataTransfer.getData("application/x-girder-items")
       );
+      const oldId = this.itemId;
       this.itemId = items[0]._id;
       this.updatePlotDetails({
         [`${this.itemId}`]: { zoom: null, log: false, xAxis: "", range: null },
       });
+      this.updateVisiblePlots({ newId: this.itemId, oldId });
       this.setLoadedFromView(false);
       this.setRun();
     },
     loadTemplateGallery: function (item) {
       this.cleanUpOldPlotData();
+      const oldId = this.itemId;
       this.itemId = item.id;
       this.setLoadedTimeStepData({ [`${this.itemId}`]: [] });
       this.setLoadedFromView(true);
@@ -224,6 +228,7 @@ export default {
           range: item.range,
         },
       });
+      this.updateVisiblePlots({ newId: this.itemId, oldId });
     },
     /**
      * Returns the previous valid timestep, null if no timestep exists.
