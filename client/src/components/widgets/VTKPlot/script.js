@@ -195,7 +195,22 @@ export default {
           (x - parent.x + width) / parent.width,
           1 - y / parent.height,
         ];
-        this.renderer.setViewport(...viewport);
+        if (this.plotType === PlotType.Mesh) {
+          this.renderer.setViewport(...viewport);
+        } else {
+          // Keep the viewport square for square plots
+          const h = viewport[3] - viewport[1];
+          const w = viewport[2] - viewport[0];
+          const midx = w / 2 + viewport[0];
+          const midy = h / 2 + viewport[1];
+          let size = h > w ? w / 2 : h / 2;
+          this.renderer.setViewport(
+            midx - size,
+            midy - size,
+            midx + size,
+            midy + size
+          );
+        }
       });
     },
     addRenderer(data) {
@@ -276,6 +291,7 @@ export default {
       this.scalarBar.setAxisTextStyle({ fontColor: "black" });
       this.scalarBar.setTickTextStyle({ fontColor: "black" });
       this.scalarBar.setDrawNanAnnotation(false);
+      this.scalarBar.setAutoLayout(scalarBarAutoLayout(this.scalarBar));
       this.renderer.addActor2D(this.scalarBar);
 
       // Setup picker

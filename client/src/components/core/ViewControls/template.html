@@ -59,7 +59,7 @@
     <save-dialog :layout="plots" @close="setSaveDialogVisible(false)" />
     <load-dialog @close="setLoadDialogVisible(false)" />
   </v-row>
-  <v-row v-if="lastSaved">
+  <v-row v-show="lastSaved">
     <span v-bind:style="{fontSize: 'small', opacity: '0.5'}">
       View Autosaved: {{ new Date(lastSaved).toLocaleTimeString() }}
     </span>
