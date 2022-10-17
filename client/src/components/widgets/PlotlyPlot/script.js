@@ -216,11 +216,11 @@ export default {
             },
             {
               name: "toggle legend visibility",
-              icon: Plotly.Icons["autoscale"],
+              icon: Plotly.Icons["tooltip_basic"],
               click: this.toggleLegendVisibility,
             },
           ],
-          modeBarButtonsToRemove: ["toImage", "autoScale2d"],
+          modeBarButtonsToRemove: ["toImage"],
         });
         if (!this.eventHandlersSet) this.setEventHandlers();
         this.updateNumReady(this.numReady + 1);
