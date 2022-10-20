@@ -4,6 +4,7 @@ import { decode } from "@msgpack/msgpack";
 import PlotlyPlot from "../PlotlyPlot";
 import VtkPlot from "../VTKPlot";
 import { PlotType } from "../../../utils/constants";
+import { PlotFetcher } from "../../../utils/plotFetcher";
 
 // Number of timesteps to prefetch data for.
 const TIMESTEPS_TO_PREFETCH = 3;
@@ -31,9 +32,7 @@ export default {
   data() {
     return {
       itemId: "",
-      // Set of the current timesteps we are fetching data for, used to prevent
-      // duplicate prefetching.
-      prefetchRequested: new Set(),
+      plotFetcher: undefined,
       plotType: PlotType.Plotly,
     };
   },
@@ -55,22 +54,26 @@ export default {
       immediate: true,
       handler() {
         // First display the updated timestep
+        if (this.plotFetcher && this.plotFetcher.initialized) {
+          this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
+        }
         this.displayCurrentTimeStep();
-        // Then ensure we have the next few timesteps
-        this.preCacheTimeStepData();
       },
     },
     itemId: {
       immediate: true,
       handler() {
-        this.prefetchRequested.clear();
+        this.plotFetcher = new PlotFetcher(
+          this.itemId,
+          (itemId) => this.callFastEndpoint(`variables/${itemId}/timesteps`),
+          (itemId, timestep) => this.callFastEndpoint(`variables/${itemId}/timesteps/${timestep}/plot`, { responseType: "blob" })
+        );
         this.loadVariable();
       },
     },
     maxTimeStep: {
       immediate: true,
       handler() {
-        this.prefetchRequested.clear();
         this.loadVariable();
       },
     },
@@ -116,10 +119,11 @@ export default {
      * Fetch the data for give timestep. The data is added to loadedTimeStepData
      */
     fetchTimeStepData: async function (timeStep) {
-      await this.callFastEndpoint(
-        `variables/${this.itemId}/timesteps/${timeStep}/plot`,
-        { responseType: "blob" }
-      ).then((response) => {
+      if (!this.plotFetcher || !this.plotFetcher.initialized) {
+        return;
+      }
+
+      this.plotFetcher.getTimestepPlot(timeStep).then((response) => {
         const reader = new FileReader();
         if (response.type === "application/msgpack") {
           reader.readAsArrayBuffer(response);
@@ -172,8 +176,7 @@ export default {
         return;
       }
       let ats;
-      const firstAvailableStep = await this.callFastEndpoint(
-        `variables/${this.itemId}/timesteps`
+      const firstAvailableStep = await this.plotFetcher.initialize(
       ).then((response) => {
         ats = response.steps.sort();
         this.setAvailableTimeSteps({ [`${this.itemId}`]: ats });
@@ -196,7 +199,6 @@ export default {
       this.setItemId(this.itemId);
       this.setInitialLoad(false);
       this.$refs[`${this.row}-${this.col}`].react();
-      this.preCacheTimeStepData();
     },
     loadGallery: function (event) {
       this.preventDefault(event);
@@ -311,58 +313,6 @@ export default {
     displayCurrentTimeStep: async function () {
       if (!isNil(this.currentTimeStep)) {
         this.displayTimeStep(this.currentTimeStep);
-      }
-    },
-    /**
-     * Precache timestep data.
-     */
-    preCacheTimeStepData: async function () {
-      if (!this.itemId) {
-        return;
-      }
-      const ats = this.availableTimeSteps();
-      const numTimeSteps = ats.length;
-      if (!numTimeSteps) {
-        // We have not selected an item, do not attempt to load the images
-        return;
-      }
-
-      // First find the index of the current timestep
-      let startIndex = ats.findIndex((step) => step === this.currentTimeStep);
-      // If the current timestep can't be found start at the next available one.
-      if (startIndex === -1) {
-        startIndex = this.nextTimeStep(this.currentTimeStep);
-        // If there isn't one we are done.
-        if (startIndex === -1) {
-          return;
-        }
-      } else {
-        // We want the next one
-        startIndex += 1;
-      }
-
-      // We have reached the end.
-      if (startIndex >= numTimeSteps) {
-        return;
-      }
-
-      // Load the next TIMESTEPS_TO_PREFETCH timesteps.
-      for (let i = 0; i < TIMESTEPS_TO_PREFETCH; i++) {
-        const stepIndex = startIndex + i;
-        if (stepIndex >= numTimeSteps) {
-          // There are no more timesteps to load
-          break;
-        }
-        // Only load this timestep we haven't done so already.
-        let nextStep = ats[stepIndex];
-        if (
-          !this.isTimeStepLoaded(nextStep) &&
-          !this.prefetchRequested.has(nextStep)
-        ) {
-          this.prefetchRequested.add(nextStep);
-          await this.fetchTimeStepData(nextStep);
-          this.prefetchRequested.delete(nextStep);
-        }
       }
     },
     async requestContextMenu(e) {
