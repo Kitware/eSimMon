@@ -6,8 +6,8 @@ import VtkPlot from "../VTKPlot";
 import { PlotType } from "../../../utils/constants";
 import { PlotFetcher } from "../../../utils/plotFetcher";
 
-// Number of timesteps to prefetch data for.
-const TIMESTEPS_TO_PREFETCH = 3;
+// // Number of timesteps to prefetch data for.
+// const TIMESTEPS_TO_PREFETCH = 3;
 
 export default {
   name: "Plots",
