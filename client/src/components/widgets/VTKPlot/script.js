@@ -191,9 +191,11 @@ export default {
       this.updateNumReady(this.numReady + 1);
     },
     updateViewPort() {
-      if (!this.renderer) return;
-
       this.$nextTick(() => {
+        if (!this.renderer) {
+          return;
+        }
+
         const parent = document
           .getElementById("mainContent")
           .getBoundingClientRect();
