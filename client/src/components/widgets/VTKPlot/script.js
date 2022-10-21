@@ -313,7 +313,9 @@ export default {
       this.mesh.getPolys().setData(cells);
     },
     updateRenderer(data) {
-      if (!this.renderer || !this.plotType) return;
+      if (!this.renderer || !this.plotType || this.plotType != data.type) {
+        return;
+      }
 
       if (this.plotType === PlotType.Mesh) {
         this.updateMeshRenderer(data);
