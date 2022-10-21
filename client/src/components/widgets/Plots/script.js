@@ -66,7 +66,11 @@ export default {
         this.plotFetcher = new PlotFetcher(
           this.itemId,
           (itemId) => this.callFastEndpoint(`variables/${itemId}/timesteps`),
-          (itemId, timestep) => this.callFastEndpoint(`variables/${itemId}/timesteps/${timestep}/plot`, { responseType: "blob" })
+          (itemId, timestep) =>
+            this.callFastEndpoint(
+              `variables/${itemId}/timesteps/${timestep}/plot`,
+              { responseType: "blob" }
+            )
         );
         this.loadVariable();
       },
@@ -176,23 +180,24 @@ export default {
         return;
       }
       let ats;
-      const firstAvailableStep = await this.plotFetcher.initialize(
-      ).then((response) => {
-        ats = response.steps.sort();
-        this.setAvailableTimeSteps({ [`${this.itemId}`]: ats });
-        this.updateTimes({ [`${this.itemId}`]: response.time });
-        this.setMinTimeStep(Math.max(this.minTimeStep, Math.min(...ats)));
-        // Make sure there is an image associated with this time step
-        let step = ats.find((step) => step === this.currentTimeStep);
-        if (isNil(step)) {
-          // If not, display the previous available image
-          // If no previous image display first available
-          let idx = ats.findIndex((step) => step > this.currentTimeStep);
-          idx = Math.max(idx - 1, 0);
-          step = ats[idx];
-        }
-        return step;
-      });
+      const firstAvailableStep = await this.plotFetcher
+        .initialize()
+        .then((response) => {
+          ats = response.steps.sort();
+          this.setAvailableTimeSteps({ [`${this.itemId}`]: ats });
+          this.updateTimes({ [`${this.itemId}`]: response.time });
+          this.setMinTimeStep(Math.max(this.minTimeStep, Math.min(...ats)));
+          // Make sure there is an image associated with this time step
+          let step = ats.find((step) => step === this.currentTimeStep);
+          if (isNil(step)) {
+            // If not, display the previous available image
+            // If no previous image display first available
+            let idx = ats.findIndex((step) => step > this.currentTimeStep);
+            idx = Math.max(idx - 1, 0);
+            step = ats[idx];
+          }
+          return step;
+        });
       await this.fetchTimeStepData(firstAvailableStep);
 
       this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
