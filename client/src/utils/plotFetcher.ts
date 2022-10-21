@@ -250,11 +250,11 @@ export class PlotFetcher {
       status: 'pending',
     }
 
-    result.then(_ => {
+    result.then(() => {
       if (task.status === 'pending') {
         task.status = 'resolved';
       }
-    }).catch(_ => {
+    }).catch(() => {
       if (task.status === 'pending') {
         task.status = 'rejected';
       }
