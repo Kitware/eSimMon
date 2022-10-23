@@ -125,8 +125,7 @@ export default {
       if (!this.plotFetcher || !this.plotFetcher.initialized) {
         return;
       }
-
-      this.plotFetcher.getTimestepPlot(timeStep).then((response) => {
+      return this.plotFetcher.getTimestepPlot(timeStep).then((response) => {
         const reader = new FileReader();
         if (response.type === "application/msgpack") {
           reader.readAsArrayBuffer(response);
