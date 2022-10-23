@@ -46,6 +46,7 @@ export default {
       maxTimeStep: "PLOT_MAX_TIME_STEP",
       allLoadedTimeStepData: "PLOT_LOADED_TIME_STEPS",
       allAvailableTimeSteps: "PLOT_AVAILABLE_TIME_STEPS",
+      initialDataLoaded: "PLOT_INITIAL_LOAD",
     }),
   },
 
@@ -57,7 +58,9 @@ export default {
         if (this.plotFetcher && this.plotFetcher.initialized) {
           this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
         }
-        this.displayCurrentTimeStep();
+        if (!this.initialDataLoaded) {
+          this.displayCurrentTimeStep();
+        }
       },
     },
     itemId: {
