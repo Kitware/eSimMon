@@ -71,7 +71,6 @@ export default {
       immediate: true,
       handler() {
         this.prefetchRequested.clear();
-        this.loadVariable();
       },
     },
   },
