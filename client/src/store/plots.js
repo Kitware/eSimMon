@@ -125,9 +125,14 @@ export default {
     },
   },
   actions: {
-    PLOT_MIN_TIME_STEP_CHANGED({ state, commit }, val) {
-      commit("PLOT_MIN_TIME_STEP_SET", val);
-      commit("PLOT_TIME_STEP_SET", Math.max(state.currentTimeStep, val));
+    PLOT_MIN_TIME_STEP_CHANGED({ state, commit }) {
+      let newMin = Infinity;
+      Object.values(state.availableTimeSteps).forEach((ats) => {
+        const itemMin = Math.min(...ats);
+        newMin = itemMin < newMin ? itemMin : newMin;
+      });
+      commit("PLOT_MIN_TIME_STEP_SET", newMin);
+      commit("PLOT_TIME_STEP_SET", Math.max(state.currentTimeStep, newMin));
     },
     PLOT_UPDATE_ITEM_TIMES({ state, commit }, data) {
       let itemId = Object.keys(data)[0];

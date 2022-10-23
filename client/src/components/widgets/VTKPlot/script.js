@@ -148,7 +148,6 @@ export default {
 
   methods: {
     ...mapActions({
-      setMinTimeStep: "PLOT_MIN_TIME_STEP_CHANGED",
       updatePlotDetails: "PLOT_DETAILS_UPDATED",
     }),
     ...mapMutations({
