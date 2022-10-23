@@ -116,7 +116,13 @@ export default {
     },
 
     updateTimeStep(val) {
-      this.setCurrentTimeStep(parseInt(val));
+      if (this.minTimeStep <= val && val <= this.maxTimeStep) {
+        this.setCurrentTimeStep(parseInt(val));
+      } else if (this.minTimeStep > val) {
+        this.setCurrentTimeStep(this.minTimeStep);
+      } else {
+        this.setCurrentTimeStep(this.maxTimeStep);
+      }
     },
 
     incrementTimeStep(should_pause) {
