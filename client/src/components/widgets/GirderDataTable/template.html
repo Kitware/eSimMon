@@ -25,6 +25,7 @@
       :active="props.isSelected"
       :class="getRowClass(props.item)"
       class="itemRow"
+      :style="selectedPlot(props.item._id)"
       @click="handleRowSelect($event, props)"
       @drag="emitDrag('drag', $event, [props])"
       @dragstart="emitDrag('dragstart', $event, [props])"
