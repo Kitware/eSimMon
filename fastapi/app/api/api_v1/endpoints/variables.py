@@ -62,8 +62,8 @@ def get_timestep_bp_file_id(gc, group_folder_id, group_name, timestep):
 
     # FIXME: This is a temporary hack to allow us to test the performance plots
     # This block should be removed once those bp filenames are fixed.
-    if group_name == "HeatLoad" or group_name == "Poincare":
-        filename = f"{group_name}-{timestep_item['name'].lstrip('0')}.bp.tgz"
+    if group_name == "Heat Load" or group_name == "Poincare":
+        filename = f"{('').join(group_name.split())}-{timestep_item['name'].lstrip('0')}.bp.tgz"
     else:
         filename = f"{group_name}.bp.tgz"
 
