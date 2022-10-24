@@ -116,7 +116,13 @@ export default {
     },
 
     updateTimeStep(val) {
-      this.setCurrentTimeStep(parseInt(val));
+      if (this.minTimeStep <= val && val <= this.maxTimeStep) {
+        this.setCurrentTimeStep(parseInt(val));
+      } else if (this.minTimeStep > val) {
+        this.setCurrentTimeStep(this.minTimeStep);
+      } else {
+        this.setCurrentTimeStep(this.maxTimeStep);
+      }
     },
 
     incrementTimeStep(should_pause) {
@@ -279,7 +285,6 @@ export default {
       minTimeStep: "PLOT_MIN_TIME_STEP",
       viewTimeStep: "PLOT_VIEW_TIME_STEP",
       numReady: "PLOT_NUM_READY",
-      selectedPlots: "PLOT_SELECTIONS",
     }),
 
     location: {
@@ -401,22 +406,6 @@ export default {
 
       // Setup polling to autosave view
       this.autosave();
-    },
-
-    selectedPlots(selections) {
-      const dataTable = document.getElementById("data-table");
-      if (!dataTable) {
-        return;
-      }
-      const tableBody = dataTable.getElementsByTagName("tbody")[0];
-      const children = tableBody.childNodes;
-      children.forEach((child) => {
-        if (selections.includes(child.id)) {
-          child.style.color = "lightgray";
-        } else {
-          child.style.color = "black";
-        }
-      });
     },
   },
 };

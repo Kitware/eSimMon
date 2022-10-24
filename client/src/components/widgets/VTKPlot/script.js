@@ -50,7 +50,6 @@ export default {
       position: null,
       rangeText: [],
       plotType: null,
-      newPlotLoaded: false,
     };
   },
 
@@ -140,17 +139,15 @@ export default {
     itemId: {
       immediate: true,
       handler(new_id, old_id) {
-        if (!new_id) {
+        if (!new_id || new_id !== old_id) {
           this.removeRenderer();
         }
-        this.newPlotLoaded = new_id !== old_id;
       },
     },
   },
 
   methods: {
     ...mapActions({
-      setMinTimeStep: "PLOT_MIN_TIME_STEP_CHANGED",
       updatePlotDetails: "PLOT_DETAILS_UPDATED",
     }),
     ...mapMutations({
@@ -193,9 +190,11 @@ export default {
       this.updateNumReady(this.numReady + 1);
     },
     updateViewPort() {
-      if (!this.renderer) return;
-
       this.$nextTick(() => {
+        if (!this.renderer) {
+          return;
+        }
+
         const parent = document
           .getElementById("mainContent")
           .getBoundingClientRect();
@@ -225,16 +224,9 @@ export default {
       });
     },
     addRenderer(data) {
-      if (this.renderer && !this.newPlotLoaded) {
+      if (this.renderer && this.plotType == data.type) {
         // We've already created a renderer, just re-use it
         return;
-      }
-
-      if (this.renderer) {
-        // Connectivity is handled differently for different plots
-        // Recreate the renderer for new plot types
-        this.removeRenderer();
-        this.newPlotLoaded = false;
       }
 
       this.plotType = data.type;
@@ -320,7 +312,9 @@ export default {
       this.mesh.getPolys().setData(cells);
     },
     updateRenderer(data) {
-      if (!this.renderer || !this.plotType) return;
+      if (!this.renderer || !this.plotType || this.plotType != data.type) {
+        return;
+      }
 
       if (this.plotType === PlotType.Mesh) {
         this.updateMeshRenderer(data);

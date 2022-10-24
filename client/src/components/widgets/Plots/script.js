@@ -71,14 +71,13 @@ export default {
       immediate: true,
       handler() {
         this.prefetchRequested.clear();
-        this.loadVariable();
       },
     },
   },
 
   methods: {
     ...mapActions({
-      setMinTimeStep: "PLOT_MIN_TIME_STEP_CHANGED",
+      updateMinTimeStep: "PLOT_MIN_TIME_STEP_CHANGED",
       updateTimes: "PLOT_UPDATE_ITEM_TIMES",
       setLoadedTimeStepData: "PLOT_UPDATE_LOADED_TIME_STEPS",
       setAvailableTimeSteps: "PLOT_UPDATE_AVAILABLE_TIME_STEPS",
@@ -178,7 +177,7 @@ export default {
         ats = response.steps.sort();
         this.setAvailableTimeSteps({ [`${this.itemId}`]: ats });
         this.updateTimes({ [`${this.itemId}`]: response.time });
-        this.setMinTimeStep(Math.max(this.minTimeStep, Math.min(...ats)));
+        this.updateMinTimeStep();
         // Make sure there is an image associated with this time step
         let step = ats.find((step) => step === this.currentTimeStep);
         if (isNil(step)) {

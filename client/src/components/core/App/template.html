@@ -45,7 +45,7 @@
               <v-col :sm="1" class="text-xs-center">
                 <v-icon
                   v-on:click="decrementTimeStep(true)"
-                  :disabled="!dataLoaded"
+                  :disabled="!dataLoaded || currentTimeStep === minTimeStep"
                 >
                   arrow_back_ios
                 </v-icon>
@@ -63,7 +63,7 @@
               <v-col :sm="1" class="text-xs-center">
                 <v-icon
                   v-on:click="incrementTimeStep(true)"
-                  :disabled="!dataLoaded"
+                  :disabled="!dataLoaded || currentTimeStep === maxTimeStep"
                 >
                   arrow_forward_ios
                 </v-icon>
@@ -89,7 +89,7 @@
               <v-col :sm="6" class="text-xs-center">
                 <input
                   type="number"
-                  min="1"
+                  min="minTimeStep"
                   :max="maxTimeStep"
                   size="4"
                   :disabled="!dataLoaded"
