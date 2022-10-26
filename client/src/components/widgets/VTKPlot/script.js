@@ -3,6 +3,7 @@ import { mapGetters, mapActions, mapMutations } from "vuex";
 import {
   setAxesStyling,
   scalarBarAutoLayout,
+  customGenerateTicks,
 } from "../../../utils/vtkPlotStyling";
 import { PlotType } from "../../../utils/constants";
 
@@ -270,6 +271,7 @@ export default {
 
       // Build color bar
       this.scalarBar = vtkScalarBarActor.newInstance();
+      this.scalarBar.setGenerateTicks(customGenerateTicks(6));
       this.scalarBar.setScalarsToColors(lut);
       this.scalarBar.setAxisLabel(data.colorLabel);
       this.scalarBar.setAxisTextStyle({ fontColor: "black" });

@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@girder/components": "^3.2.0",
-    "@kitware/vtk.js": "^22.6.1",
+    "@kitware/vtk.js": "^24.11.0",
     "@msgpack/msgpack": "^2.7.2",
     "axios": "^0.21.2",
     "core-js": "^3.8.3",
