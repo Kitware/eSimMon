@@ -194,12 +194,15 @@ export default {
           }
           return step;
         });
-      await this.fetchTimeStepData(firstAvailableStep);
+      if (!this.isTimeStepLoaded(firstAvailableStep)) {
+        await this.fetchTimeStepData(firstAvailableStep);
 
-      this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
-      this.setItemId(this.itemId);
-      this.setInitialLoad(false);
-      this.$refs[`${this.row}-${this.col}`].react();
+        this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
+        this.setItemId(this.itemId);
+        this.setInitialLoad(false);
+        console.log("loadVariable for item ", this.itemId);
+        return await this.$refs[`${this.row}-${this.col}`].react();
+      }
     },
     loadGallery: function (event) {
       this.preventDefault(event);
