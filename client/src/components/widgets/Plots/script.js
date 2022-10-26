@@ -188,7 +188,7 @@ export default {
           ats = response.steps.sort();
           this.setAvailableTimeSteps({ [`${this.itemId}`]: ats });
           this.updateTimes({ [`${this.itemId}`]: response.time });
-          this.setMinTimeStep(Math.max(this.minTimeStep, Math.min(...ats)));
+          this.updateMinTimeStep();
           // Make sure there is an image associated with this time step
           let step = ats.find((step) => step === this.currentTimeStep);
           if (isNil(step)) {
