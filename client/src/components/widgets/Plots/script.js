@@ -361,9 +361,6 @@ export default {
       }
 
       const ltsd = this.allLoadedTimeStepData[`${this.itemId}`] || [];
-      if (ltsd.length === 0) {
-        this.loadVariable();
-      }
       return ltsd;
     },
     availableTimeSteps() {

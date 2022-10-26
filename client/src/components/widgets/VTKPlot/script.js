@@ -106,14 +106,12 @@ export default {
     numrows: {
       immediate: true,
       handler() {
-        this.react();
         this.$nextTick(this.updateViewPort);
       },
     },
     numcols: {
       immediate: true,
       handler() {
-        this.react();
         this.$nextTick(this.updateViewPort);
       },
     },

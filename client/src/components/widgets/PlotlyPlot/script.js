@@ -105,14 +105,12 @@ export default {
     numrows: {
       immediate: true,
       handler() {
-        this.react();
         this.$nextTick(this.relayoutPlotly);
       },
     },
     numcols: {
       immediate: true,
       handler() {
-        this.react();
         this.$nextTick(this.relayoutPlotly);
       },
     },
