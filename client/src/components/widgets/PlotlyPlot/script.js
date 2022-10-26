@@ -173,6 +173,10 @@ export default {
       });
     },
     react: function () {
+      if (!this.itemId) {
+        return;
+      }
+
       let nextImage = this.loadedTimeStepData.find(
         (img) => img.timestep == this.currentTimeStep
       );
