@@ -78,12 +78,6 @@ export default {
         this.loadVariable();
       },
     },
-    maxTimeStep: {
-      immediate: true,
-      handler() {
-        this.prefetchRequested.clear();
-      },
-    },
   },
 
   methods: {
