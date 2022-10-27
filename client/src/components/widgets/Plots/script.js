@@ -200,7 +200,6 @@ export default {
         this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
         this.setItemId(this.itemId);
         this.setInitialLoad(false);
-        console.log("loadVariable for item ", this.itemId);
         return await this.$refs[`${this.row}-${this.col}`].react();
       }
     },
