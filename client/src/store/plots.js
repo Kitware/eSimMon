@@ -132,7 +132,9 @@ export default {
         newMin = itemMin < newMin ? itemMin : newMin;
       });
       commit("PLOT_MIN_TIME_STEP_SET", newMin);
-      commit("PLOT_TIME_STEP_SET", Math.max(state.currentTimeStep, newMin));
+      if (!state.loadedFromView || !state.initialLoad) {
+        commit("PLOT_TIME_STEP_SET", Math.max(state.currentTimeStep, newMin));
+      }
     },
     PLOT_UPDATE_ITEM_TIMES({ state, commit }, data) {
       let itemId = Object.keys(data)[0];

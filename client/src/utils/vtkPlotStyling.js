@@ -1,3 +1,6 @@
+import { scaleLinear } from "d3-scale";
+import { format } from "d3-format";
+
 export function setAxesStyling(axes, scale) {
   const tickCounts = axes.getTickCounts();
   let textValues = axes.getTextValues();
@@ -90,5 +93,24 @@ export function scalarBarAutoLayout(model) {
 
     // recomute bar segments based on positioning
     helper.recomputeBarSegments(textSizes);
+  };
+}
+
+// Copied from the example at
+// https://github.com/Kitware/vtk-js/blob/1400faebd8899265ad3ffb5f165ec624ce3389fe/Sources/Rendering/Core/ScalarBarActor/example/index.js#L44-L65
+// Modified to use scientific notation
+export function customGenerateTicks(numberOfTicks) {
+  return (helper) => {
+    const lastTickBounds = helper.getLastTickBounds();
+    // compute tick marks for axes
+    const scale = scaleLinear()
+      .domain([0.0, 1.0])
+      .range([lastTickBounds[0], lastTickBounds[1]]);
+    const samples = scale.ticks(numberOfTicks);
+    const ticks = samples.map((tick) => scale(tick));
+    const tickFormat = format(".2e");
+    const tickStrings = ticks.map(tickFormat);
+    helper.setTicks(ticks);
+    helper.setTickStrings(tickStrings);
   };
 }

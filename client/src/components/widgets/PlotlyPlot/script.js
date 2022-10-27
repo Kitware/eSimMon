@@ -105,14 +105,12 @@ export default {
     numrows: {
       immediate: true,
       handler() {
-        this.react();
         this.$nextTick(this.relayoutPlotly);
       },
     },
     numcols: {
       immediate: true,
       handler() {
-        this.react();
         this.$nextTick(this.relayoutPlotly);
       },
     },
@@ -175,6 +173,10 @@ export default {
       });
     },
     react: function () {
+      if (!this.itemId) {
+        return;
+      }
+
       let nextImage = this.loadedTimeStepData.find(
         (img) => img.timestep == this.currentTimeStep
       );

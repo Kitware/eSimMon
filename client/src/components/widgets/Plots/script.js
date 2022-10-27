@@ -78,12 +78,6 @@ export default {
         this.loadVariable();
       },
     },
-    maxTimeStep: {
-      immediate: true,
-      handler() {
-        this.prefetchRequested.clear();
-      },
-    },
   },
 
   methods: {
@@ -188,7 +182,7 @@ export default {
           ats = response.steps.sort();
           this.setAvailableTimeSteps({ [`${this.itemId}`]: ats });
           this.updateTimes({ [`${this.itemId}`]: response.time });
-          this.setMinTimeStep(Math.max(this.minTimeStep, Math.min(...ats)));
+          this.updateMinTimeStep();
           // Make sure there is an image associated with this time step
           let step = ats.find((step) => step === this.currentTimeStep);
           if (isNil(step)) {
@@ -200,12 +194,14 @@ export default {
           }
           return step;
         });
-      await this.fetchTimeStepData(firstAvailableStep);
+      if (!this.isTimeStepLoaded(firstAvailableStep)) {
+        await this.fetchTimeStepData(firstAvailableStep);
 
-      this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
-      this.setItemId(this.itemId);
-      this.setInitialLoad(false);
-      this.$refs[`${this.row}-${this.col}`].react();
+        this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
+        this.setItemId(this.itemId);
+        this.setInitialLoad(false);
+        return await this.$refs[`${this.row}-${this.col}`].react();
+      }
     },
     loadGallery: function (event) {
       this.preventDefault(event);
@@ -361,9 +357,6 @@ export default {
       }
 
       const ltsd = this.allLoadedTimeStepData[`${this.itemId}`] || [];
-      if (ltsd.length === 0) {
-        this.loadVariable();
-      }
       return ltsd;
     },
     availableTimeSteps() {
