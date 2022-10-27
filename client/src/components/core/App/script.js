@@ -157,7 +157,7 @@ export default {
         try {
           const { data } = await this.girderRest.get(`/folder/${this.runId}`);
           if ("meta" in data && "currentTimestep" in data.meta) {
-            var new_timestep = data.meta.currentTimeStep;
+            var new_timestep = data.meta.currentTimestep;
             if (new_timestep > this.maxTimeStep) {
               this.setMaxTimeStep(new_timestep);
             }
