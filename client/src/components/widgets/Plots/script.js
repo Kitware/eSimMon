@@ -228,7 +228,6 @@ export default {
       this.cleanUpOldPlotData();
       const oldId = this.itemId;
       this.itemId = item.id || "";
-      this.setLoadedTimeStepData({ [`${this.itemId}`]: [] });
       this.setLoadedFromView(true);
       this.updatePlotDetails({
         [`${this.itemId}`]: {
@@ -332,7 +331,7 @@ export default {
       this.showContextMenu(true);
     },
     clearGallery() {
-      this.itemId = null;
+      this.itemId = "";
       this.setInitialLoad(true);
     },
     async setRun() {
