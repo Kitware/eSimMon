@@ -184,7 +184,6 @@ export default {
       var wait_ms = 500;
       if (this.numReady >= this.cellCount) {
         this.incrementTimeStep(false);
-        wait_ms = 250;
       }
       this.setTickWait(wait_ms);
     },
@@ -387,7 +386,7 @@ export default {
       if (!isPaused) {
         // Give the user a moment to view the first time step
         // before progressing
-        this.setTickWait(250);
+        this.setTickWait(500);
       }
     },
 
