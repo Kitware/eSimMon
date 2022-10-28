@@ -345,8 +345,6 @@ export default {
       this.setShouldAutoSave(true);
     },
     cleanUpOldPlotData() {
-      this.setLoadedTimeStepData({ [`${this.itemId}`]: [] });
-      this.setAvailableTimeSteps({ [`${this.itemId}`]: [] });
       this.updateTimes({ [`${this.itemId}`]: [] });
       this.updatePlotDetails({ [`${this.itemId}`]: null });
     },
