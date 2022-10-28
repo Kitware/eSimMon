@@ -117,12 +117,17 @@
     <v-card-actions>
       <v-spacer />
       <v-btn text @click.stop="clearSelection()"> Cancel </v-btn>
-      <v-btn :disabled="!canBeTemplate()" text @click.stop="loadAsTemplate()">
+      <v-btn
+        :disabled="!canBeTemplate() || loading"
+        text
+        @click.stop="loadAsTemplate()"
+      >
         Load as Template
       </v-btn>
       <v-btn text :disabled="selection===null" @click.stop="load()">
         Load
       </v-btn>
     </v-card-actions>
+    <v-progress-linear v-if="loading" indeterminate />
   </v-card>
 </v-dialog>

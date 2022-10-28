@@ -157,7 +157,7 @@ export default {
         try {
           const { data } = await this.girderRest.get(`/folder/${this.runId}`);
           if ("meta" in data && "currentTimestep" in data.meta) {
-            var new_timestep = data.meta.currentTimeStep;
+            var new_timestep = data.meta.currentTimestep;
             if (new_timestep > this.maxTimeStep) {
               this.setMaxTimeStep(new_timestep);
             }
@@ -330,7 +330,7 @@ export default {
   },
 
   watch: {
-    async location(current) {
+    async location(current, previous) {
       if (current._modelType !== "folder") {
         return;
       }
@@ -345,9 +345,14 @@ export default {
         simFolder = data[data.length - 2]?.object;
       }
 
-      if ("meta" in runFolder && "currentTimestep" in runFolder.meta) {
+      if (
+        previous._id === current.parentId &&
+        "meta" in runFolder &&
+        "currentTimestep" in runFolder.meta
+      ) {
         // This is a run folder. Check for auto-saved view to load and
-        // update simulation and run id.
+        // update simulation and run id. Only prompt when coming from
+        // parent folder
         this.setSimulation(simFolder._id);
         this.setRunId(runFolder._id);
         this.fetchAutoSave();
