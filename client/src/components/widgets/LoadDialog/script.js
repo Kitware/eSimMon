@@ -12,6 +12,7 @@ export default {
       search: "",
       selection: null,
       dialogTogglePublic: false,
+      loading: false,
     };
   },
 
@@ -86,6 +87,7 @@ export default {
       this.clearSelection();
     },
     async loadAsTemplate() {
+      this.loading = true;
       // Create a list of selection's item ids
       let templateView = {
         rows: this.selection.rows,
@@ -118,6 +120,7 @@ export default {
 
       this.loadView(templateView);
       this.clearSelection();
+      this.loading = false;
     },
     rowSelected(selection) {
       this.clicks++;
