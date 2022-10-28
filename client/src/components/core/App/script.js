@@ -31,7 +31,6 @@ export default {
       cellHeight: "100vh",
       dataLoaded: false,
       forgotPasswordUrl: "/#?dialog=resetpassword",
-      numLoadedGalleries: 0,
       runId: null,
       range: "",
       pos: [],
@@ -169,13 +168,11 @@ export default {
     },
 
     removeColumn() {
-      this.numLoadedGalleries -= this.numrows;
       this.setColumns(this.numcols - 1);
       this.setGridSize(this.rows * this.columns);
     },
 
     removeRow() {
-      this.numLoadedGalleries -= this.numcols;
       this.setRows(this.numrows - 1);
       this.setGridSize(this.rows * this.columns);
     },
@@ -184,10 +181,10 @@ export default {
       if (this.paused) {
         return;
       }
-      var wait_ms = 2000;
-      if (this.numReady >= this.numLoadedGalleries) {
+      var wait_ms = 500;
+      if (this.numReady >= this.cellCount) {
         this.incrementTimeStep(false);
-        wait_ms = 1000;
+        wait_ms = 250;
       }
       this.setTickWait(wait_ms);
     },
@@ -209,6 +206,7 @@ export default {
     },
 
     applyView() {
+      this.numLoadedGalleries = this.gridSize;
       this.$refs.plots.forEach((cell) => {
         const { row, col } = cell;
         const item = this.items[`${row}::${col}`];
@@ -229,7 +227,6 @@ export default {
       this.setColumns(1);
       this.setRows(1);
       this.setGridSize(1);
-      this.numLoadedGalleries = 0;
       this.dataLoaded = false;
       this.runId = null;
       this.location = null;
@@ -311,7 +308,7 @@ export default {
     loggedOut() {
       const loggedOut = this.girderRest.user === null;
       if (loggedOut) {
-        if (this.numLoadedGalleries > 0) {
+        if (this.cellCount > 0) {
           this.resetView();
         }
       } else {
@@ -390,8 +387,7 @@ export default {
       if (!isPaused) {
         // Give the user a moment to view the first time step
         // before progressing
-        const wait_ms = this.currentTimeStep === 1 ? 2000 : 0;
-        this.setTickWait(wait_ms);
+        this.setTickWait(250);
       }
     },
 
@@ -400,7 +396,6 @@ export default {
         return;
       }
 
-      this.numLoadedGalleries += 1;
       if (this.dataLoaded) {
         return;
       }
