@@ -47,6 +47,7 @@ export default {
       allLoadedTimeStepData: "PLOT_LOADED_TIME_STEPS",
       allAvailableTimeSteps: "PLOT_AVAILABLE_TIME_STEPS",
       initialDataLoaded: "PLOT_INITIAL_LOAD",
+      paused: "UI_PAUSE_GALLERY",
     }),
   },
 
@@ -331,6 +332,7 @@ export default {
       this.showContextMenu(true);
     },
     clearGallery() {
+      this.updateVisiblePlots({ newId: null, oldId: this.itemId });
       this.itemId = "";
       this.setInitialLoad(true);
     },
