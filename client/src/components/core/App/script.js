@@ -346,7 +346,7 @@ export default {
       }
 
       if (
-        previous._id === current.parentId &&
+        previous?._id === current.parentId &&
         "meta" in runFolder &&
         "currentTimestep" in runFolder.meta
       ) {

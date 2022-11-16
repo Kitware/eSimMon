@@ -130,5 +130,8 @@ export default {
     downloadOptions() {
       this.showDownloadOptions(true);
     },
+    clearGallery() {
+      this.itemInfo.clearGallery();
+    },
   },
 };

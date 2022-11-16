@@ -325,12 +325,14 @@ export default {
         event: e,
         step: this.currentTimeStep,
         isPlotly: this.plotType === PlotType.Plotly,
+        clearGallery: this.clearGallery,
       };
       this.setCurrentItemId(this.itemId);
       this.setContextMenuItemData(data);
       this.showContextMenu(true);
     },
     clearGallery() {
+      this.updateVisiblePlots({ newId: null, oldId: this.itemId });
       this.itemId = "";
       this.setInitialLoad(true);
     },

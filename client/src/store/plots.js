@@ -182,7 +182,9 @@ export default {
       if (pos !== -1) {
         state.selectedPlots.splice(pos, 1);
       }
-      state.selectedPlots.push(newId);
+      if (newId) {
+        state.selectedPlots.push(newId);
+      }
     },
   },
 };
