@@ -47,7 +47,6 @@ export default {
       allLoadedTimeStepData: "PLOT_LOADED_TIME_STEPS",
       allAvailableTimeSteps: "PLOT_AVAILABLE_TIME_STEPS",
       initialDataLoaded: "PLOT_INITIAL_LOAD",
-      paused: "UI_PAUSE_GALLERY",
     }),
   },
 
@@ -326,6 +325,7 @@ export default {
         event: e,
         step: this.currentTimeStep,
         isPlotly: this.plotType === PlotType.Plotly,
+        clearGallery: this.clearGallery,
       };
       this.setCurrentItemId(this.itemId);
       this.setContextMenuItemData(data);

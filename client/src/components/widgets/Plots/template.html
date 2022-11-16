@@ -5,13 +5,6 @@
     v-on:dragover="preventDefault($event)"
     @contextmenu.prevent="requestContextMenu"
   >
-    <v-icon
-      v-show="itemId && paused"
-      class="clearPlot"
-      v-on:click="clearGallery()"
-    >
-      mdi-reload
-    </v-icon>
     <plotly-plot
       :ref="row+'-'+col"
       v-if="plotType === 'plotly'"
