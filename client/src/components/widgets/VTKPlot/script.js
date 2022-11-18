@@ -50,6 +50,7 @@ export default {
       position: null,
       rangeText: [],
       plotType: null,
+      lastLoadedTimeStep: -1,
     };
   },
 
@@ -178,12 +179,24 @@ export default {
       }
       // Plots can be added faster than the data can update. Make sure that the
       // nextImage is the correct plot type.
-      if (!isNil(nextImage) && !Array.isArray(nextImage.data)) {
+
+      const readyForUpdate =
+        !isNil(nextImage) &&
+        !Array.isArray(nextImage.data) &&
+        this.lastLoadedTimeStep != nextImage?.timestep;
+      if (readyForUpdate) {
         if (!this.xaxis) {
           let xAxis = nextImage.data.xLabel;
           this.updatePlotDetails({ [`${this.itemId}`]: { xAxis } });
         }
-        this.updateRenderer(nextImage.data);
+        if (
+          this.renderer &&
+          this.plotType &&
+          this.plotType == nextImage.data.type
+        ) {
+          this.updateRenderer(nextImage.data);
+          this.lastLoadedTimeStep = nextImage.timestep;
+        }
       }
       this.updateNumReady(this.numReady + 1);
     },
@@ -310,10 +323,6 @@ export default {
       this.mesh.getPolys().setData(cells);
     },
     updateRenderer(data) {
-      if (!this.renderer || !this.plotType || this.plotType != data.type) {
-        return;
-      }
-
       if (this.plotType === PlotType.Mesh) {
         this.updateMeshRenderer(data);
       } else if (this.plotType === PlotType.ColorMap) {
