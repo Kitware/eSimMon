@@ -203,10 +203,13 @@ export default {
     },
     loadGallery: function (event) {
       this.preventDefault(event);
-      this.cleanUpOldPlotData();
       var items = JSON.parse(
         event.dataTransfer.getData("application/x-girder-items")
       );
+      if (items[0]._modelType !== "item") {
+        return;
+      }
+      this.cleanUpOldPlotData();
       const oldId = this.itemId;
       this.itemId = items[0]._id;
       this.updatePlotDetails({
