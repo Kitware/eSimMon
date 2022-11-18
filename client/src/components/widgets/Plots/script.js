@@ -248,7 +248,7 @@ export default {
       }
       const ats = this.availableTimeSteps();
       const previousTimeStep = ats.findIndex((step) => step < timestep);
-      return previousTimeStep !== -1 ? ats[previousTimeStep] : null;
+      return previousTimeStep !== -1 ? ats[previousTimeStep] : ats[0];
     },
     /**
      * Return the next valid timestep, null if no timestep exists.
