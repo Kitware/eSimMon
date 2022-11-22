@@ -47,6 +47,7 @@ export default {
       allLoadedTimeStepData: "PLOT_LOADED_TIME_STEPS",
       allAvailableTimeSteps: "PLOT_AVAILABLE_TIME_STEPS",
       initialDataLoaded: "PLOT_INITIAL_LOAD",
+      numReady: "PLOT_NUM_READY",
     }),
   },
 
@@ -101,6 +102,7 @@ export default {
       setRunId: "VIEW_RUN_ID_SET",
       setSimulation: "VIEW_SIMULATION_SET",
       setShouldAutoSave: "VIEW_AUTO_SAVE_RUN_SET",
+      updateNumReady: "PLOT_NUM_READY_SET",
     }),
     preventDefault: function (event) {
       event.preventDefault();
@@ -297,6 +299,7 @@ export default {
       }
 
       if (isNull(timestep)) {
+        this.updateNumReady(this.numReady + 1);
         return;
       }
 
