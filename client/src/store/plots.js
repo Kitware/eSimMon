@@ -131,6 +131,9 @@ export default {
         const itemMin = Math.min(...ats);
         newMin = itemMin < newMin ? itemMin : newMin;
       });
+      if (state.maxTimeStep < newMin) {
+        commit("PLOT_MAX_TIME_STEP_SET", newMin);
+      }
       commit("PLOT_MIN_TIME_STEP_SET", newMin);
       if (!state.loadedFromView || !state.initialLoad) {
         commit("PLOT_TIME_STEP_SET", Math.max(state.currentTimeStep, newMin));

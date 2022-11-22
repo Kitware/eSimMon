@@ -194,21 +194,22 @@ export default {
           }
           return step;
         });
-      if (!this.isTimeStepLoaded(firstAvailableStep)) {
-        await this.fetchTimeStepData(firstAvailableStep);
+      await this.fetchTimeStepData(firstAvailableStep);
 
-        this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
-        this.setItemId(this.itemId);
-        this.setInitialLoad(false);
-        return await this.$refs[`${this.row}-${this.col}`].react();
-      }
+      this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
+      this.setItemId(this.itemId);
+      this.setInitialLoad(false);
+      this.$refs[`${this.row}-${this.col}`].react();
     },
     loadGallery: function (event) {
       this.preventDefault(event);
-      this.cleanUpOldPlotData();
       var items = JSON.parse(
         event.dataTransfer.getData("application/x-girder-items")
       );
+      if (items[0]._modelType !== "item") {
+        return;
+      }
+      this.cleanUpOldPlotData();
       const oldId = this.itemId;
       this.itemId = items[0]._id;
       this.updatePlotDetails({
@@ -250,7 +251,7 @@ export default {
       }
       const ats = this.availableTimeSteps();
       const previousTimeStep = ats.findIndex((step) => step < timestep);
-      return previousTimeStep !== -1 ? ats[previousTimeStep] : null;
+      return previousTimeStep !== -1 ? ats[previousTimeStep] : ats[0];
     },
     /**
      * Return the next valid timestep, null if no timestep exists.
