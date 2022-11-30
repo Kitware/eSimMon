@@ -38,6 +38,7 @@ export default {
       timeIndex: -1,
       selectedTime: -1,
       rangeText: [],
+      lastLoadedTimeStep: -1,
     };
   },
 
@@ -196,8 +197,10 @@ export default {
       const plotReadyForUpdate =
         !isNil(nextImage) &&
         !isNil(this.$refs.plotly) &&
-        nextImage.type === PlotType.Plotly;
+        nextImage.type === PlotType.Plotly &&
+        this.lastLoadedTimeStep !== nextImage.timestep;
       if (plotReadyForUpdate) {
+        this.lastLoadedTimeStep = nextImage.timestep;
         if (!this.xAxis) {
           let xAxis = nextImage.layout.xaxis.title.text;
           this.updatePlotDetails({ [`${this.itemId}`]: { xAxis } });
@@ -233,8 +236,8 @@ export default {
           modeBarButtonsToRemove: ["toImage"],
         });
         if (!this.eventHandlersSet) this.setEventHandlers();
-        this.updateNumReady(this.numReady + 1);
       }
+      this.updateNumReady(this.numReady + 1);
     },
     setEventHandlers() {
       this.$refs.plotly.on("plotly_relayout", (eventdata) => {
