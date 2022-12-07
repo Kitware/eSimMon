@@ -141,9 +141,12 @@ export default {
     },
     itemId: {
       immediate: true,
-      handler(val) {
-        if (!val) {
+      handler(new_id, old_id) {
+        if (!new_id) {
           this.removePlotly();
+        }
+        if (new_id !== old_id) {
+          this.lastLoadedTimeStep = -1;
         }
       },
     },
