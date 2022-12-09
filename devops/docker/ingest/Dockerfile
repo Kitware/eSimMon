@@ -1,4 +1,4 @@
-FROM python:3.8.2-slim
+FROM python:3.11-slim
 
 COPY ./ingest /ingest
 
