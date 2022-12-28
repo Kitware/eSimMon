@@ -1,13 +1,11 @@
 version: "3.0"
 services:
   client:
-    image: kitware/esimmon-client
+    image: kitware/esimmon-client:0.1.0
     depends_on:
       - girder
     build:
       context: ../../
       dockerfile: devops/docker/nginx/Dockerfile
-      args:
-        VUE_APP_FOLDER_ID: $VUE_APP_FOLDER_ID
     ports:
       - 9090:80

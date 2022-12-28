@@ -203,16 +203,3 @@
         regexp: "^GIRDER_FOLDER_ID="
         line: "GIRDER_FOLDER_ID={{ data_folder.gc_return._id }}"
       when: not folder_presence.matched
-
-    - name: Check if folder ID has already been set for client
-      find:
-        paths: ../docker/
-        contains: "^VUE_APP_FOLDER_ID="
-      register: client_folder_presence
-
-    - name: Save folder ID if not set
-      lineinfile:
-        dest: ../docker/.env
-        regexp: "^VUE_APP_FOLDER_ID="
-        line: "VUE_APP_FOLDER_ID={{ data_folder.gc_return._id }}"
-      when: not client_folder_presence.matched
