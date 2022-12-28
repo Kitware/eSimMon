@@ -12,14 +12,10 @@ export function bootstrap() {
 
   let apiRoot = `${window.location}api/v1`;
   let authenticateWithCredentials = false;
-  if (!isNil(process.env.VUE_APP_API_URL)) {
-    apiRoot = process.env.VUE_APP_API_URL;
-    authenticateWithCredentials = true;
-  }
 
-  var fastRestUrl = `http://localhost:5000/api/v1`;
-  if (!isNil(process.env.VUE_APP_FASTAPI_API_URL)) {
-    fastRestUrl = process.env.VUE_APP_FASTAPI_API_URL;
+  var fastRestUrl = apiRoot;
+  if (window.location.host === "esimmon.kitware.com") {
+    fastRestUrl = `http://localhost:5000/api/v1`;
   }
 
   let folderId = null;
