@@ -17,6 +17,7 @@ import vtkmodules.vtkRenderingOpenGL2  # noqa
 from app.schemas.format import PlotFormat
 from fastapi.responses import FileResponse
 from PIL import Image
+from PIL import ImageFilter
 from starlette.responses import StreamingResponse
 from vtk.util import numpy_support
 from vtkmodules.vtkCommonCore import vtkIdList
@@ -370,6 +371,7 @@ async def get_timestep_images(
     format: str,
     selectedTimeSteps: str = None,
     details: Optional[str] = None,
+    filterInfo: Optional[str] = None,
     girder_token: str = Header(None),
 ):
     # Get all timesteps
@@ -383,6 +385,7 @@ async def get_timestep_images(
         selectedTimeSteps = timesteps
     # Check if there are additional settings to apply
     details = json.loads(unquote(details)) if details else {}
+    img_filter = json.loads(unquote(filterInfo)) if filterInfo else {}
 
     output_file = tempfile.NamedTemporaryFile(suffix=f".zip", delete=False)
     with zipfile.ZipFile(output_file, "w") as zip_obj:
@@ -395,6 +398,11 @@ async def get_timestep_images(
                     )
                     image = await get_timestep_image_data(plot, "png", details)
                     im = Image.open(io.BytesIO(image), "r", ["PNG"]).convert("RGB")
+                    if img_filter and img_filter["value"]:
+                        fn = getattr(ImageFilter, img_filter["filter"])
+                        im = im.filter(fn(int(img_filter["value"])))
+                    elif img_filter:
+                        im = im.filter(getattr(ImageFilter, img_filter["filter"]))
                     f = tempfile.NamedTemporaryFile(
                         dir=tmpdir, prefix=f"{step}_", suffix=f".{format}", delete=False
                     )

@@ -64,19 +64,25 @@ export default {
       const endpoint = `variables/${id}/timesteps/${step}/image?format=${format}`;
       this.downloadData(endpoint, format, "image");
     },
-    fetchImages(format, timeSteps = null) {
+    fetchImages(format, timeSteps = null, filter = null) {
       const { id } = this.itemInfo;
       let endpoint = `variables/${id}/timesteps/image?format=${format}`;
       if (timeSteps) {
         endpoint = `${endpoint}&selectedTimeSteps=${JSON.stringify(timeSteps)}`;
       }
+      if (filter) {
+        endpoint = `${endpoint}&filterInfo=${JSON.stringify(filter)}`;
+      }
       this.downloadData(endpoint, "zip", "image");
     },
-    fetchMovie(format, timeSteps = null) {
+    fetchMovie(format, timeSteps = null, filter = null) {
       const { id } = this.itemInfo;
       let endpoint = `variables/${id}/timesteps/movie?format=${format}`;
       if (timeSteps) {
         endpoint = `${endpoint}&selectedTimeSteps=${JSON.stringify(timeSteps)}`;
+      }
+      if (filter) {
+        endpoint = `${endpoint}&filterInfo=${JSON.stringify(filter)}`;
       }
       this.downloadData(endpoint, format, "movie");
     },

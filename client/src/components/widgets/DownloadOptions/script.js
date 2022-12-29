@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { mapActions, mapGetters, mapMutations } from "vuex";
 
 export default {
@@ -9,7 +10,31 @@ export default {
       rangeInput: "",
       rangeSelection: "selectAll",
       formatSelection: "0",
-      hint: "",
+      filters: [
+        { text: "No filter", value: undefined, inputs: [] },
+        {
+          text: "Savitzky-Golay Filter",
+          value: "savgol_filter",
+          inputs: [
+            { model: { windowLength: 1 }, label: "window_length (int)" },
+            { model: { polyorder: 1 }, label: "polyorder (int)" },
+            { model: { deriv: 0 }, label: "deriv (int) (optional)" },
+            { model: { delta: 1.0 }, label: "delta (float) (optional)" },
+            { model: { axis: -1 }, label: "axis (int) (optional)" },
+            { model: { mode: "mirror" }, label: "mode (str) (optional)" },
+            { model: { cval: 0.0 }, label: "cval (scalar) (optional)" },
+          ],
+        },
+        {
+          text: "Rolling Average",
+          value: "convolve",
+          inputs: [
+            { model: { kernel: 1 }, label: "kernel (int)" },
+            { model: { mode: "full" }, label: "mode (str) (optional)" },
+          ],
+        },
+      ],
+      filter: { text: "No filter", value: undefined, inputs: [] },
     };
   },
   props: {
@@ -111,10 +136,11 @@ export default {
         return;
       }
       const timeSteps = this.computeListOfTimeSteps();
+      const filter = this.filterInfo();
       if (this.activeTab === 0) {
-        this.fetchMovie(this.format, timeSteps);
+        this.fetchMovie(this.format, timeSteps, filter);
       } else {
-        this.fetchImages(this.format, timeSteps);
+        this.fetchImages(this.format, timeSteps, filter);
       }
       this.downloadsDialog = false;
     },
@@ -140,7 +166,13 @@ export default {
       return timeSteps;
     },
     validate() {
-      return !this.invalidInput;
+      const validTextInput = !this.invalidInput;
+      const validFilter = _.isObject(this.filter);
+      // let validFilterValue = true;
+      // if (this.filter.inputs) {
+      //   validFilterValue = parseInt(this.filterValue);
+      // }
+      return validTextInput && validFilter; // && validFilterValue;
     },
     updateHint() {
       if (this.invalidInput) {
@@ -150,6 +182,18 @@ export default {
       } else {
         this.hint = `Available Range: ${this.minStep} - ${this.maxStep}`;
       }
+    },
+    filterInfo() {
+      if (this.filter.value == null) {
+        return null;
+      }
+      return {
+        filter: this.filter.value,
+        // value: this.filter.inputs ? this.filterValue : false,
+      };
+    },
+    updateDialog() {
+      this.filter = this.filters[0];
     },
   },
   watch: {

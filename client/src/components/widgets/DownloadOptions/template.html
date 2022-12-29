@@ -47,6 +47,41 @@
           </v-row>
         </v-container>
       </v-form>
+      <v-expansion-panels>
+        <v-expansion-panel>
+          <v-expansion-panel-header>Advanced Options</v-expansion-panel-header>
+          <v-expansion-panel-content>
+            <v-form>
+              <v-container>
+                <v-row justify="center" v-bind:style="{alignItems: 'baseline'}">
+                  <v-col cols="12">
+                    <v-combobox
+                      v-model="filter"
+                      :items="filters"
+                      label="Smoothing Filter"
+                      filled
+                      dense
+                    />
+                  </v-col>
+                </v-row>
+                <v-row justify="center">
+                  <v-col
+                    v-for="item in filter.inputs"
+                    v-bind="item"
+                    cols="auto"
+                  >
+                    <v-text-field
+                      v-model="Object.values(item.model)[0]"
+                      :label="item.label"
+                      dense
+                    />
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-form>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
     </v-card-text>
     <v-card-actions>
       <v-spacer />
