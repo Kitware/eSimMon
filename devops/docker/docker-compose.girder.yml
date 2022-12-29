@@ -8,7 +8,7 @@ services:
       - girder-db:/data/db
 
   girder:
-    image: kitware/esimmon-girder:0.1.0
+    image: kitware/esimmon-girder
     build:
       context: ../../
       dockerfile: devops/docker/girder/Dockerfile

@@ -1,7 +1,7 @@
 version: "3.0"
 services:
   demo:
-    image: kitware/esimmon-demo:0.1.0
+    image: kitware/esimmon-demo
     depends_on:
       - girder
     build:
