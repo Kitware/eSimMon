@@ -25,6 +25,7 @@ async def create_movie(
     format: str,
     details: Optional[str] = None,
     selectedTimeSteps: Optional[str] = None,
+    fps: Optional[str] = None,
     girder_token: str = Header(None),
 ):
     # Get all timesteps
@@ -36,6 +37,7 @@ async def create_movie(
     )
     # Check if there are additional settings to apply
     details = json.loads(unquote(details)) if details else {}
+    framerate = fps if float(fps) else 10.0
     with tempfile.TemporaryDirectory() as tmpdir:
         for step in selectedTimeSteps:
             if step in timesteps:
@@ -51,7 +53,7 @@ async def create_movie(
         output_file = tempfile.NamedTemporaryFile(suffix=f".{format}", delete=False)
         try:
             (
-                ffmpeg.input(path_name, pattern_type="glob", framerate=10)
+                ffmpeg.input(path_name, pattern_type="glob", framerate=framerate)
                 .output(output_file.name, **{"r": 30})
                 .overwrite_output()
                 .run()
