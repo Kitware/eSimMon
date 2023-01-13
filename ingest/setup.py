@@ -28,6 +28,7 @@ setup(
         "coloredlogs",
         "tenacity",
         "aiofiles",
+        "adios2",
     ],
     entry_points={
         "console_scripts": ["esimmon=esimmon.cli:main"],

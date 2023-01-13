@@ -6,11 +6,14 @@ import mimetypes
 import re
 import ssl
 import tarfile
+import tempfile
 from io import BytesIO
+from json.encoder import INFINITY
 from pathlib import Path
 from typing import Union
 from urllib.parse import urlparse
 
+import adios2
 import aiofiles
 import aiohttp
 import click
@@ -354,6 +357,61 @@ class FileSystemUploadSource(UploadSource):
             return await fp.read()
 
 
+async def update_range_metadata(gc, image_tarball, bp_path, variable_items, semaphore):
+    with tempfile.TemporaryDirectory() as tempdir:
+        image_tarball.extractall(tempdir)
+        with adios2.open(f"{tempdir}/{bp_path}", "r") as fh:
+            for var, id in variable_items.items():
+                attrs = fh.read_attribute_string(var)
+                if not attrs:
+                    # Current variable isn't in this file
+                    continue
+
+                # get existing item metadata
+                item_meta = await gc.get_metadata("item", id)
+                new_meta = {}
+
+                # get variable names for current item
+                attrs = json.loads(attrs[0])
+                vars = fh.available_variables()
+
+                if attrs["type"] != "mesh-colormap":
+                    # All plots except mesh-colormap have x and y vars to grab
+                    new_meta["x_range"] = item_meta.get(
+                        "x_range", [INFINITY, -INFINITY]
+                    )
+                    x0 = float(vars[attrs["x"]]["Min"])
+                    x1 = float(vars[attrs["x"]]["Max"])
+                    old_x0, old_x1 = new_meta["x_range"]
+                    new_meta["x_range"] = [min(old_x0, x0), max(old_x1, x1)]
+
+                    new_meta["y_range"] = item_meta.get(
+                        "y_range", [INFINITY, -INFINITY]
+                    )
+                    old_y0, old_y1 = new_meta["y_range"]
+                    y_attrs = attrs["y"]
+                    if not isinstance(attrs["y"], list):
+                        y_attrs = [attrs["y"]]
+                    for y in [vars[n] for n in y_attrs]:
+                        start = min(old_y0, float(y["Min"]))
+                        end = max(old_y1, float(y["Max"]))
+                        new_meta["y_range"] = [start, end]
+
+                color = attrs.get("color", None)
+                if color is not None:
+                    # Only some 2D plots have a color scalar variable
+                    new_meta["color_range"] = item_meta.get(
+                        "color_range", [INFINITY, -INFINITY]
+                    )
+                    c0 = float(vars[color]["Min"])
+                    c1 = float(vars[color]["Max"])
+                    old_c0, old_c1 = new_meta["color_range"]
+                    new_meta["color_range"] = [min(old_c0, c0), max(old_c1, c1)]
+
+                # update item metadata
+                await gc.set_metadata("item", id, new_meta, semaphore)
+
+
 async def ensure_folders(gc, parent, folders):
     for folder_name in folders:
         parent = await gc.create_folder(parent["_id"], "folder", folder_name)
@@ -416,6 +474,8 @@ async def create_variable_item(
     time_values.append(time)
 
     await gc.set_metadata("item", item["_id"], meta)
+
+    return item["_id"]
 
 
 async def upload_timestep_bp_archive(
@@ -499,6 +559,7 @@ async def fetch_images(
             log.warning("Data archive not found")
             return
 
+        variable_items = {}
         buffer = BytesIO(image_archive)
 
         with tarfile.open(fileobj=buffer) as images_tgz:
@@ -524,7 +585,7 @@ async def fetch_images(
                     return
 
                 # Ensure we have the variable item created
-                await create_variable_item(
+                item_id = await create_variable_item(
                     gc,
                     folder,
                     shot_name,
@@ -534,6 +595,7 @@ async def fetch_images(
                     timestep,
                     time,
                 )
+                variable_items[variable_name] = item_id
 
             tasks = []
             # Now upload the BP files
@@ -551,9 +613,16 @@ async def fetch_images(
                         for m in images_tgz.getmembers()
                         if re.match(bp_file_regex, m.name)
                     ]
+                    name = ""
                     for m in bp_members:
                         f = images_tgz.extractfile(m)
                         timestep_bp_tgz.addfile(m, f)
+                        if Path(m.name).suffix == ".bp":
+                            name = m.name
+
+                await update_range_metadata(
+                    gc, images_tgz, name, variable_items, metadata_semaphore
+                )
 
                 upload_filename = Path(bp).name.split(".")[0]
                 upload_filename = f"{upload_filename}.bp.tgz"
