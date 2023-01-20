@@ -66,9 +66,9 @@ export default {
       const { location, counts } = this;
       if (counts.nFolders || counts.nItems) {
         return this.fetchPaginatedFolderRows().then((rows) => {
-          // Filter out the internal 'timesteps' folder
+          // Filter out the internal 'timesteps'  and 'movies' folders
           return rows.filter((folder) => {
-            return folder.name !== "timesteps";
+            return folder.name !== "timesteps" && folder.name !== "movies";
           });
         });
       }
