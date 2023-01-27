@@ -1,7 +1,7 @@
 version: "3.0"
 services:
   watch:
-    image: kitware/esimmon-cli:0.1.0
+    image: kitware/esimmon-cli
     build:
       context: ../../
       dockerfile: devops/docker/ingest/Dockerfile

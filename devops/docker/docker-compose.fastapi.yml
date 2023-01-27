@@ -1,9 +1,8 @@
 version: "3.0"
 services:
   fastapi:
-    image: kitware/esimmon-fastapi:0.1.0
+    image: kitware/esimmon-fastapi
     ports:
       - 5000:5000
     env_file:
       - fastapi.env
-
