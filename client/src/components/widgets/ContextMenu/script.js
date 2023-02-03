@@ -73,6 +73,9 @@ export default {
     maxRange() {
       return this.maxTimeStep - this.minTimeStep;
     },
+    averaging() {
+      return this.itemInfo ? this.itemInfo?.averaging : false;
+    },
   },
 
   methods: {
@@ -84,6 +87,7 @@ export default {
       updateItemInfo: "UI_CONTEXT_MENU_ITEM_DATA_SET",
       showDownloadOptions: "UI_SHOW_DOWNLOAD_OPTIONS_SET",
       plotTimeAverageChanged: "PLOT_TIME_AVERAGE_SET",
+      setPaused: "UI_PAUSE_GALLERY_SET",
     }),
     fetchImage(format) {
       const { id, step } = this.itemInfo;
@@ -168,6 +172,10 @@ export default {
         [`${this.itemInfo.id}`]: { timeAverage: Number(this.range) },
       });
       this.plotTimeAverageChanged(this.itemInfo.id);
+    },
+    notTimeSeries() {
+      const xAxis = this.itemInfo?.xAxis || "";
+      return !xAxis.toLowerCase().includes("time");
     },
   },
 };

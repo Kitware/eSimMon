@@ -1,5 +1,5 @@
 import Plotly from "plotly.js-basic-dist-min";
-import { isNil } from "lodash";
+import { isEmpty, isNil } from "lodash";
 import { mapGetters, mapActions, mapMutations } from "vuex";
 import { PlotType } from "../../../utils/constants";
 
@@ -30,6 +30,10 @@ export default {
       type: String,
       required: true,
     },
+    readyToApplyAverage: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   data() {
@@ -39,6 +43,7 @@ export default {
       selectedTime: -1,
       rangeText: [],
       lastLoadedTimeStep: -1,
+      averagingValues: [],
     };
   },
 
@@ -150,6 +155,16 @@ export default {
         }
       },
     },
+    readyToApplyAverage: {
+      handler(shouldAvg) {
+        if (shouldAvg) {
+          this.lastLoadedTimeStep = -1;
+          this.react();
+          this.plotTimeAverageChanged("");
+          this.averagingValues = [];
+        }
+      },
+    },
   },
 
   methods: {
@@ -160,6 +175,7 @@ export default {
       setTimeStep: "PLOT_TIME_STEP_SET",
       setPauseGallery: "UI_PAUSE_GALLERY_SET",
       updateNumReady: "PLOT_NUM_READY_SET",
+      plotTimeAverageChanged: "PLOT_TIME_AVERAGE_SET",
     }),
     relayoutPlotly() {
       if (this.zoom) {
@@ -176,20 +192,51 @@ export default {
         }
       });
     },
-    react: function () {
-      if (!this.itemId) {
-        return;
-      }
-
+    setXAxis(image) {
+      let xAxis = image.layout.xaxis.title.text;
+      this.updatePlotDetails({ [`${this.itemId}`]: { xAxis } });
+    },
+    applyLogScaling(image) {
+      image.layout.xaxis.type = this.logScaling ? "log" : "linear";
+      image.layout.yaxis.type = this.logScaling ? "log" : "linear";
+    },
+    applyZoom(image) {
+      image.layout.xaxis.range = this.zoom.xAxis;
+      image.layout.yaxis.range = this.zoom.yAxis;
+      image.layout.yaxis.autorange = false;
+    },
+    useGlobalRange(image) {
+      image.layout.yaxis.range = [...this.range];
+      image.layout.yaxis.autorange = false;
+    },
+    plotPreProcessing(image) {
+      if (!this.xAxis) this.setXAxis(image);
+      this.applyLogScaling(image);
+      image.layout.yaxis.autorange = true;
+      image.layout.showlegend = this.legendVisibility;
+      if (this.zoom) this.applyZoom(image);
+      if (this.range) this.useGlobalRange(image);
+      this.setAnnotations(image.data[0]);
+    },
+    getNextImage(averaging, timeStep) {
+      // Grab the data for the current time step
       let nextImage = this.loadedTimeStepData.find(
-        (img) => img.timestep == this.currentTimeStep,
+        (img) => img.timestep == timeStep
       );
-      if (isNil(nextImage) && this.loadedTimeStepData.length >= 1) {
-        let idx = this.availableTimeSteps.findIndex(
-          (step) => step >= this.currentTimeStep,
-        );
+
+      // If no data is available for the current time step, find the most
+      // recent previous time step that does have data and display that instead
+      const ats = this.availableTimeSteps;
+      if (
+        !averaging &&
+        isNil(nextImage) &&
+        this.loadedTimeStepData.length >= 1
+      ) {
+        let idx = ats.findIndex((step) => step >= timeStep);
+        // Use the data for the first time step available if the current time
+        // step is before the first available for this variable
         idx = Math.max((idx -= 1), 0);
-        let prevTimeStep = this.availableTimeSteps[idx];
+        let prevTimeStep = ats[idx];
         nextImage = this.loadedTimeStepData.find(
           (img) => img.timestep === prevTimeStep,
         );
