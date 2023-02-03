@@ -146,7 +146,7 @@
                   persistent-hint
                   :hint="`Average the next (n) time steps together where 0 \<= n \<= ${maxRange}.`"
                   dense
-                  @keyup.enter="useAverage(clear=false)"
+                  @keydown.enter.prevent="useAverage(clear=false)"
                 />
               </v-col>
             </v-row>

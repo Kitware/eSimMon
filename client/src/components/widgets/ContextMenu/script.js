@@ -163,7 +163,7 @@ export default {
     clearGallery() {
       this.itemInfo.clearGallery();
     },
-    useAverage(clear) {
+    useAverage(clear = false) {
       this.averageDialog = false;
       if (clear) {
         this.range = 0;
