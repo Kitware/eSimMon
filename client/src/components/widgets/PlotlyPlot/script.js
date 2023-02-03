@@ -1,7 +1,8 @@
 import Plotly from "plotly.js-basic-dist-min";
-import { isEmpty, isNil } from "lodash";
+import { isEmpty, isEqual, isNil } from "lodash";
 import { mapGetters, mapActions, mapMutations } from "vuex";
 import { PlotType } from "../../../utils/constants";
+import Annotations from "../Annotations";
 
 //-----------------------------------------------------------------------------
 // Utility Functions
@@ -25,6 +26,10 @@ export default {
   name: "PlotlyPlot",
   inject: ["girderRest", "fastRestUrl"],
 
+  components: {
+    Annotations,
+  },
+
   props: {
     itemId: {
       type: String,
@@ -41,9 +46,10 @@ export default {
       eventHandlersSet: false,
       timeIndex: -1,
       selectedTime: -1,
-      rangeText: [],
+      rangeText: "",
       lastLoadedTimeStep: -1,
       averagingValues: [],
+      avgAnnotation: "",
     };
   },
 
@@ -122,26 +128,30 @@ export default {
     },
     legendVisibility: {
       immediate: true,
-      handler() {
-        this.react();
+      handler(newVal, oldVal) {
+        let needRerender = !isEqual(newVal, oldVal);
+        this.react(needRerender);
       },
     },
     logScaling: {
       immediate: true,
-      handler() {
-        this.react();
+      handler(newVal, oldVal) {
+        let needRerender = !isEqual(newVal, oldVal);
+        this.react(needRerender);
       },
     },
     range: {
       immediate: true,
-      handler() {
-        this.react();
+      handler(newVal, oldVal) {
+        let needRerender = !isEqual(newVal, oldVal);
+        this.react(needRerender);
       },
     },
     zoom: {
       immediate: true,
-      handler() {
-        this.react();
+      handler(newVal, oldVal) {
+        let needRerender = !isEqual(newVal, oldVal);
+        this.react(needRerender);
       },
     },
     itemId: {
@@ -247,25 +257,33 @@ export default {
       const avgRange = this.plotDetails[this.itemId]?.timeAverage;
       let nextImage = this.getNextImage(avgRange, this.currentTimeStep);
       if (!avgRange) {
+        this.avgAnnotation = "";
         if (!isEmpty(this.averagingValues)) {
           this.averagingValues = [];
         }
         return nextImage;
       } else {
+        let end = Math.min(
+          this.currentTimeStep + avgRange,
+          Math.max(...this.availableTimeSteps)
+        );
+        this.avgAnnotation = `Averaging Over Time Steps ${this.currentTimeStep} - ${end}`;
         // if no 2-d array of results
         if (isEmpty(this.averagingValues)) {
-          // call findImage for each time step in range
+          // call getNextImage for each time step in range
           for (
             let i = this.currentTimeStep;
             i <= this.currentTimeStep + avgRange;
             i++
           ) {
-            nextImage = this.getNextImage(avgRange, i);
-            if (!isNil(nextImage)) {
-              nextImage.data.forEach((data, idx) => {
-                // append y data to 2d array
-                (this.averagingValues[idx] ??= []).push(data.y);
-              });
+            if (this.availableTimeSteps.includes(i)) {
+              nextImage = this.getNextImage(avgRange, i);
+              if (!isNil(nextImage)) {
+                nextImage.data.forEach((data, idx) => {
+                  // append y data to 2d array
+                  (this.averagingValues[idx] ??= []).push(data.y);
+                });
+              }
             }
           }
         } else {
@@ -304,7 +322,7 @@ export default {
         return nextImage;
       }
     },
-    react: function () {
+    react: function (needRerender = false) {
       if (!this.itemId) {
         return;
       }
@@ -316,7 +334,7 @@ export default {
         !isNil(nextImage) &&
         !isNil(this.$refs.plotly) &&
         nextImage.type === PlotType.Plotly &&
-        this.lastLoadedTimeStep !== nextImage.timestep;
+        (this.lastLoadedTimeStep !== nextImage.timestep || needRerender);
       if (plotReadyForUpdate) {
         this.lastLoadedTimeStep = nextImage.timestep;
         this.plotPreProcessing(nextImage);
@@ -372,7 +390,7 @@ export default {
         if (this.timeStepSelectorMode && xAxis === "time") {
           return false;
         } else {
-          this.rangeText = [];
+          this.rangeText = "";
           if (this.syncZoom) {
             for (let [key, value] of Object.entries(this.plotDetails)) {
               if (value.xAxis === this.xAxis) {
@@ -392,7 +410,7 @@ export default {
       const elems = node?.getElementsByClassName("plot-container");
       if (node !== undefined && elems.length > 0) {
         Plotly.purge(this.$refs.plotly);
-        this.rangeText = [];
+        this.rangeText = "";
       }
     },
     selectTimeStepFromPlot() {
@@ -419,14 +437,15 @@ export default {
     },
     setAnnotations(data) {
       if (!this.zoom) {
-        this.rangeText = [];
+        this.rangeText = "";
         return;
       }
       const xRange = [data.x[0], data.x[data.x.length - 1]];
       let yRange = this.range;
       if (!yRange) yRange = [Math.min(...data.y), Math.max(...data.y)];
       const range = [...xRange, ...yRange];
-      this.rangeText = range.map((r) => r.toPrecision(4));
+      const [x0, x1, y0, y1] = range.map((r) => r.toPrecision(4));
+      this.rangeText = `xRange: [${x0}, ${x1}] yRange: [${y0}, ${y1}]`;
     },
     toggleLogScale() {
       this.updatePlotDetails({ [`${this.itemId}`]: { log: !this.logScaling } });

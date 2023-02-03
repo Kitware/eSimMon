@@ -5,6 +5,7 @@ import {
   scalarBarAutoLayout,
 } from "../../../utils/vtkPlotStyling";
 import { PlotType } from "../../../utils/constants";
+import Annotations from "../Annotations";
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import "@kitware/vtk.js/Rendering/Profiles/Geometry";
@@ -27,6 +28,10 @@ export default {
   name: "VTKPlot",
   inject: ["girderRest", "fastRestUrl"],
 
+  components: {
+    Annotations,
+  },
+
   props: {
     itemId: {
       type: String,
@@ -48,7 +53,7 @@ export default {
       focalPoint: null,
       scale: 0,
       position: null,
-      rangeText: [],
+      rangeText: "",
       plotType: null,
       lastLoadedTimeStep: -1,
     };
@@ -524,7 +529,7 @@ export default {
         this.updateRendererCount(this.renderWindow.getRenderers().length);
         this.position = null;
         this.renderWindow.render();
-        this.rangeText = [];
+        this.rangeText = "";
       }
     },
     enterCurrentRenderer() {
@@ -601,7 +606,8 @@ export default {
             this.updatePlotDetails({ [`${this.itemId}`]: { zoom: zoomData } });
           }
           const range = this.actor.getBounds();
-          this.rangeText = range.map((r) => r.toPrecision(4));
+          const [x0, x1, y0, y1] = range.map((r) => r.toPrecision(4));
+          this.rangeText = `xRange: [${x0}, ${x1}] yRange: [${y0}, ${y1}]`;
         }
       });
     },
@@ -634,7 +640,7 @@ export default {
           }
         }
         this.renderer.resetCamera(bounds);
-        this.rangeText = [];
+        this.rangeText = "";
       } else if (!isEqual(this.zoom.focalPoint, this.camera.getFocalPoint())) {
         if (this.zoom.scale) {
           this.camera.setFocalPoint(...this.zoom.focalPoint);

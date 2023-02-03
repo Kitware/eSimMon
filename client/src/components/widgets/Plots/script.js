@@ -143,6 +143,9 @@ export default {
      * Fetch the data for give timestep. The data is added to loadedTimeStepData
      */
     resolveTimeStepData: function (response, timeStep) {
+      if (this.isTimeStepLoaded(timeStep)) {
+        return;
+      }
       const reader = new FileReader();
       if (response.type === "application/msgpack") {
         reader.readAsArrayBuffer(response);
@@ -190,7 +193,7 @@ export default {
         return;
       }
       return this.plotFetcher.getTimestepPlot(timeStep).then((response) => {
-        this.resolveTimeStepData(response, timeStep);
+        return this.resolveTimeStepData(response, timeStep);
       });
     },
     /**

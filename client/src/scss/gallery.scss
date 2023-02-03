@@ -197,14 +197,25 @@
   background-color: white;
 }
 
-.plotlyAnnotations {
+.annotations {
   position: absolute;
-  left: 0;
-  top: 25px;
   z-index: 1;
   background-color: white;
   font-size: smaller;
+}
+.right {
+  right: 0;
+  padding-right: 5px;
+}
+.left {
+  left: 0;
   padding-left: 5px;
+}
+.top {
+  top: 25px;
+}
+.bottom {
+  bottom: 25px;
 }
 
 .notificiations {
