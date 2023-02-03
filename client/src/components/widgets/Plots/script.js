@@ -80,10 +80,14 @@ export default {
           (itemId, timestep) =>
             this.callFastEndpoint(
               `variables/${itemId}/timesteps/${timestep}/plot`,
-              { responseType: "blob" },
+              { responseType: "blob" }
             ),
+          (response, timeStep) => this.resolveTimeStepData(response, timeStep)
         );
-        this.loadVariable();
+        this.plotFetcher.initialize().then(() => {
+          this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
+          this.loadVariable();
+        });
       },
     },
     timeAverage: {
@@ -216,7 +220,7 @@ export default {
           }
           return step;
         });
-      await this.fetchTimeStepData(firstAvailableStep);
+      await this.plotFetcher.fastEndpointFn(this.itemId, firstAvailableStep);
 
       this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
       this.setItemId(this.itemId);
