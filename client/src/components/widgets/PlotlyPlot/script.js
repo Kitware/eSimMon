@@ -268,40 +268,23 @@ export default {
           Math.max(...this.availableTimeSteps)
         );
         this.avgAnnotation = `Averaging Over Time Steps ${this.currentTimeStep} - ${end}`;
-        // if no 2-d array of results
-        if (isEmpty(this.averagingValues)) {
-          // call getNextImage for each time step in range
-          for (
-            let i = this.currentTimeStep;
-            i <= this.currentTimeStep + avgRange;
-            i++
-          ) {
-            if (this.availableTimeSteps.includes(i)) {
-              nextImage = this.getNextImage(avgRange, i);
-              if (!isNil(nextImage)) {
-                nextImage.data.forEach((data, idx) => {
-                  // append y data to 2d array
-                  (this.averagingValues[idx] ??= []).push(data.y);
-                });
-              }
+        // call getNextImage for each time step in range
+        this.averagingValues = [];
+        for (
+          let i = this.currentTimeStep;
+          i <= this.currentTimeStep + avgRange;
+          i++
+        ) {
+          if (this.availableTimeSteps.includes(i)) {
+            nextImage = this.getNextImage(avgRange, i);
+            if (!isNil(nextImage)) {
+              nextImage.data.forEach((data, idx) => {
+                // append y data to 2d array
+                (this.averagingValues[idx] ??= []).push(data.y);
+              });
             }
           }
-        } else {
-          nextImage = this.getNextImage(
-            avgRange,
-            this.currentTimeStep + avgRange
-          );
-          this.averagingValues.forEach((value, idx) => {
-            // remove first element from 2d array
-            value.shift();
-            // add next timestep image to array
-            if (!isNil(nextImage)) {
-              value.push(nextImage.data[idx].y);
-            }
-            this.averagingValues[idx] = value;
-          });
         }
-        // average the y values
         const avgData = [];
         let length = 1;
         this.averagingValues.forEach((value) => {
