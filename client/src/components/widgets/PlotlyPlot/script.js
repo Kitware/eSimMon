@@ -241,6 +241,74 @@ export default {
           (img) => img.timestep === prevTimeStep,
         );
       }
+      return nextImage;
+    },
+    findImage() {
+      const avgRange = this.plotDetails[this.itemId]?.timeAverage;
+      let nextImage = this.getNextImage(avgRange, this.currentTimeStep);
+      if (!avgRange) {
+        if (!isEmpty(this.averagingValues)) {
+          this.averagingValues = [];
+        }
+        return nextImage;
+      } else {
+        // if no 2-d array of results
+        if (isEmpty(this.averagingValues)) {
+          // call findImage for each time step in range
+          for (
+            let i = this.currentTimeStep;
+            i <= this.currentTimeStep + avgRange;
+            i++
+          ) {
+            nextImage = this.getNextImage(avgRange, i);
+            if (!isNil(nextImage)) {
+              nextImage.data.forEach((data, idx) => {
+                // append y data to 2d array
+                (this.averagingValues[idx] ??= []).push(data.y);
+              });
+            }
+          }
+        } else {
+          nextImage = this.getNextImage(
+            avgRange,
+            this.currentTimeStep + avgRange
+          );
+          this.averagingValues.forEach((value, idx) => {
+            // remove first element from 2d array
+            value.shift();
+            // add next timestep image to array
+            if (!isNil(nextImage)) {
+              value.push(nextImage.data[idx].y);
+            }
+            this.averagingValues[idx] = value;
+          });
+        }
+        // average the y values
+        const avgData = [];
+        let length = 1;
+        this.averagingValues.forEach((value) => {
+          length = value.length;
+          const dataVal = value.reduce((acc, val) => {
+            val.forEach((v, i) => (acc[i] = (acc[i] || 0) + v));
+            return acc;
+          }, []);
+          dataVal.forEach((v, i) => (dataVal[i] = v / length));
+          avgData.push(dataVal);
+        });
+        // rebuild the data with the average values
+        if (isNil(nextImage)) {
+          nextImage = this.getNextImage(false, this.currentTimeStep + avgRange);
+        }
+        avgData.forEach((yAvg, idx) => (nextImage.data[idx].y = yAvg));
+        // return new plotly dict
+        return nextImage;
+      }
+    },
+    react: function () {
+      if (!this.itemId) {
+        return;
+      }
+      const nextImage = this.findImage();
       // Plots can be added faster than the data can update. Make sure we have
       // a nextImage, that the DOM element has been created, and that the
       // nextImage is the correct plot type.
@@ -251,24 +319,7 @@ export default {
         this.lastLoadedTimeStep !== nextImage.timestep;
       if (plotReadyForUpdate) {
         this.lastLoadedTimeStep = nextImage.timestep;
-        if (!this.xAxis) {
-          let xAxis = nextImage.layout.xaxis.title.text;
-          this.updatePlotDetails({ [`${this.itemId}`]: { xAxis } });
-        }
-        nextImage.layout.xaxis.type = this.logScaling ? "log" : "linear";
-        nextImage.layout.yaxis.type = this.logScaling ? "log" : "linear";
-        nextImage.layout.yaxis.autorange = true;
-        nextImage.layout.showlegend = this.legendVisibility;
-        if (this.zoom) {
-          nextImage.layout.xaxis.range = this.zoom.xAxis;
-          nextImage.layout.yaxis.range = this.zoom.yAxis;
-          nextImage.layout.yaxis.autorange = false;
-        }
-        if (this.range) {
-          nextImage.layout.yaxis.range = [...this.range];
-          nextImage.layout.yaxis.autorange = false;
-        }
-        this.setAnnotations(nextImage.data[0]);
+        this.plotPreProcessing(nextImage);
         Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {
           autosize: true,
           modeBarButtonsToAdd: [
