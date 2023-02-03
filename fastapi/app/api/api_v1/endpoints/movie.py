@@ -19,6 +19,13 @@ from .variables import get_timestep_plot
 router = APIRouter()
 
 
+def _cleanup():
+    # Make sure we don't start collecting temp movie files as they can get quite large
+    path = f"{tempfile.gettempdir()}/esimmon*"
+    for ext in ["mp4", "mpg"]:
+        [os.remove(f) for f in glob.glob(f"{path}.{ext}")]
+
+
 async def _create_movie(
     id: str,
     format: str,
@@ -28,6 +35,9 @@ async def _create_movie(
     fps: Optional[str] = None,
     girder_token: str = Header(None),
 ):
+    # Clean up any old temp files that might be hanging around
+    _cleanup()
+
     selectedTimeSteps = (
         json.loads(unquote(selectedTimeSteps)) if selectedTimeSteps else timeSteps
     )
