@@ -1,7 +1,7 @@
 import RangeDialog from "../RangeDialog";
 import DownloadOptions from "../DownloadOptions";
 import { v4 as uuidv4 } from "uuid";
-import { mapGetters, mapMutations } from "vuex";
+import { mapActions, mapGetters, mapMutations } from "vuex";
 
 // Enum values
 const REQUEST = "in progress";
@@ -21,7 +21,20 @@ export default {
     return {
       showRangeDialog: false,
       downloads: [],
+      averageDialog: false,
+      range: "",
     };
+  },
+
+  watch: {
+    averageDialog: {
+      immediate: true,
+      handler(visible) {
+        if (visible) {
+          this.setPaused(true);
+        }
+      },
+    },
   },
 
   computed: {
@@ -30,6 +43,8 @@ export default {
       itemInfo: "UI_CONTEXT_MENU_ITEM_DATA",
       plotDetails: "PLOT_DETAILS",
       mathJaxOptions: "UI_MATH_JAX_OPTIONS",
+      minTimeStep: "PLOT_MIN_TIME_STEP",
+      maxTimeStep: "PLOT_MAX_TIME_STEP",
     }),
     showMenu: {
       get() {
@@ -51,13 +66,24 @@ export default {
     downloading() {
       return this.downloads.length > 0;
     },
+    invalidInput() {
+      let range = Number(this.range);
+      return range < 0 && range > this.maxRange;
+    },
+    maxRange() {
+      return this.maxTimeStep - this.minTimeStep;
+    },
   },
 
   methods: {
+    ...mapActions({
+      updatePlotDetails: "PLOT_DETAILS_UPDATED",
+    }),
     ...mapMutations({
       showContextMenu: "UI_SHOW_CONTEXT_MENU_SET",
       updateItemInfo: "UI_CONTEXT_MENU_ITEM_DATA_SET",
       showDownloadOptions: "UI_SHOW_DOWNLOAD_OPTIONS_SET",
+      plotTimeAverageChanged: "PLOT_TIME_AVERAGE_SET",
     }),
     fetchImage(format) {
       const { id, step } = this.itemInfo;
@@ -132,6 +158,16 @@ export default {
     },
     clearGallery() {
       this.itemInfo.clearGallery();
+    },
+    useAverage(clear) {
+      this.averageDialog = false;
+      if (clear) {
+        this.range = 0;
+      }
+      this.updatePlotDetails({
+        [`${this.itemInfo.id}`]: { timeAverage: Number(this.range) },
+      });
+      this.plotTimeAverageChanged(this.itemInfo.id);
     },
   },
 };

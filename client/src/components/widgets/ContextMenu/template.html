@@ -90,4 +90,47 @@
       </v-list>
     </v-navigation-drawer>
   </v-snackbar>
+  <v-dialog v-model="averageDialog" max-width="300px">
+    <v-card>
+      <v-card-title style="justify-content: center">Time Average</v-card-title>
+      <v-card-text>
+        <v-form>
+          <v-container>
+            <v-row v-bind:style="{alignItems: 'center'}">
+              <v-col cols="12">
+                <v-text-field
+                  v-model="range"
+                  type="number"
+                  step="1"
+                  label="Range (n)"
+                  persistent-hint
+                  :hint="`Average the next (n) time steps together where 0 \<= n \<= ${maxRange}.`"
+                  dense
+                  @keyup.enter="useAverage(clear=false)"
+                />
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-form>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn text @click.stop="averageDialog=false"> Cancel </v-btn>
+        <v-spacer />
+        <v-btn
+          text
+          :disabled="invalidInput"
+          @click.stop="useAverage(clear=true)"
+        >
+          Clear
+        </v-btn>
+        <v-btn
+          text
+          :disabled="invalidInput"
+          @click.stop="useAverage(clear=false)"
+        >
+          Apply
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </div>
