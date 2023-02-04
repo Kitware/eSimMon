@@ -62,7 +62,7 @@ export default {
     const boxSelector = Manipulators.vtkMouseBoxSelectorManipulator.newInstance(
       {
         button: 1,
-      }
+      },
     );
     this.setBoxSelector(boxSelector);
     const iStyle = vtkInteractorStyleManipulator.newInstance();

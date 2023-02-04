@@ -73,8 +73,8 @@ export default {
           (itemId, timestep) =>
             this.callFastEndpoint(
               `variables/${itemId}/timesteps/${timestep}/plot`,
-              { responseType: "blob" }
-            )
+              { responseType: "blob" },
+            ),
         );
         this.loadVariable();
       },
@@ -114,7 +114,7 @@ export default {
     callFastEndpoint: async function (endpoint, options = null) {
       const { data } = await this.girderRest.get(
         `${this.fastRestUrl}/${endpoint}`,
-        options ? options : {}
+        options ? options : {},
       );
       return data;
     },
@@ -206,7 +206,7 @@ export default {
     loadGallery: function (event) {
       this.preventDefault(event);
       var items = JSON.parse(
-        event.dataTransfer.getData("application/x-girder-items")
+        event.dataTransfer.getData("application/x-girder-items"),
       );
       if (items[0]._modelType !== "item") {
         return;
@@ -342,7 +342,7 @@ export default {
     },
     async setRun() {
       const { data } = await this.girderRest.get(
-        `/item/${this.itemId}/rootpath`
+        `/item/${this.itemId}/rootpath`,
       );
       const runIdx = data.length - 2;
       const simulationIdx = runIdx - 1;

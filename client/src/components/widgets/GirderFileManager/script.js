@@ -62,7 +62,7 @@ export default {
       this.refresh();
       if (!this.showPartials && _.isObject(this.query)) {
         let { data } = await this.girderRest.get(
-          `/folder/${this.query.value.folderId}`
+          `/folder/${this.query.value.folderId}`,
         );
         this.internalLocation = { ...data, search: true };
       }
@@ -88,7 +88,7 @@ export default {
       this.currentPath = "";
       if ("_id" in location && "_modelType" in location) {
         let { data } = await this.girderRest.get(
-          `/resource/${location._id}/path?type=${location._modelType}`
+          `/resource/${location._id}/path?type=${location._modelType}`,
         );
         this.currentPath = data;
       }
@@ -127,7 +127,7 @@ export default {
       try {
         let input = this.input ? this.input : "";
         let { data } = await this.girderRest.get(
-          `resource/${this.location._id}/search?type=folder&q=${input}`
+          `resource/${this.location._id}/search?type=folder&q=${input}`,
         );
         this.filteredItems = data.results;
       } catch (error) {

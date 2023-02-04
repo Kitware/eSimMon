@@ -658,7 +658,6 @@ async def watch_run(
         delta = new_timestep - last_timestep
         # We have missed to timesteps so need to catch up!
         if delta > 1:
-
             # First schedule a fetch of the next timesetp checking if the files
             # exists ( this is the one that could be partially processed.
             fetch_images_queue.put_nowait(
@@ -785,7 +784,6 @@ async def watch_shots_index(
 async def watch(
     folder_id, upload_url, api_url, api_key, shot_poll_interval, run_poll_internval
 ):
-
     # Select the appropriate source class based on the URL
     if upload_url.startswith("http"):
         cls = HttpUploadSource

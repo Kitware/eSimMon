@@ -291,12 +291,12 @@ export default {
           if (_.isNil(this.defaultLocation["_id"])) {
             // The dashboard will always use the eSimMon collection to collect all data
             let collection = await this.girderRest.get(
-              "/collection?text=eSimMon"
+              "/collection?text=eSimMon",
             );
             // The eSimMon collection should have a single folder that contains all
             // data and serves as the top-level directory.
             let folder = await this.girderRest.get(
-              `/folder?parentType=collection&parentId=${collection.data[0]._id}`
+              `/folder?parentType=collection&parentId=${collection.data[0]._id}`,
             );
             this.defaultLocation["_id"] = folder.data[0]._id;
           }
@@ -338,7 +338,7 @@ export default {
       }
 
       const { data } = await this.girderRest.get(
-        `/folder/${current._id}/rootpath`
+        `/folder/${current._id}/rootpath`,
       );
       let runFolder = current;
       let simFolder = data[data.length - 1].object;
