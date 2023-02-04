@@ -166,16 +166,16 @@ export default {
     }),
     react: function () {
       let nextImage = this.loadedTimeStepData.find(
-        (img) => img.timestep == this.currentTimeStep
+        (img) => img.timestep == this.currentTimeStep,
       );
       if (isNil(nextImage) && this.loadedTimeStepData.length >= 1) {
         let idx = this.availableTimeSteps.findIndex(
-          (step) => step >= this.currentTimeStep
+          (step) => step >= this.currentTimeStep,
         );
         idx = Math.max((idx -= 1), 0);
         let prevTimeStep = this.availableTimeSteps[idx];
         nextImage = this.loadedTimeStepData.find(
-          (img) => img.timestep === prevTimeStep
+          (img) => img.timestep === prevTimeStep,
         );
       }
       // Plots can be added faster than the data can update. Make sure that the
@@ -230,7 +230,7 @@ export default {
             midx - size,
             midy - size,
             midx + size,
-            midy + size
+            midy + size,
           );
         }
       });
@@ -305,7 +305,7 @@ export default {
       const connectivityView = new DataView(
         data.connectivity.buffer,
         data.connectivity.byteOffset,
-        data.connectivity.byteLength
+        data.connectivity.byteLength,
       );
       const numberOfNodes =
         data.connectivity.length / Int32Array.BYTES_PER_ELEMENT / 3;
@@ -338,12 +338,12 @@ export default {
         // use to create the typed array
         const buffer = data.color.buffer.slice(
           data.color.byteOffset,
-          data.color.byteOffset + data.color.byteLength
+          data.color.byteOffset + data.color.byteLength,
         );
         const color = new Float64Array(
           buffer,
           0,
-          buffer.byteLength / Float64Array.BYTES_PER_ELEMENT
+          buffer.byteLength / Float64Array.BYTES_PER_ELEMENT,
         );
         const scalars = vtkDataArray.newInstance({
           name: "scalars",
@@ -407,21 +407,21 @@ export default {
       // Create a view of the data
       const xBuffer = data.x.buffer.slice(
         data.x.byteOffset,
-        data.x.byteOffset + data.x.byteLength
+        data.x.byteOffset + data.x.byteLength,
       );
       const x = new Float64Array(
         xBuffer,
         0,
-        xBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT
+        xBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT,
       );
       const yBuffer = data.y.buffer.slice(
         data.y.byteOffset,
-        data.y.byteOffset + data.y.byteLength
+        data.y.byteOffset + data.y.byteLength,
       );
       const y = new Float64Array(
         yBuffer,
         0,
-        yBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT
+        yBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT,
       );
 
       const points = [];
@@ -437,7 +437,7 @@ export default {
               idx + x.length,
               idx + x.length + 1,
               idx + 1,
-              idx
+              idx,
             );
           }
           idx++;
@@ -460,7 +460,7 @@ export default {
       const pointsView = new DataView(
         data.nodes.buffer,
         data.nodes.byteOffset,
-        data.nodes.byteLength
+        data.nodes.byteLength,
       );
       const numberOfPoints =
         data.nodes.length / Float64Array.BYTES_PER_ELEMENT / 2;
@@ -479,21 +479,21 @@ export default {
       // Create a view of the data
       const xBuffer = data.x.buffer.slice(
         data.x.byteOffset,
-        data.x.byteOffset + data.x.byteLength
+        data.x.byteOffset + data.x.byteLength,
       );
       const x = new Float64Array(
         xBuffer,
         0,
-        xBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT
+        xBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT,
       );
       const yBuffer = data.y.buffer.slice(
         data.y.byteOffset,
-        data.y.byteOffset + data.y.byteLength
+        data.y.byteOffset + data.y.byteLength,
       );
       const y = new Float64Array(
         yBuffer,
         0,
-        yBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT
+        yBuffer.byteLength / Float64Array.BYTES_PER_ELEMENT,
       );
 
       const points = [];

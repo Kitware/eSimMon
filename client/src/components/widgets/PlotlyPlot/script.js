@@ -182,16 +182,16 @@ export default {
       }
 
       let nextImage = this.loadedTimeStepData.find(
-        (img) => img.timestep == this.currentTimeStep
+        (img) => img.timestep == this.currentTimeStep,
       );
       if (isNil(nextImage) && this.loadedTimeStepData.length >= 1) {
         let idx = this.availableTimeSteps.findIndex(
-          (step) => step >= this.currentTimeStep
+          (step) => step >= this.currentTimeStep,
         );
         idx = Math.max((idx -= 1), 0);
         let prevTimeStep = this.availableTimeSteps[idx];
         nextImage = this.loadedTimeStepData.find(
-          (img) => img.timestep === prevTimeStep
+          (img) => img.timestep === prevTimeStep,
         );
       }
       // Plots can be added faster than the data can update. Make sure we have

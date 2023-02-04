@@ -31,7 +31,7 @@ export default {
       } else {
         return Object.values(this.counts).reduce(
           (total, value) => total + value,
-          0
+          0,
         );
       }
     },

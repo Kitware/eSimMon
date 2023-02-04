@@ -17,7 +17,6 @@ _gc = None
 
 
 def get_girder_client(girder_token):
-
     if girder_token is None:
         raise HTTPException(status_code=400, detail="Invalid token.")
 

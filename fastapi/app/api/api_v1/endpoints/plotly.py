@@ -83,7 +83,7 @@ async def generate_plotly_response(plot_config: Dict, bp_file, variable: str):
     data = []
     x = bp_file.read(x_variable).tolist()
 
-    for (y_variable, y_name) in zip(y_variables, y_names):
+    for y_variable, y_name in zip(y_variables, y_names):
         y = bp_file.read(y_variable).tolist()
         data.append(generate_data(x, y, y_name, plot_type)),
 
@@ -115,7 +115,7 @@ async def generate_plotly_data(plot_config: Dict, bp_file, variable: str):
     data = []
     x = bp_file.read(x_variable).tolist()
 
-    for (y_variable, y_name) in zip(y_variables, y_names):
+    for y_variable, y_name in zip(y_variables, y_names):
         y = bp_file.read(y_variable).tolist()
         data.append(generate_data(x, y, y_name, plot_type)),
 

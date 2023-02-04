@@ -150,7 +150,7 @@ export default {
       const formData = state.formData;
       // Check if auto-saved view already exists
       const { data } = await this.$girderRest.get(
-        `/view?text=${state.autoSaveName}&exact=true&limit=50&sort=name&sortdir=1`
+        `/view?text=${state.autoSaveName}&exact=true&limit=50&sort=name&sortdir=1`,
       );
       if (data.length) {
         // If it does, update it
@@ -202,7 +202,7 @@ export default {
     },
     async VIEW_FETCH_ALL_AVAILABLE({ state, commit }) {
       const { data } = await this.$girderRest.get(
-        "/view?exact=false&limit=50&sort=name&sortdir=1"
+        "/view?exact=false&limit=50&sort=name&sortdir=1",
       );
       commit("VIEW_LIST_ALL_SET", data);
       let viewNames = [];
@@ -222,7 +222,7 @@ export default {
       const viewName = `${state.simulation}_${state.runId}_${userId}`;
       commit("VIEW_AUTO_SAVE_NAME_SET", viewName);
       const { data } = await this.$girderRest.get(
-        `/view?text=${viewName}&exact=true&limit=50&sort=name&sortdir=1`
+        `/view?text=${viewName}&exact=true&limit=50&sort=name&sortdir=1`,
       );
       const view = data[0];
       if (view) {

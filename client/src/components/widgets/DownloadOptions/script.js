@@ -130,7 +130,7 @@ export default {
           const start = parseInt(vals[0]);
           const end = parseInt(vals[1]);
           const range = [...Array(end - start + 1).keys()].map(
-            (x) => x + start
+            (x) => x + start,
           );
           timeSteps.push(...range);
         } else {
