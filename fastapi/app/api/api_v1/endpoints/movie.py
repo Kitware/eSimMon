@@ -32,7 +32,7 @@ async def _create_movie(
     details: Optional[dict] = None,
     timeSteps: Optional[str] = None,
     selectedTimeSteps: Optional[str] = None,
-    fps: Optional[str] = None,
+    framerate: Optional[float] = None,
     girder_token: str = Header(None),
 ):
     # Clean up any old temp files that might be hanging around
@@ -89,9 +89,10 @@ async def create_movie(
     timeSteps = item["meta"]["timesteps"]
 
     # Check if there are additional settings to apply
+    framerate = float(fps) if fps else 10.0
     details = json.loads(unquote(details)) if details else {}
     no_deets = not any([v for k, v in details.items() if not v or k == "Axis"])
-    no_user_reqs = selectedTimeSteps is None and no_deets
+    no_user_reqs = selectedTimeSteps is None and no_deets and framerate == 10
 
     if no_user_reqs and format in [f["exts"][0] for f in files]:
         # The user is requesting the default movie, grab the pre-generated one
@@ -103,7 +104,7 @@ async def create_movie(
     else:
         # This is a customized movie, generate it now
         output_file = await _create_movie(
-            id, format, details, timeSteps, selectedTimeSteps, girder_token
+            id, format, details, timeSteps, selectedTimeSteps, framerate, girder_token
         )
     return FileResponse(path=output_file.name, media_type=f"video/{format}")
 
@@ -126,7 +127,9 @@ async def save_movie(
     found_exts = [os.path.splitext(f["name"])[-1] for f in files]
     if f".{format}" not in found_exts:
         # We don't have the default movie(s) saved yet, generate it now
-        output_file = await _create_movie(id, format, {}, timeSteps, None, girder_token)
+        output_file = await _create_movie(
+            id, format, {}, timeSteps, None, 10.0, girder_token
+        )
         gc.uploadFileToItem(
             itemId=movie_id,
             filepath=output_file.name,
