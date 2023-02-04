@@ -231,7 +231,7 @@ export default {
     getNextImage(averaging, timeStep) {
       // Grab the data for the current time step
       let nextImage = this.loadedTimeStepData.find(
-        (img) => img.timestep == timeStep
+        (img) => img.timestep == timeStep,
       );
 
       // If no data is available for the current time step, find the most
@@ -265,7 +265,7 @@ export default {
       } else {
         let end = Math.min(
           this.currentTimeStep + avgRange,
-          Math.max(...this.availableTimeSteps)
+          Math.max(...this.availableTimeSteps),
         );
         this.avgAnnotation = `Averaging Over Time Steps ${this.currentTimeStep} - ${end}`;
         // call getNextImage for each time step in range

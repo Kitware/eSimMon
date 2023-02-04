@@ -80,9 +80,9 @@ export default {
           (itemId, timestep) =>
             this.callFastEndpoint(
               `variables/${itemId}/timesteps/${timestep}/plot`,
-              { responseType: "blob" }
+              { responseType: "blob" },
             ),
-          (response, timeStep) => this.resolveTimeStepData(response, timeStep)
+          (response, timeStep) => this.resolveTimeStepData(response, timeStep),
         );
         this.plotFetcher.initialize().then(() => {
           this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
