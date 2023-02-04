@@ -38,7 +38,7 @@
               <v-text-field
                 v-model="rangeInput"
                 label="Range (e.g. 1-10, 15, 20-25)"
-                :hint="hint"
+                :hint="rangeHint"
                 persistent-hint
                 :disabled="disableInput"
                 dense
@@ -47,6 +47,28 @@
           </v-row>
         </v-container>
       </v-form>
+      <v-expansion-panels>
+        <v-expansion-panel>
+          <v-expansion-panel-header>Advanced Options</v-expansion-panel-header>
+          <v-expansion-panel-content>
+            <v-form>
+              <v-container>
+                <v-row>
+                  <v-col v-if="activeTab===0" cols="12">
+                    <v-text-field
+                      v-model="fpsInput"
+                      label="Frames Per Second"
+                      :hint="fpsHint"
+                      persistent-hint
+                      dense
+                    />
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-form>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
     </v-card-text>
     <v-card-actions>
       <v-spacer />

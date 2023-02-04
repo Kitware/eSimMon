@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { mapActions, mapGetters, mapMutations } from "vuex";
 
 export default {
@@ -9,7 +10,9 @@ export default {
       rangeInput: "",
       rangeSelection: "selectAll",
       formatSelection: "0",
-      hint: "",
+      rangeHint: "",
+      fpsInput: "10",
+      fpsHint: "",
     };
   },
   props: {
@@ -50,7 +53,7 @@ export default {
       set(value) {
         this.showDownloadOptions(value);
         if (value) {
-          this.updateHint();
+          this.updateDialog();
         }
       },
     },
@@ -80,7 +83,7 @@ export default {
     format() {
       return this.formatOptions[this.formatSelection];
     },
-    invalidInput() {
+    invalidRangeInput() {
       if (this.rangeSelection == "selectAll") {
         return false;
       }
@@ -96,6 +99,12 @@ export default {
       }
       return true;
     },
+    invalidFPSInput() {
+      if (_.isEmpty(this.fpsInput)) {
+        return false;
+      }
+      return !parseFloat(this.fpsInput);
+    },
   },
   methods: {
     ...mapActions({
@@ -107,12 +116,13 @@ export default {
     beginDownload() {
       const valid = this.validate();
       if (!valid) {
-        this.updateHint();
+        this.updateDialog();
         return;
       }
       const timeSteps = this.computeListOfTimeSteps();
+      const fps = this.fpsInput ? this.fpsInput : 10;
       if (this.activeTab === 0) {
-        this.fetchMovie(this.format, timeSteps);
+        this.fetchMovie(this.format, timeSteps, fps);
       } else {
         this.fetchImages(this.format, timeSteps);
       }
@@ -140,31 +150,49 @@ export default {
       return timeSteps;
     },
     validate() {
-      return !this.invalidInput;
+      return !this.invalidRangeInput && !this.invalidFPSInput;
     },
-    updateHint() {
-      if (this.invalidInput) {
-        this.hint = `Input must be ranges(start-stop) or values seperated by
+    updateRangeHint() {
+      if (this.invalidRangeInput) {
+        this.rangeHint = `Input must be ranges(start-stop) or values seperated by
                     commas. Values must be within available range of time steps
                     (${this.minStep}-${this.maxStep})`;
       } else {
-        this.hint = `Available Range: ${this.minStep} - ${this.maxStep}`;
+        this.rangeHint = `Available Range: ${this.minStep} - ${this.maxStep}`;
       }
+    },
+    updateFPSHint() {
+      if (this.invalidFPSInput) {
+        this.fpsHint = "Must be a single numeric value greater than zero.";
+      } else {
+        this.fpsHint = "Set the frames per second for movies";
+      }
+    },
+    updateDialog() {
+      this.updateRangeHint();
+      this.updateFPSHint();
     },
   },
   watch: {
     rangeInput() {
-      if (this.hint.startsWith("Input")) {
+      if (this.rangeHint.startsWith("Input")) {
         // We're in error mode but the user has changed their input.
         // Clear the error message if the input is now valid
-        this.updateHint();
+        this.updateRangeHint();
+      }
+    },
+    fpsInput() {
+      if (this.fpsHint.startsWith("Must")) {
+        // We're in error mode but the user has changed their input.
+        // Clear the error message if the input is now valid
+        this.updateFPSHint();
       }
     },
     minStep() {
-      this.updateHint();
+      this.updateRangeHint();
     },
     maxStep() {
-      this.updateHint();
+      this.updateRangeHint();
     },
   },
 };
