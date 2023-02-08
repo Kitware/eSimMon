@@ -5,6 +5,10 @@
     :top="true"
     :left="true"
   />
-  <annotations v-if="avgAnnotation" :text="avgAnnotation" :top="true" />
+  <annotations
+    v-if="avgAnnotation && itemId"
+    :text="avgAnnotation"
+    :top="true"
+  />
   <v-icon v-if="!itemId" large> input </v-icon>
 </div>
