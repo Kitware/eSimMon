@@ -92,12 +92,15 @@ async def create_movie(
     # Check if there are additional settings to apply
     framerate = float(fps) if fps else 10.0
     details = json.loads(unquote(details)) if details else {}
+
+    # Are this default or user modified settings?
     no_deets = not any([v for k, v in details.items() if not v or k == "Axis"])
     no_user_reqs = selectedTimeSteps is None and no_deets and framerate == 10
 
-    if no_user_reqs and format in [f["exts"][0] for f in files]:
+    found_exts = [os.path.splitext(f["name"])[-1] for f in files]
+    if no_user_reqs and f".{format}" in found_exts:
         # The user is requesting the default movie, grab the pre-generated one
-        file_id = [f["_id"] for f in files if f["exts"][0] == format][0]
+        file_id = files[found_exts.index(f".{format}")]["_id"]
         output_file = tempfile.NamedTemporaryFile(
             prefix="esimmon", suffix=f".{format}", delete=False
         )
