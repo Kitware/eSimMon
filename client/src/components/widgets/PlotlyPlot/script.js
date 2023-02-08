@@ -35,9 +35,9 @@ export default {
       type: String,
       required: true,
     },
-    readyToApplyAverage: {
-      type: Boolean,
-      default: false,
+    timeAverage: {
+      type: Number,
+      default: 0,
     },
   },
 
@@ -165,14 +165,13 @@ export default {
         }
       },
     },
-    readyToApplyAverage: {
-      handler(shouldAvg) {
-        if (shouldAvg) {
+    timeAverage: {
+      immediate: true,
+      handler(newAvg, oldAvg) {
+        if (newAvg !== oldAvg) {
           this.lastLoadedTimeStep = -1;
-          this.react();
-          this.plotTimeAverageChanged("");
-          this.averagingValues = [];
         }
+        this.react();
       },
     },
   },
@@ -185,7 +184,6 @@ export default {
       setTimeStep: "PLOT_TIME_STEP_SET",
       setPauseGallery: "UI_PAUSE_GALLERY_SET",
       updateNumReady: "PLOT_NUM_READY_SET",
-      plotTimeAverageChanged: "PLOT_TIME_AVERAGE_SET",
     }),
     relayoutPlotly() {
       if (this.zoom) {
@@ -228,7 +226,7 @@ export default {
       if (this.range) this.useGlobalRange(image);
       this.setAnnotations(image.data[0]);
     },
-    getNextImage(averaging, timeStep) {
+    getNextImage(timeStep) {
       // Grab the data for the current time step
       let nextImage = this.loadedTimeStepData.find(
         (img) => img.timestep == timeStep,
@@ -238,7 +236,7 @@ export default {
       // recent previous time step that does have data and display that instead
       const ats = this.availableTimeSteps;
       if (
-        !averaging &&
+        !this.timeAverage &&
         isNil(nextImage) &&
         this.loadedTimeStepData.length >= 1
       ) {
@@ -254,9 +252,8 @@ export default {
       return nextImage;
     },
     findImage() {
-      const avgRange = this.plotDetails[this.itemId]?.timeAverage;
-      let nextImage = this.getNextImage(avgRange, this.currentTimeStep);
-      if (!avgRange) {
+      let nextImage = this.getNextImage(this.currentTimeStep);
+      if (!this.timeAverage) {
         this.avgAnnotation = "";
         if (!isEmpty(this.averagingValues)) {
           this.averagingValues = [];
@@ -264,7 +261,7 @@ export default {
         return nextImage;
       } else {
         let end = Math.min(
-          this.currentTimeStep + avgRange,
+          this.currentTimeStep + this.timeAverage,
           Math.max(...this.availableTimeSteps),
         );
         this.avgAnnotation = `Averaging Over Time Steps ${this.currentTimeStep} - ${end}`;
@@ -272,11 +269,11 @@ export default {
         this.averagingValues = [];
         for (
           let i = this.currentTimeStep;
-          i <= this.currentTimeStep + avgRange;
+          i <= this.currentTimeStep + this.timeAverage;
           i++
         ) {
           if (this.availableTimeSteps.includes(i)) {
-            nextImage = this.getNextImage(avgRange, i);
+            nextImage = this.getNextImage(i);
             if (!isNil(nextImage)) {
               nextImage.data.forEach((data, idx) => {
                 // append y data to 2d array
@@ -298,7 +295,9 @@ export default {
         });
         // rebuild the data with the average values
         if (isNil(nextImage)) {
-          nextImage = this.getNextImage(false, this.currentTimeStep + avgRange);
+          nextImage = this.getNextImage(
+            this.currentTimeStep + this.timeAverage,
+          );
         }
         avgData.forEach((yAvg, idx) => (nextImage.data[idx].y = yAvg));
         // return new plotly dict

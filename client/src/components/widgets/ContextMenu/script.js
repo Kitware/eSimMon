@@ -86,7 +86,6 @@ export default {
       showContextMenu: "UI_SHOW_CONTEXT_MENU_SET",
       updateItemInfo: "UI_CONTEXT_MENU_ITEM_DATA_SET",
       showDownloadOptions: "UI_SHOW_DOWNLOAD_OPTIONS_SET",
-      plotTimeAverageChanged: "PLOT_TIME_AVERAGE_SET",
       setPaused: "UI_PAUSE_GALLERY_SET",
     }),
     fetchImage(format) {
@@ -172,11 +171,10 @@ export default {
       this.updatePlotDetails({
         [`${this.itemInfo.id}`]: { timeAverage: Number(this.range) },
       });
-      this.plotTimeAverageChanged(this.itemInfo.id);
     },
-    notTimeSeries() {
+    canAverage() {
       const xAxis = this.itemInfo?.xAxis || "";
-      return !xAxis.toLowerCase().includes("time");
+      return !xAxis.toLowerCase().includes("time") && this.itemInfo?.isPlotly;
     },
   },
 };

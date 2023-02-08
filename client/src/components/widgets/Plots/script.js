@@ -34,7 +34,6 @@ export default {
       itemId: "",
       plotFetcher: undefined,
       plotType: PlotType.Plotly,
-      readyToApplyAverage: false,
     };
   },
 
@@ -50,24 +49,36 @@ export default {
       initialDataLoaded: "PLOT_INITIAL_LOAD",
       numReady: "PLOT_NUM_READY",
       plotDetails: "PLOT_DETAILS",
-      timeAverage: "PLOT_TIME_AVERAGE",
     }),
+    plotDataLoaded() {
+      let loaded = this.allLoadedTimeStepData || [];
+      loaded = loaded[`${this.itemId}`] || [];
+      let loadedTimeSteps = loaded.map((data) => data.timestep);
+      let firstImage = Math.min(...loadedTimeSteps);
+      let lastImage = Math.max(...loadedTimeSteps);
+      let rangeEnd = this.currentTimeStep + this.timeAverage;
+      return firstImage <= this.currentTimeStep && lastImage >= rangeEnd;
+    },
+    timeAverage() {
+      if (this.itemId) {
+        let details = this.plotDetails[this.itemId] || {};
+        let avg = details?.timeAverage || 0;
+        return avg;
+      }
+      return 0;
+    },
   },
 
   watch: {
     currentTimeStep: {
       immediate: true,
       handler() {
-        this.readyToApplyAverage = false;
         // First display the updated timestep
         if (this.plotFetcher && this.plotFetcher.initialized) {
           this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
         }
         if (!this.initialDataLoaded) {
           this.displayCurrentTimeStep();
-        }
-        if (this.itemId) {
-          this.fetchPlotsForAveraging();
         }
       },
     },
@@ -84,19 +95,19 @@ export default {
             ),
           (response, timeStep) => this.resolveTimeStepData(response, timeStep),
         );
-        this.plotFetcher.initialize().then(() => {
-          this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
-          this.loadVariable();
-        });
+        if (this.itemId) {
+          this.plotFetcher.initialize().then(() => {
+            this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
+            this.loadVariable();
+          });
+        }
       },
     },
     timeAverage: {
       immediate: true,
-      handler(id, old_id) {
-        if (id && id === this.itemId) {
-          this.fetchPlotsForAveraging();
-        } else if (id === "" && old_id === this.itemId) {
-          this.readyToApplyAverage = false;
+      handler(avg) {
+        if (avg) {
+          this.displayCurrentTimeStep();
         }
       },
     },
@@ -143,9 +154,6 @@ export default {
      * Fetch the data for give timestep. The data is added to loadedTimeStepData
      */
     resolveTimeStepData: function (response, timeStep) {
-      if (this.isTimeStepLoaded(timeStep)) {
-        return;
-      }
       const reader = new FileReader();
       if (response.type === "application/msgpack") {
         reader.readAsArrayBuffer(response);
@@ -158,31 +166,33 @@ export default {
         reader.onload = () => {
           let img;
           const ltsd = this.loadedTimeStepData();
-          if (this.plotType === PlotType.VTK) {
-            img = decode(reader.result);
-            this.$refs[`${this.row}-${this.col}`].addRenderer(img);
-            this.setLoadedTimeStepData({
-              [`${this.itemId}`]: [
-                ...ltsd,
-                {
-                  timestep: timeStep,
-                  data: img,
-                },
-              ],
-            });
-          } else {
-            img = JSON.parse(reader.result);
-            this.setLoadedTimeStepData({
-              [`${this.itemId}`]: [
-                ...ltsd,
-                {
-                  timestep: timeStep,
-                  data: img.data,
-                  layout: img.layout,
-                  type: img.type,
-                },
-              ],
-            });
+          if (!this.isTimeStepLoaded(timeStep)) {
+            if (this.plotType === PlotType.VTK) {
+              img = decode(reader.result);
+              this.$refs[`${this.row}-${this.col}`].addRenderer(img);
+              this.setLoadedTimeStepData({
+                [`${this.itemId}`]: [
+                  ...ltsd,
+                  {
+                    timestep: timeStep,
+                    data: img,
+                  },
+                ],
+              });
+            } else {
+              img = JSON.parse(reader.result);
+              this.setLoadedTimeStepData({
+                [`${this.itemId}`]: [
+                  ...ltsd,
+                  {
+                    timestep: timeStep,
+                    data: img.data,
+                    layout: img.layout,
+                    type: img.type,
+                  },
+                ],
+              });
+            }
           }
           return resolve(img);
         };
@@ -223,7 +233,11 @@ export default {
           }
           return step;
         });
-      await this.plotFetcher.fastEndpointFn(this.itemId, firstAvailableStep);
+      const response = await this.plotFetcher.fastEndpointFn(
+        this.itemId,
+        firstAvailableStep,
+      );
+      await this.plotFetcher.fetchTimeStepFn(response, firstAvailableStep);
 
       this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
       this.setItemId(this.itemId);
@@ -271,7 +285,7 @@ export default {
       this.updateVisiblePlots({ newId: this.itemId, oldId });
     },
     /**
-     * Returns the previous valid timestep, null if no timestep exists.
+     * Returns the previous valid timestep, first image if no timestep exists.
      */
     previousTimeStep: function (timestep) {
       // find previous available timestep
@@ -279,8 +293,8 @@ export default {
         return null;
       }
       const ats = this.availableTimeSteps();
-      const previousTimeStep = ats.findIndex((step) => step < timestep);
-      return previousTimeStep !== -1 ? ats[previousTimeStep] : ats[0];
+      const previousTimeStep = ats.findIndex((step) => step >= timestep);
+      return previousTimeStep !== -1 ? ats[previousTimeStep - 1] : ats[0];
     },
     /**
      * Return the next valid timestep, null if no timestep exists.
@@ -331,9 +345,9 @@ export default {
       }
 
       // Check if the timestep data has been fetched
-      if (!this.isTimeStepLoaded(timestep)) {
+      if (!this.plotDataLoaded) {
         // Fetch the data
-        await this.fetchTimeStepData(timestep);
+        await this.fetchPlotsForAveraging();
       }
 
       // Update this plot
@@ -358,7 +372,7 @@ export default {
         isPlotly: this.plotType === PlotType.Plotly,
         xAxis: this.plotDetails[this.itemId].xAxis,
         clearGallery: this.clearGallery,
-        averaging: this.plotDetails[this.itemId]?.timeAverage,
+        averaging: this.timeAverage,
       };
       this.setCurrentItemId(this.itemId);
       this.setContextMenuItemData(data);
@@ -399,17 +413,15 @@ export default {
       return this.allAvailableTimeSteps[`${this.itemId}`] || [];
     },
     async fetchPlotsForAveraging() {
-      // We'll need enough time steps cached to calculate the average
-      const avgRange = this.plotDetails[this.itemId]?.timeAverage;
-      if (avgRange >= 0) {
+      if (this.timeAverage > 0) {
+        // We'll need enough time steps cached to calculate the average
         const step = this.currentTimeStep;
-        for (let i = step; i <= step + avgRange; i++) {
+        for (let i = step; i <= step + this.timeAverage; i++) {
           if (this.isValidTimeStep(i) && !this.isTimeStepLoaded(i)) {
             // Load the missing plot data
             await this.fetchTimeStepData(i);
           }
         }
-        this.readyToApplyAverage = true;
       }
     },
   },

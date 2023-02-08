@@ -9,7 +9,7 @@
       :ref="row+'-'+col"
       v-if="plotType === 'plotly'"
       :itemId="itemId"
-      :readyToApplyAverage="readyToApplyAverage"
+      :timeAverage="timeAverage"
     />
     <vtk-plot :ref="row+'-'+col" v-if="plotType === 'vtk'" :itemId="itemId" />
   </v-card>
