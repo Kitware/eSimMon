@@ -172,9 +172,9 @@ export default {
         [`${this.itemInfo.id}`]: { timeAverage: Number(this.range) },
       });
     },
-    notTimeSeries() {
+    canAverage() {
       const xAxis = this.itemInfo?.xAxis || "";
-      return !xAxis.toLowerCase().includes("time");
+      return !xAxis.toLowerCase().includes("time") && this.itemInfo?.isPlotly;
     },
   },
 };

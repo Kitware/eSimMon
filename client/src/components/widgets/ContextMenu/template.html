@@ -76,8 +76,8 @@
           <v-list-item-title> Clear Plot </v-list-item-title>
         </v-list-item>
       </v-list>
-      <v-divider v-if="notTimeSeries()" />
-      <v-list v-if="notTimeSeries()">
+      <v-divider v-if="canAverage()" />
+      <v-list v-if="canAverage()">
         <v-list-item dense @click="averageDialog=true">
           <v-list-item-title> Average Over Time </v-list-item-title>
         </v-list-item>
