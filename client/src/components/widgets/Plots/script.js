@@ -166,31 +166,33 @@ export default {
         reader.onload = () => {
           let img;
           const ltsd = this.loadedTimeStepData();
-          if (this.plotType === PlotType.VTK) {
-            img = decode(reader.result);
-            this.$refs[`${this.row}-${this.col}`].addRenderer(img);
-            this.setLoadedTimeStepData({
-              [`${this.itemId}`]: [
-                ...ltsd,
-                {
-                  timestep: timeStep,
-                  data: img,
-                },
-              ],
-            });
-          } else {
-            img = JSON.parse(reader.result);
-            this.setLoadedTimeStepData({
-              [`${this.itemId}`]: [
-                ...ltsd,
-                {
-                  timestep: timeStep,
-                  data: img.data,
-                  layout: img.layout,
-                  type: img.type,
-                },
-              ],
-            });
+          if (!this.isTimeStepLoaded(timeStep)) {
+            if (this.plotType === PlotType.VTK) {
+              img = decode(reader.result);
+              this.$refs[`${this.row}-${this.col}`].addRenderer(img);
+              this.setLoadedTimeStepData({
+                [`${this.itemId}`]: [
+                  ...ltsd,
+                  {
+                    timestep: timeStep,
+                    data: img,
+                  },
+                ],
+              });
+            } else {
+              img = JSON.parse(reader.result);
+              this.setLoadedTimeStepData({
+                [`${this.itemId}`]: [
+                  ...ltsd,
+                  {
+                    timestep: timeStep,
+                    data: img.data,
+                    layout: img.layout,
+                    type: img.type,
+                  },
+                ],
+              });
+            }
           }
           return resolve(img);
         };
