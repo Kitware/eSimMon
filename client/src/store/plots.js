@@ -17,7 +17,6 @@ export default {
     availableTimeSteps: null,
     details: null,
     selectedPlots: [],
-    timeAverage: "",
   },
   getters: {
     PLOT_TIME_STEP(state) {
@@ -71,9 +70,6 @@ export default {
     PLOT_SELECTIONS(state) {
       return state.selectedPlots;
     },
-    PLOT_TIME_AVERAGE(state) {
-      return state.timeAverage;
-    },
   },
   mutations: {
     PLOT_TIME_STEP_SET(state, val) {
@@ -126,9 +122,6 @@ export default {
     },
     PLOT_SELECTIONS_SET(state, val) {
       return (state.selectedPlots = val);
-    },
-    PLOT_TIME_AVERAGE_SET(state, val) {
-      state.timeAverage = val;
     },
   },
   actions: {
