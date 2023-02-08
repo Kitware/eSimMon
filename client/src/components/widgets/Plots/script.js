@@ -95,10 +95,12 @@ export default {
             ),
           (response, timeStep) => this.resolveTimeStepData(response, timeStep),
         );
-        this.plotFetcher.initialize().then(() => {
-          this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
-          this.loadVariable();
-        });
+        if (this.itemId) {
+          this.plotFetcher.initialize().then(() => {
+            this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
+            this.loadVariable();
+          });
+        }
       },
     },
     timeAverage: {
@@ -229,7 +231,11 @@ export default {
           }
           return step;
         });
-      await this.plotFetcher.fastEndpointFn(this.itemId, firstAvailableStep);
+      const response = await this.plotFetcher.fastEndpointFn(
+        this.itemId,
+        firstAvailableStep,
+      );
+      await this.plotFetcher.fetchTimeStepFn(response, firstAvailableStep);
 
       this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
       this.setItemId(this.itemId);

@@ -222,10 +222,14 @@ export class PlotFetcher {
   }
 
   private preFetchPlots(timestep: number) {
-    const idx = this.availableTimesteps.indexOf(timestep);
+    let idx = this.availableTimesteps.indexOf(timestep);
 
     if (idx === -1) {
-      return;
+      // Return the next valid timestep, return if no timestep exists
+      idx = this.availableTimesteps.findIndex((step) => step > timestep);
+      if (idx === -1) {
+        return;
+      }
     }
 
     const maxIdx = Math.min(this.availableTimesteps.length, idx + this.lookAhead + 1);
