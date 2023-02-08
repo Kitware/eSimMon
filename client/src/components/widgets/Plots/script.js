@@ -285,7 +285,7 @@ export default {
       this.updateVisiblePlots({ newId: this.itemId, oldId });
     },
     /**
-     * Returns the previous valid timestep, null if no timestep exists.
+     * Returns the previous valid timestep, first image if no timestep exists.
      */
     previousTimeStep: function (timestep) {
       // find previous available timestep
@@ -293,8 +293,8 @@ export default {
         return null;
       }
       const ats = this.availableTimeSteps();
-      const previousTimeStep = ats.findIndex((step) => step < timestep);
-      return previousTimeStep !== -1 ? ats[previousTimeStep] : ats[0];
+      const previousTimeStep = ats.findIndex((step) => step >= timestep);
+      return previousTimeStep !== -1 ? ats[previousTimeStep - 1] : ats[0];
     },
     /**
      * Return the next valid timestep, null if no timestep exists.
