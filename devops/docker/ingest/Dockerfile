@@ -1,6 +1,11 @@
-FROM python:3.11-slim
+FROM continuumio/miniconda3
 
 COPY ./ingest /ingest
+
+RUN conda install -c \
+  conda-forge \
+  python=3.11 \
+  adios2
 
 RUN pip install /ingest
 
