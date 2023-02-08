@@ -143,8 +143,9 @@ export class PlotFetcher {
   private itemId: string;
   private currentTimestep?: number;
   private tasks: Record<string, FetcherTask<any>>;
-  private fetchMetaFn: (itemId: string) => Promise<any>;
-  private fetchTimestepFn: (itemId: string, timestep: number) => Promise<any>;
+  private endpointFn: (itemId: string) => Promise<any>;
+  private fastEndpointFn: (itemId: string, timestep: number) => Promise<any>;
+  private fetchTimeStepFn: (response: any, timeStep: number) => Promise<any>;
   private metaPromise?: Promise<any>;
   private initialized: boolean;
   private availableTimesteps: number[];
@@ -153,12 +154,14 @@ export class PlotFetcher {
   
   constructor(
     itemId: string,
-    fetchMetaFn: (itemId: string) => Promise<any>,
-    fetchTimestepFn: (itemId: string, timestep: number) => Promise<any>
+    endpointFn: (itemId: string) => Promise<any>,
+    fastEndpointFn: (itemId: string, timestep: number) => Promise<any>,
+    fetchTimeStepFn: (response: any, timeStep: number) => Promise<any>,
   ) {
     this.itemId = itemId;
-    this.fetchMetaFn = fetchMetaFn;
-    this.fetchTimestepFn = fetchTimestepFn;
+    this.endpointFn = endpointFn;
+    this.fastEndpointFn = fastEndpointFn;
+    this.fetchTimeStepFn = fetchTimeStepFn;
     this.tasks = {};
     this.metaPromise = undefined;
     this.initialized = false;
@@ -168,7 +171,7 @@ export class PlotFetcher {
 
   initialize() : Promise<any> {
     if (!this.initialized || !this.metaPromise) {
-      this.metaPromise = this.fetchMetaFn(this.itemId);
+      this.metaPromise = this.endpointFn(this.itemId);
 
       this.metaPromise.then(result => {
         this.initialized = true;
@@ -242,7 +245,7 @@ export class PlotFetcher {
 
   private createFetchTask<T>(timestep: number, priority: number): FetcherTask<T> {
     const id = `${this.seed}_${this.itemId}_${timestep}`;
-    const result = registry.addTask(id, () => this.fetchTimestepFn(this.itemId, timestep), priority);
+    const result = registry.addTask(id, () => this.fastEndpointFn(this.itemId, timestep), priority);
 
     const task: FetcherTask<T> = {
       id,
@@ -250,9 +253,10 @@ export class PlotFetcher {
       status: 'pending',
     }
 
-    result.then(() => {
+    result.then((response) => {
       if (task.status === 'pending') {
         task.status = 'resolved';
+        this.fetchTimeStepFn(response, timestep);
       }
     }).catch(() => {
       if (task.status === 'pending') {

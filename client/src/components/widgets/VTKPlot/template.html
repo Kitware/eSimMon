@@ -1,7 +1,9 @@
 <div ref="vtk" class="plot">
-  <span v-if="rangeText.length" class="plotlyAnnotations">
-    xRange: [{{rangeText[0]}}, {{rangeText[1]}}] yRange: [{{rangeText[2]}},
-    {{rangeText[3]}}]
-  </span>
+  <annotations
+    v-if="rangeText.length"
+    :text="rangeText"
+    :top="true"
+    :left="true"
+  />
   <v-icon v-if="!itemId" large> input </v-icon>
 </div>

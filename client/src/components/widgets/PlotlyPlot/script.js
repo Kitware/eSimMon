@@ -1,7 +1,8 @@
 import Plotly from "plotly.js-basic-dist-min";
-import { isNil } from "lodash";
+import { isEmpty, isEqual, isNil } from "lodash";
 import { mapGetters, mapActions, mapMutations } from "vuex";
 import { PlotType } from "../../../utils/constants";
+import Annotations from "../Annotations";
 
 //-----------------------------------------------------------------------------
 // Utility Functions
@@ -25,10 +26,18 @@ export default {
   name: "PlotlyPlot",
   inject: ["girderRest", "fastRestUrl"],
 
+  components: {
+    Annotations,
+  },
+
   props: {
     itemId: {
       type: String,
       required: true,
+    },
+    readyToApplyAverage: {
+      type: Boolean,
+      default: false,
     },
   },
 
@@ -37,8 +46,10 @@ export default {
       eventHandlersSet: false,
       timeIndex: -1,
       selectedTime: -1,
-      rangeText: [],
+      rangeText: "",
       lastLoadedTimeStep: -1,
+      averagingValues: [],
+      avgAnnotation: "",
     };
   },
 
@@ -117,26 +128,30 @@ export default {
     },
     legendVisibility: {
       immediate: true,
-      handler() {
-        this.react();
+      handler(newVal, oldVal) {
+        let needRerender = !isEqual(newVal, oldVal);
+        this.react(needRerender);
       },
     },
     logScaling: {
       immediate: true,
-      handler() {
-        this.react();
+      handler(newVal, oldVal) {
+        let needRerender = !isEqual(newVal, oldVal);
+        this.react(needRerender);
       },
     },
     range: {
       immediate: true,
-      handler() {
-        this.react();
+      handler(newVal, oldVal) {
+        let needRerender = !isEqual(newVal, oldVal);
+        this.react(needRerender);
       },
     },
     zoom: {
       immediate: true,
-      handler() {
-        this.react();
+      handler(newVal, oldVal) {
+        let needRerender = !isEqual(newVal, oldVal);
+        this.react(needRerender);
       },
     },
     itemId: {
@@ -150,6 +165,16 @@ export default {
         }
       },
     },
+    readyToApplyAverage: {
+      handler(shouldAvg) {
+        if (shouldAvg) {
+          this.lastLoadedTimeStep = -1;
+          this.react();
+          this.plotTimeAverageChanged("");
+          this.averagingValues = [];
+        }
+      },
+    },
   },
 
   methods: {
@@ -160,6 +185,7 @@ export default {
       setTimeStep: "PLOT_TIME_STEP_SET",
       setPauseGallery: "UI_PAUSE_GALLERY_SET",
       updateNumReady: "PLOT_NUM_READY_SET",
+      plotTimeAverageChanged: "PLOT_TIME_AVERAGE_SET",
     }),
     relayoutPlotly() {
       if (this.zoom) {
@@ -176,24 +202,114 @@ export default {
         }
       });
     },
-    react: function () {
-      if (!this.itemId) {
-        return;
-      }
-
+    setXAxis(image) {
+      let xAxis = image.layout.xaxis.title.text;
+      this.updatePlotDetails({ [`${this.itemId}`]: { xAxis } });
+    },
+    applyLogScaling(image) {
+      image.layout.xaxis.type = this.logScaling ? "log" : "linear";
+      image.layout.yaxis.type = this.logScaling ? "log" : "linear";
+    },
+    applyZoom(image) {
+      image.layout.xaxis.range = this.zoom.xAxis;
+      image.layout.yaxis.range = this.zoom.yAxis;
+      image.layout.yaxis.autorange = false;
+    },
+    useGlobalRange(image) {
+      image.layout.yaxis.range = [...this.range];
+      image.layout.yaxis.autorange = false;
+    },
+    plotPreProcessing(image) {
+      if (!this.xAxis) this.setXAxis(image);
+      this.applyLogScaling(image);
+      image.layout.yaxis.autorange = true;
+      image.layout.showlegend = this.legendVisibility;
+      if (this.zoom) this.applyZoom(image);
+      if (this.range) this.useGlobalRange(image);
+      this.setAnnotations(image.data[0]);
+    },
+    getNextImage(averaging, timeStep) {
+      // Grab the data for the current time step
       let nextImage = this.loadedTimeStepData.find(
-        (img) => img.timestep == this.currentTimeStep,
+        (img) => img.timestep == timeStep,
       );
-      if (isNil(nextImage) && this.loadedTimeStepData.length >= 1) {
-        let idx = this.availableTimeSteps.findIndex(
-          (step) => step >= this.currentTimeStep,
-        );
+
+      // If no data is available for the current time step, find the most
+      // recent previous time step that does have data and display that instead
+      const ats = this.availableTimeSteps;
+      if (
+        !averaging &&
+        isNil(nextImage) &&
+        this.loadedTimeStepData.length >= 1
+      ) {
+        let idx = ats.findIndex((step) => step >= timeStep);
+        // Use the data for the first time step available if the current time
+        // step is before the first available for this variable
         idx = Math.max((idx -= 1), 0);
-        let prevTimeStep = this.availableTimeSteps[idx];
+        let prevTimeStep = ats[idx];
         nextImage = this.loadedTimeStepData.find(
           (img) => img.timestep === prevTimeStep,
         );
       }
+      return nextImage;
+    },
+    findImage() {
+      const avgRange = this.plotDetails[this.itemId]?.timeAverage;
+      let nextImage = this.getNextImage(avgRange, this.currentTimeStep);
+      if (!avgRange) {
+        this.avgAnnotation = "";
+        if (!isEmpty(this.averagingValues)) {
+          this.averagingValues = [];
+        }
+        return nextImage;
+      } else {
+        let end = Math.min(
+          this.currentTimeStep + avgRange,
+          Math.max(...this.availableTimeSteps),
+        );
+        this.avgAnnotation = `Averaging Over Time Steps ${this.currentTimeStep} - ${end}`;
+        // call getNextImage for each time step in range
+        this.averagingValues = [];
+        for (
+          let i = this.currentTimeStep;
+          i <= this.currentTimeStep + avgRange;
+          i++
+        ) {
+          if (this.availableTimeSteps.includes(i)) {
+            nextImage = this.getNextImage(avgRange, i);
+            if (!isNil(nextImage)) {
+              nextImage.data.forEach((data, idx) => {
+                // append y data to 2d array
+                (this.averagingValues[idx] ??= []).push(data.y);
+              });
+            }
+          }
+        }
+        const avgData = [];
+        let length = 1;
+        this.averagingValues.forEach((value) => {
+          length = value.length;
+          const dataVal = value.reduce((acc, val) => {
+            val.forEach((v, i) => (acc[i] = (acc[i] || 0) + v));
+            return acc;
+          }, []);
+          dataVal.forEach((v, i) => (dataVal[i] = v / length));
+          avgData.push(dataVal);
+        });
+        // rebuild the data with the average values
+        if (isNil(nextImage)) {
+          nextImage = this.getNextImage(false, this.currentTimeStep + avgRange);
+        }
+        avgData.forEach((yAvg, idx) => (nextImage.data[idx].y = yAvg));
+        // return new plotly dict
+        return nextImage;
+      }
+    },
+    react: function (needRerender = false) {
+      if (!this.itemId) {
+        return;
+      }
+      const nextImage = this.findImage();
       // Plots can be added faster than the data can update. Make sure we have
       // a nextImage, that the DOM element has been created, and that the
       // nextImage is the correct plot type.
@@ -201,27 +317,10 @@ export default {
         !isNil(nextImage) &&
         !isNil(this.$refs.plotly) &&
         nextImage.type === PlotType.Plotly &&
-        this.lastLoadedTimeStep !== nextImage.timestep;
+        (this.lastLoadedTimeStep !== nextImage.timestep || needRerender);
       if (plotReadyForUpdate) {
         this.lastLoadedTimeStep = nextImage.timestep;
-        if (!this.xAxis) {
-          let xAxis = nextImage.layout.xaxis.title.text;
-          this.updatePlotDetails({ [`${this.itemId}`]: { xAxis } });
-        }
-        nextImage.layout.xaxis.type = this.logScaling ? "log" : "linear";
-        nextImage.layout.yaxis.type = this.logScaling ? "log" : "linear";
-        nextImage.layout.yaxis.autorange = true;
-        nextImage.layout.showlegend = this.legendVisibility;
-        if (this.zoom) {
-          nextImage.layout.xaxis.range = this.zoom.xAxis;
-          nextImage.layout.yaxis.range = this.zoom.yAxis;
-          nextImage.layout.yaxis.autorange = false;
-        }
-        if (this.range) {
-          nextImage.layout.yaxis.range = [...this.range];
-          nextImage.layout.yaxis.autorange = false;
-        }
-        this.setAnnotations(nextImage.data[0]);
+        this.plotPreProcessing(nextImage);
         Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {
           autosize: true,
           modeBarButtonsToAdd: [
@@ -274,7 +373,7 @@ export default {
         if (this.timeStepSelectorMode && xAxis === "time") {
           return false;
         } else {
-          this.rangeText = [];
+          this.rangeText = "";
           if (this.syncZoom) {
             for (let [key, value] of Object.entries(this.plotDetails)) {
               if (value.xAxis === this.xAxis) {
@@ -294,7 +393,7 @@ export default {
       const elems = node?.getElementsByClassName("plot-container");
       if (node !== undefined && elems.length > 0) {
         Plotly.purge(this.$refs.plotly);
-        this.rangeText = [];
+        this.rangeText = "";
       }
     },
     selectTimeStepFromPlot() {
@@ -321,14 +420,15 @@ export default {
     },
     setAnnotations(data) {
       if (!this.zoom) {
-        this.rangeText = [];
+        this.rangeText = "";
         return;
       }
       const xRange = [data.x[0], data.x[data.x.length - 1]];
       let yRange = this.range;
       if (!yRange) yRange = [Math.min(...data.y), Math.max(...data.y)];
       const range = [...xRange, ...yRange];
-      this.rangeText = range.map((r) => r.toPrecision(4));
+      const [x0, x1, y0, y1] = range.map((r) => r.toPrecision(4));
+      this.rangeText = `xRange: [${x0}, ${x1}] yRange: [${y0}, ${y1}]`;
     },
     toggleLogScale() {
       this.updatePlotDetails({ [`${this.itemId}`]: { log: !this.logScaling } });

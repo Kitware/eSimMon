@@ -8,12 +8,9 @@
     <plotly-plot
       :ref="row+'-'+col"
       v-if="plotType === 'plotly'"
-      v-bind:itemId="itemId"
+      :itemId="itemId"
+      :readyToApplyAverage="readyToApplyAverage"
     />
-    <vtk-plot
-      :ref="row+'-'+col"
-      v-if="plotType === 'vtk'"
-      v-bind:itemId="itemId"
-    />
+    <vtk-plot :ref="row+'-'+col" v-if="plotType === 'vtk'" :itemId="itemId" />
   </v-card>
 </div>

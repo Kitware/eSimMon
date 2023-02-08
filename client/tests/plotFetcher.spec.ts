@@ -2,15 +2,21 @@ import {PlotFetcher} from '../src/utils/plotFetcher';
 // import {test} from 'jest';
 
 
-const fetchMetaFn = (itemId: string) => Promise.resolve({steps: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]});
-const fetchTimestepFn = (itemId: string, timestep: number) => {
+const endpointFn = (itemId: string) => Promise.resolve({steps: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]});
+const fastEndpointFn = (itemId: string, timestep: number) => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve(`timestepData: ${itemId} - ${timestep}`);
+      resolve(`itemID: ${itemId} timeStepData: ${timestep}`);
     }, 500);
   });
 }
-
+const fetchTimeStepFn = (timestep: number) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(`timeStepData: ${timestep}`);
+    }, 500);
+  });
+}
 const logResponse = (promise?: Promise<any>) => {
   if (!promise) {
     console.log("Nothing to resolve.");
@@ -25,7 +31,7 @@ const logResponse = (promise?: Promise<any>) => {
 
 // test('one-fetcher', () => {
 //   return new Promise<void>((resolve) => {
-//     const fetcher = new PlotFetcher("0", fetchMetaFn, fetchTimestepFn);
+//     const fetcher = new PlotFetcher("0", endpointFn, fastEndpointFn, fetchTimeStepFn);
 //     fetcher.initialize().then(res => {
 //       fetcher.setCurrentTimestep(7);
 
@@ -45,7 +51,7 @@ test('multi-fetcher', () => {
     const N_FETCHERS = 10;
     const fetchers: PlotFetcher[] = [];
     for (let i = 0; i < N_FETCHERS; ++i) {
-      fetchers.push(new PlotFetcher(i.toString(), fetchMetaFn, fetchTimestepFn));
+      fetchers.push(new PlotFetcher(i.toString(), endpointFn, fastEndpointFn, fetchTimeStepFn));
     }
 
     Promise.all(fetchers.map(fetcher => fetcher.initialize())).then(() => {

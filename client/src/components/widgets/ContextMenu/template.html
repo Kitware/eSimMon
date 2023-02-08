@@ -13,15 +13,49 @@
         </v-list-item>
       </v-list>
       <v-divider v-if="itemInfo && itemInfo.isPlotly" />
-      <v-list>
-        <v-list-item dense @click="fetchImage('png')">
-          <v-list-item-title> Save PNG Image </v-list-item-title>
-        </v-list-item>
-        <v-list-item dense @click="fetchImage('pdf')">
-          <v-list-item-title> Save PDF Image </v-list-item-title>
-        </v-list-item>
-      </v-list>
-      <v-divider />
+      <v-menu
+        open-on-hover
+        offset-y
+        :position-x="pos[0]+125"
+        :position-y="pos[1]+60"
+        absolute
+      >
+        <template v-slot:activator="{ on, attrs }">
+          <div v-bind="attrs" v-on="on" v-if="!averaging">
+            <v-list>
+              <v-list-item dense>
+                <v-list-item-title> Save... </v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </div>
+        </template>
+        <v-card style="padding: 5px">
+          <v-list>
+            <v-list-item dense @click="fetchImage('png')">
+              <v-list-item-title> Save PNG Image </v-list-item-title>
+            </v-list-item>
+            <v-list-item dense @click="fetchImage('pdf')">
+              <v-list-item-title> Save PDF Image </v-list-item-title>
+            </v-list-item>
+          </v-list>
+          <v-divider />
+          <v-list>
+            <v-list-item dense @click="fetchMovie('mp4')">
+              <v-list-item-title> Save MP4 Movie </v-list-item-title>
+            </v-list-item>
+            <v-list-item dense @click="fetchMovie('mpg')">
+              <v-list-item-title> Save MPG Movie </v-list-item-title>
+            </v-list-item>
+          </v-list>
+          <v-divider />
+          <v-list>
+            <v-list-item dense @click="downloadOptions()">
+              <v-list-item-title> Save As... </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-card>
+      </v-menu>
+      <v-divider v-if="!averaging" />
       <v-list>
         <v-list-item dense @click="fetchMovie('mp4')">
           <v-list-item-title> Save MP4 Movie </v-list-item-title>
@@ -40,6 +74,12 @@
       <v-list>
         <v-list-item dense @click="clearGallery()">
           <v-list-item-title> Clear Plot </v-list-item-title>
+        </v-list-item>
+      </v-list>
+      <v-divider v-if="notTimeSeries()" />
+      <v-list v-if="notTimeSeries()">
+        <v-list-item dense @click="averageDialog=true">
+          <v-list-item-title> Average Over Time </v-list-item-title>
         </v-list-item>
       </v-list>
     </v-card>
@@ -90,4 +130,47 @@
       </v-list>
     </v-navigation-drawer>
   </v-snackbar>
+  <v-dialog v-model="averageDialog" max-width="300px">
+    <v-card>
+      <v-card-title style="justify-content: center">Time Average</v-card-title>
+      <v-card-text>
+        <v-form>
+          <v-container>
+            <v-row v-bind:style="{alignItems: 'center'}">
+              <v-col cols="12">
+                <v-text-field
+                  v-model="range"
+                  type="number"
+                  step="1"
+                  label="Range (n)"
+                  persistent-hint
+                  :hint="`Average the next (n) time steps together where 0 \<= n \<= ${maxRange}.`"
+                  dense
+                  @keydown.enter.prevent="useAverage(clear=false)"
+                />
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-form>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn text @click.stop="averageDialog=false"> Cancel </v-btn>
+        <v-spacer />
+        <v-btn
+          text
+          :disabled="invalidInput"
+          @click.stop="useAverage(clear=true)"
+        >
+          Clear
+        </v-btn>
+        <v-btn
+          text
+          :disabled="invalidInput"
+          @click.stop="useAverage(clear=false)"
+        >
+          Apply
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </div>
