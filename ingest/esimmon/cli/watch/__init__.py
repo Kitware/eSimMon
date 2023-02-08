@@ -22,11 +22,13 @@ from async_lru import alru_cache
 
 
 class AsyncGirderClient(object):
-    def __init__(self, session, api_url):
+    def __init__(self, session, api_url, fastapi_url):
         self._ratelimit_semaphore = asyncio.Semaphore(5)
         self._api_url = api_url.rstrip("/")
+        self._fastapi_url = fastapi_url
         self._folder_create_semaphore = asyncio.Semaphore()
         self._item_create_semaphore = asyncio.Semaphore()
+        self._movie_create_semaphore = asyncio.Semaphore()
         self._session = session
 
     async def authenticate(self, api_key):
@@ -46,7 +48,13 @@ class AsyncGirderClient(object):
         stop=tenacity.stop_after_attempt(10),
     )
     async def post(
-        self, path, headers=None, params=None, raise_for_status=True, **kwargs
+        self,
+        path,
+        headers=None,
+        params=None,
+        raise_for_status=True,
+        useFastApi=False,
+        **kwargs,
     ):
         if params is not None:
             params = {k: str(v) for (k, v) in params.items()}
@@ -56,9 +64,11 @@ class AsyncGirderClient(object):
         else:
             headers.update(self._headers)
 
+        url = self._fastapi_url if useFastApi else self._api_url
+
         async with self._ratelimit_semaphore:
             async with self._session.post(
-                "%s/%s" % (self._api_url, path),
+                "%s/%s" % (url, path),
                 headers=headers,
                 params=params,
                 **kwargs,
@@ -75,7 +85,13 @@ class AsyncGirderClient(object):
         stop=tenacity.stop_after_attempt(10),
     )
     async def put(
-        self, path, headers=None, params=None, raise_for_status=True, **kwargs
+        self,
+        path,
+        headers=None,
+        params=None,
+        raise_for_status=True,
+        useFastApi=False,
+        **kwargs,
     ):
         if params is not None:
             params = {k: str(v) for (k, v) in params.items()}
@@ -85,9 +101,11 @@ class AsyncGirderClient(object):
         else:
             headers.update(self._headers)
 
+        url = self._fastapi_url if useFastApi else self._api_url
+
         async with self._ratelimit_semaphore:
             async with self._session.put(
-                "%s/%s" % (self._api_url, path),
+                "%s/%s" % (url, path),
                 headers=headers,
                 params=params,
                 **kwargs,
@@ -104,14 +122,22 @@ class AsyncGirderClient(object):
         stop=tenacity.stop_after_attempt(10),
     )
     async def get(
-        self, path, raise_for_status=True, params=None, status=False, **kwargs
+        self,
+        path,
+        raise_for_status=True,
+        params=None,
+        status=False,
+        useFastApi=False,
+        **kwargs,
     ):
         if params is not None:
             params = {k: str(v) for (k, v) in params.items()}
 
+        url = self._fastapi_url if useFastApi else self._api_url
+
         async with self._ratelimit_semaphore:
             async with self._session.get(
-                "%s/%s" % (self._api_url, path),
+                "%s/%s" % (url, path),
                 headers=self._headers,
                 params=params,
                 **kwargs,
@@ -139,8 +165,10 @@ class AsyncGirderClient(object):
         async with self._folder_create_semaphore:
             return await self.post("folder", params=params)
 
-    async def list_item(self, folder, name):
-        params = {"parentId": folder["_id"], "name": name}
+    async def list_item(self, folder, name=None):
+        params = {"folderId": folder["_id"]}
+        if name is not None:
+            params["name"] = name
 
         return await self.get("item", params=params)
 
@@ -217,6 +245,33 @@ class AsyncGirderClient(object):
 
     async def get_folder(self, folder_id):
         return await self.get(f"folder/{folder_id}")
+
+    async def list_folder(self, folder_id):
+        params = {"parentId": folder_id, "parentType": "folder"}
+
+        return await self.get("folder", params=params)
+
+    async def create_movies(self, folder):
+        # We need this sempahore to prevent two movies for the same item form
+        # being created.
+        log = logging.getLogger("esimmon")
+        async with self._movie_create_semaphore:
+            ignored_folders = ["timesteps", "movies"]
+            folders = await self.list_folder(folder["_id"])
+            folders = [f for f in folders if f["name"] not in ignored_folders]
+            items = []
+            for f in folders:
+                items_list = await self.list_item(f)
+                items.extend(items_list)
+            for item in items:
+                log.info(
+                    f"Creating movies for item \"{item['name']}\" in run \"{folder['name']}\""
+                )
+                for ext in ["mp4", "mpg"]:
+                    await self.put(
+                        f"variables/{item['_id']}/timesteps/movie?format={ext}",
+                        useFastApi=True,
+                    )
 
 
 class UploadSource(abc.ABC):
@@ -475,6 +530,18 @@ async def create_variable_item(
 
     await gc.set_metadata("item", item["_id"], meta)
 
+    movie_folders = [shot_name, run_name, "movies", group_name]
+    parent_folder = await ensure_folders(gc, folder, movie_folders)
+
+    movie_item = await gc.create_item(parent_folder["_id"], variable_name)
+    movie_meta = movie_item["meta"]
+
+    # Save the associated item and movie ids for later reference
+    movie_meta["itemId"] = item["_id"]
+    await gc.set_metadata("item", movie_item["_id"], movie_meta)
+    meta["movieItemId"] = movie_item["_id"]
+    await gc.set_metadata("item", item["_id"], meta)
+
     return item["_id"]
 
 
@@ -721,6 +788,10 @@ async def watch_run(
             log.info('Run "%s" is complete.' % run_name)
             await fetch_images_queue.join()
             scheduler.cancel()
+            # Create movies for all run params
+            log.info('Generating movies for run "%s".' % run_name)
+            await gc.create_movies(run_folder)
+            log.info('Movies for run "%s" have been generated.' % run_name)
             break
 
         # Did we miss any timesteps?
@@ -851,7 +922,13 @@ async def watch_shots_index(
 
 
 async def watch(
-    folder_id, upload_url, api_url, api_key, shot_poll_interval, run_poll_internval
+    folder_id,
+    upload_url,
+    api_url,
+    api_key,
+    shot_poll_interval,
+    run_poll_internval,
+    fastapi_url,
 ):
     # Select the appropriate source class based on the URL
     if upload_url.startswith("http"):
@@ -863,7 +940,7 @@ async def watch(
 
     async with cls() as source:
         async with aiohttp.ClientSession() as session:
-            gc = AsyncGirderClient(session, api_url)
+            gc = AsyncGirderClient(session, api_url, fastapi_url)
             await gc.authenticate(api_key)
 
             folder = {"_id": folder_id}
@@ -913,8 +990,20 @@ async def watch(
 @click.option(
     "-v", "--run-poll-interval", default=30, type=int, help="run poll interval (sec)"
 )
+@click.option(
+    "-a",
+    "--fastapi-url",
+    default=None,
+    help="RESTful API URL (e.g https://girder.example.com/api/v1)",
+)
 def main(
-    folder_id, upload_url, api_url, api_key, shot_poll_interval, run_poll_interval
+    folder_id,
+    upload_url,
+    api_url,
+    api_key,
+    shot_poll_interval,
+    run_poll_interval,
+    fastapi_url,
 ):
     # gc = GC(api_url=api_url, api_key=api_key)
     if upload_url.startswith("http") and upload_url[-1] == "/":
@@ -927,6 +1016,9 @@ def main(
     log = logging.getLogger("esimmon")
     log.info("Watching: %s" % upload_url)
 
+    if fastapi_url is None:
+        fastapi_url = api_url
+
     asyncio.run(
         watch(
             folder_id,
@@ -935,5 +1027,6 @@ def main(
             api_key,
             shot_poll_interval,
             run_poll_interval,
+            fastapi_url,
         )
     )
