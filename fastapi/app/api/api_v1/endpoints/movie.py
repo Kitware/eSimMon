@@ -94,7 +94,7 @@ async def create_movie(
     details = json.loads(unquote(details)) if details else {}
 
     # Are this default or user modified settings?
-    no_deets = not any([v for k, v in details.items() if not v or k == "Axis"])
+    no_deets = not any([v for k, v in details.items() if k != "xAxis"])
     no_user_reqs = selectedTimeSteps is None and no_deets and framerate == 10
 
     found_exts = [os.path.splitext(f["name"])[-1] for f in files]
@@ -132,7 +132,7 @@ async def save_movie(
     if f".{format}" not in found_exts:
         # We don't have the default movie(s) saved yet, generate it now
         output_file = await _create_movie(
-            id, format, {}, timeSteps, None, 10.0, girder_token
+            id, format, {"legend": False}, timeSteps, None, 10.0, girder_token
         )
         gc.uploadFileToItem(
             itemId=movie_id,

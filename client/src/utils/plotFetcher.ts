@@ -175,7 +175,7 @@ export class PlotFetcher {
 
       this.metaPromise.then(result => {
         this.initialized = true;
-        this.availableTimesteps = result.steps.sort();
+        this.availableTimesteps = result.steps.sort((a: number, b: number) => a - b);
       });
     }
 
