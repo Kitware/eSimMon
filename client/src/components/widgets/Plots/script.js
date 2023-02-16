@@ -218,7 +218,7 @@ export default {
       const firstAvailableStep = await this.plotFetcher
         .initialize()
         .then((response) => {
-          ats = response.steps.sort();
+          ats = response.steps.sort((a, b) => a - b);
           this.setAvailableTimeSteps({ [`${this.itemId}`]: ats });
           this.updateTimes({ [`${this.itemId}`]: response.time });
           this.updateMinTimeStep();
