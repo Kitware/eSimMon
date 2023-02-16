@@ -53,11 +53,11 @@ export default {
     plotDataLoaded() {
       let loaded = this.allLoadedTimeStepData || [];
       loaded = loaded[`${this.itemId}`] || [];
-      let loadedTimeSteps = loaded.map((data) => data.timestep);
-      let firstImage = Math.min(...loadedTimeSteps);
-      let lastImage = Math.max(...loadedTimeSteps);
-      let rangeEnd = this.currentTimeStep + this.timeAverage;
-      return firstImage <= this.currentTimeStep && lastImage >= rangeEnd;
+      const loadedTimeSteps = loaded.map((data) => data.timestep);
+      let start = this.currentTimeStep;
+      let end = this.currentTimeStep + this.timeAverage;
+      const range = [...Array(end - start + 1).keys()].map((x) => x + start);
+      return loadedTimeSteps.every((step) => range.includes(step));
     },
     timeAverage() {
       if (this.itemId) {
@@ -413,7 +413,7 @@ export default {
       return this.allAvailableTimeSteps[`${this.itemId}`] || [];
     },
     async fetchPlotsForAveraging() {
-      if (this.timeAverage > 0) {
+      if (this.timeAverage >= 0) {
         // We'll need enough time steps cached to calculate the average
         const step = this.currentTimeStep;
         for (let i = step; i <= step + this.timeAverage; i++) {
