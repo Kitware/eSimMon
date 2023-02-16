@@ -11,6 +11,9 @@
   display: flex;
   justify-content: center;
   height: inherit;
+  .plot-container {
+    display: contents;
+  }
 }
 
 .text-xs-center {
@@ -243,4 +246,9 @@
 
 .v-list-item__action {
   margin-left: 10px;
+}
+
+.plot-progress {
+  align-self: flex-end;
+  min-width: inherit;
 }

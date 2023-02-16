@@ -11,4 +11,10 @@
     :top="true"
   />
   <v-icon v-if="!itemId" large> input </v-icon>
+  <v-progress-linear
+    v-show="computingTimeAverage"
+    indeterminate
+    color="primary"
+    class="plot-progress"
+  />
 </div>

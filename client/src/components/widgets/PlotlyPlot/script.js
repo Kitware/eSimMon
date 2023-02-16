@@ -50,6 +50,7 @@ export default {
       lastLoadedTimeStep: -1,
       averagingValues: [],
       avgAnnotation: "",
+      computingTimeAverage: false,
     };
   },
 
@@ -170,6 +171,9 @@ export default {
       handler(newAvg, oldAvg) {
         if (newAvg !== oldAvg) {
           this.lastLoadedTimeStep = -1;
+          if (oldAvg !== undefined) {
+            this.computingTimeAverage = true;
+          }
         }
         this.react();
       },
@@ -258,7 +262,6 @@ export default {
         if (!isEmpty(this.averagingValues)) {
           this.averagingValues = [];
         }
-        return nextImage;
       } else {
         let end = Math.min(
           this.currentTimeStep + this.timeAverage,
@@ -299,10 +302,13 @@ export default {
             this.currentTimeStep + this.timeAverage,
           );
         }
-        avgData.forEach((yAvg, idx) => (nextImage.data[idx].y = yAvg));
         // return new plotly dict
-        return nextImage;
+        avgData.forEach((yAvg, idx) => (nextImage.data[idx].y = yAvg));
       }
+      if (this.computingTimeAverage) {
+        this.computingTimeAverage = false;
+      }
+      return nextImage;
     },
     react: function (needRerender = false) {
       if (!this.itemId) {
