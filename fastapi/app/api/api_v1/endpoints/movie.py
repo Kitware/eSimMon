@@ -132,7 +132,7 @@ async def save_movie(
     if f".{format}" not in found_exts:
         # We don't have the default movie(s) saved yet, generate it now
         output_file = await _create_movie(
-            id, format, {}, timeSteps, None, 10.0, girder_token
+            id, format, {"legend": False}, timeSteps, None, 10.0, girder_token
         )
         gc.uploadFileToItem(
             itemId=movie_id,
