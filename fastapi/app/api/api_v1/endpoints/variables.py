@@ -62,13 +62,13 @@ def get_timestep_bp_file_id(gc, group_folder_id, group_name, timestep):
 
     # FIXME: This is a temporary hack to allow us to test the performance plots
     # This block should be removed once those bp filenames are fixed.
-    if group_name == "Heat Load" or group_name == "Poincare":
-        filename = f"{('').join(group_name.split())}-{timestep_item['name'].lstrip('0')}.bp.tgz"
-    else:
-        filename = f"{group_name}.bp.tgz"
+    filename = f"{group_name}.bp.tgz"
+    alt_filename = (
+        f"{('').join(group_name.split())}-{timestep_item['name'].lstrip('0')}.bp.tgz"
+    )
 
     for bp_file in gc.listFile(timestep_item["_id"]):
-        if bp_file["name"] == filename:
+        if bp_file["name"] == filename or bp_file["name"] == alt_filename:
             return bp_file["_id"]
 
     raise HTTPException(status_code=404, detail="Unable to locate BP file.")
