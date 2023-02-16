@@ -55,21 +55,6 @@
           </v-list>
         </v-card>
       </v-menu>
-      <v-divider v-if="!averaging" />
-      <v-list>
-        <v-list-item dense @click="fetchMovie('mp4')">
-          <v-list-item-title> Save MP4 Movie </v-list-item-title>
-        </v-list-item>
-        <v-list-item dense @click="fetchMovie('mpg')">
-          <v-list-item-title> Save MPG Movie </v-list-item-title>
-        </v-list-item>
-      </v-list>
-      <v-divider />
-      <v-list>
-        <v-list-item dense @click="downloadOptions()">
-          <v-list-item-title> Save As... </v-list-item-title>
-        </v-list-item>
-      </v-list>
       <v-divider />
       <v-list>
         <v-list-item dense @click="clearGallery()">
