@@ -51,13 +51,14 @@ export default {
       plotDetails: "PLOT_DETAILS",
     }),
     plotDataLoaded() {
-      let loaded = this.allLoadedTimeStepData || [];
-      loaded = loaded[`${this.itemId}`] || [];
-      const loadedTimeSteps = loaded.map((data) => data.timestep);
+      let loadedTimeSteps = this.allLoadedTimeStepData || [];
+      loadedTimeSteps = loadedTimeSteps[`${this.itemId}`] || [];
+      const loaded = loaded.map((data) => data.timestep);
       let start = this.currentTimeStep;
       let end = this.currentTimeStep + this.timeAverage;
       const range = [...Array(end - start + 1).keys()].map((x) => x + start);
-      return loadedTimeSteps.every((step) => range.includes(step));
+      const available = this.allAvailableTimeSteps || [];
+      return range.every((s) => loaded.includes(s) || !available.includes(s));
     },
     timeAverage() {
       if (this.itemId) {
