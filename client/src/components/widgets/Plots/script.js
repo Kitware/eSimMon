@@ -53,7 +53,7 @@ export default {
     plotDataLoaded() {
       let loadedTimeSteps = this.allLoadedTimeStepData || [];
       loadedTimeSteps = loadedTimeSteps[`${this.itemId}`] || [];
-      const loaded = loaded.map((data) => data.timestep);
+      const loaded = loadedTimeSteps.map((data) => data.timestep);
       let start = this.currentTimeStep;
       let end = this.currentTimeStep + this.timeAverage;
       const range = [...Array(end - start + 1).keys()].map((x) => x + start);
