@@ -57,7 +57,8 @@ export default {
       let start = this.currentTimeStep;
       let end = this.currentTimeStep + this.timeAverage;
       const range = [...Array(end - start + 1).keys()].map((x) => x + start);
-      const available = this.allAvailableTimeSteps || [];
+      let available = this.allAvailableTimeSteps || [];
+      available = available[`${this.itemId}`] || [];
       return range.every((s) => loaded.includes(s) || !available.includes(s));
     },
     timeAverage() {
