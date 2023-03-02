@@ -41,7 +41,7 @@
             class="playback-controls"
             v-on:mouseover="hoverOut"
           >
-            <v-row>
+            <v-row class="mx-1" :style="{height: '10px'}">
               <v-col :sm="1" class="text-xs-center">
                 <v-icon
                   v-on:click="decrementTimeStep(true)"
@@ -69,8 +69,8 @@
                 </v-icon>
               </v-col>
             </v-row>
-            <v-row v-bind:style="{alignItems: 'baseline'}">
-              <v-col :sm="6" class="text-xs-center">
+            <v-row class="ma-0 pa-0" :style="{height: '15px'}">
+              <v-col :sm="5" :style="{alignItems: 'flex-end'}">
                 <v-icon
                   v-show="paused"
                   v-on:click="togglePlayPause"
@@ -86,7 +86,8 @@
                   &#9208;
                 </v-icon>
               </v-col>
-              <v-col :sm="6" class="text-xs-center">
+              <v-spacer />
+              <v-col :sm="6">
                 <input
                   type="number"
                   min="minTimeStep"
@@ -98,32 +99,40 @@
                 />
               </v-col>
             </v-row>
-            <v-row v-bind:style="{alignItems: 'center', paddingTop: '10px'}">
-              <v-col :sm="2">
-                <v-icon v-on:click="removeRow()" :disabled="numrows < 2">
-                  remove_circle_outline
-                </v-icon>
+            <v-row class="ma-0 pa-0">
+              <v-col :sm="6">
+                <v-row :style="{alignItems: 'center'}">
+                  <v-col :sm="4">
+                    <v-icon v-on:click="removeRow()" :disabled="numrows < 2">
+                      remove_circle_outline
+                    </v-icon>
+                  </v-col>
+                  <v-col :sm="4" :style="{alignItems: 'center'}">
+                    <span> rows </span>
+                  </v-col>
+                  <v-col :sm="4">
+                    <v-icon v-on:click="addRow()" :disabled="numrows > 7">
+                      add_circle_outline
+                    </v-icon>
+                  </v-col>
+                </v-row>
               </v-col>
-              <v-col :sm="2">
-                <span> rows </span>
-              </v-col>
-              <v-col :sm="2">
-                <v-icon v-on:click="addRow()" :disabled="numrows > 7">
-                  add_circle_outline
-                </v-icon>
-              </v-col>
-              <v-col :sm="2">
-                <v-icon v-on:click="removeColumn()" :disabled="numcols < 2">
-                  remove_circle_outline
-                </v-icon>
-              </v-col>
-              <v-col :sm="2">
-                <span> cols </span>
-              </v-col>
-              <v-col :sm="2">
-                <v-icon v-on:click="addColumn()" :disabled="numcols > 7">
-                  add_circle_outline
-                </v-icon>
+              <v-col :sm="6">
+                <v-row :style="{alignItems: 'center'}">
+                  <v-col :sm="4">
+                    <v-icon v-on:click="removeColumn()" :disabled="numcols < 2">
+                      remove_circle_outline
+                    </v-icon>
+                  </v-col>
+                  <v-col :sm="4" :style="{alignItems: 'center'}">
+                    <span> cols </span>
+                  </v-col>
+                  <v-col :sm="4">
+                    <v-icon v-on:click="addColumn()" :disabled="numcols > 7">
+                      add_circle_outline
+                    </v-icon>
+                  </v-col>
+                </v-row>
               </v-col>
             </v-row>
             <view-controls :plots.sync="$refs.plots" />
