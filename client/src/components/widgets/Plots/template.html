@@ -1,6 +1,8 @@
 <div>
   <v-card
     vertical-center
+    flat
+    :outlined="!itemId"
     v-on:drop="loadGallery($event)"
     v-on:dragover="preventDefault($event)"
     @contextmenu.prevent="requestContextMenu"

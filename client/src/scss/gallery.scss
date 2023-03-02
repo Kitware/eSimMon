@@ -80,13 +80,14 @@
   .row {
     justify-content: space-around;
     align-items: baseline;
-    margin: 0;
+    align-content: center;
     padding: 1%;
     .col {
       padding: 0;
     }
-    .v-input__control {
-      padding-top: 10px;
+    .v-input__slider {
+      position: relative;
+      top: 3px;
     }
   }
 }
@@ -251,4 +252,8 @@
 .plot-progress {
   align-self: flex-end;
   min-width: inherit;
+}
+
+html {
+  overflow: hidden;
 }
