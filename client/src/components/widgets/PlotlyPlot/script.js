@@ -297,13 +297,10 @@ export default {
           avgData.push(dataVal);
         });
         // rebuild the data with the average values
-        if (isNil(nextImage)) {
-          nextImage = this.getNextImage(
-            this.currentTimeStep + this.timeAverage,
-          );
+        if (!isNil(nextImage)) {
+          // return new plotly dict
+          avgData.forEach((yAvg, idx) => (nextImage.data[idx].y = yAvg));
         }
-        // return new plotly dict
-        avgData.forEach((yAvg, idx) => (nextImage.data[idx].y = yAvg));
       }
       if (this.computingTimeAverage) {
         this.computingTimeAverage = false;
