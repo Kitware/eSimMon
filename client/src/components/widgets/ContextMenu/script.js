@@ -74,7 +74,7 @@ export default {
       return this.maxTimeStep - this.minTimeStep;
     },
     averaging() {
-      return this.itemInfo ? this.itemInfo?.averaging : false;
+      return !this.itemInfo ? this.itemInfo?.averaging : false;
     },
   },
 
