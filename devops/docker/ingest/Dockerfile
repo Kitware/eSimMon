@@ -11,4 +11,4 @@ RUN pip install /ingest
 
 COPY ./devops/docker/wait-for-it.sh /wait-for-it.sh
 
-ENTRYPOINT ["/usr/local/bin/esimmon"]
+ENTRYPOINT ["/opt/conda/bin/esimmon"]
