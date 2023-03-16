@@ -5,6 +5,7 @@
     :position-y="pos[1]"
     absolute
     offset-y
+    :style="{minWidth: '150px'}"
   >
     <v-card style="padding: 5px">
       <v-list v-if="itemInfo && itemInfo.isPlotly">
@@ -13,15 +14,28 @@
         </v-list-item>
       </v-list>
       <v-divider v-if="itemInfo && itemInfo.isPlotly" />
+      <v-list>
+        <v-list-item dense @click="clearGallery()">
+          <v-list-item-title> Clear Plot </v-list-item-title>
+        </v-list-item>
+      </v-list>
+      <v-divider v-if="canAverage()" />
+      <v-list v-if="canAverage()">
+        <v-list-item dense @click="averageDialog=true">
+          <v-list-item-title> Average Over Time </v-list-item-title>
+        </v-list-item>
+      </v-list>
+      <v-divider v-if="!averaging" />
       <v-menu
         open-on-hover
         offset-y
-        :position-x="pos[0]+125"
-        :position-y="pos[1]+60"
+        :position-x="pos[0]+135"
+        :position-y="pos[1]"
         absolute
+        v-if="!averaging"
       >
         <template v-slot:activator="{ on, attrs }">
-          <div v-bind="attrs" v-on="on" v-if="!averaging">
+          <div v-bind="attrs" v-on="on">
             <v-list>
               <v-list-item dense>
                 <v-list-item-title> Save... </v-list-item-title>
@@ -55,18 +69,6 @@
           </v-list>
         </v-card>
       </v-menu>
-      <v-divider />
-      <v-list>
-        <v-list-item dense @click="clearGallery()">
-          <v-list-item-title> Clear Plot </v-list-item-title>
-        </v-list-item>
-      </v-list>
-      <v-divider v-if="canAverage()" />
-      <v-list v-if="canAverage()">
-        <v-list-item dense @click="averageDialog=true">
-          <v-list-item-title> Average Over Time </v-list-item-title>
-        </v-list-item>
-      </v-list>
     </v-card>
   </v-menu>
   <range-dialog
