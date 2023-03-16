@@ -251,27 +251,14 @@ class AsyncGirderClient(object):
 
         return await self.get("folder", params=params)
 
-    async def create_movies(self, folder):
+    async def create_movie(self, item, ext):
         # We need this sempahore to prevent two movies for the same item form
         # being created.
-        log = logging.getLogger("esimmon")
         async with self._movie_create_semaphore:
-            ignored_folders = ["timesteps", "movies"]
-            folders = await self.list_folder(folder["_id"])
-            folders = [f for f in folders if f["name"] not in ignored_folders]
-            items = []
-            for f in folders:
-                items_list = await self.list_item(f)
-                items.extend(items_list)
-            for item in items:
-                log.info(
-                    f"Creating movies for item \"{item['name']}\" in run \"{folder['name']}\""
-                )
-                for ext in ["mp4", "mpg"]:
-                    await self.put(
-                        f"variables/{item['_id']}/timesteps/movie?format={ext}",
-                        useFastApi=True,
-                    )
+            await self.put(
+                f"variables/{item['_id']}/timesteps/movie?format={ext}",
+                useFastApi=True,
+            )
 
 
 class UploadSource(abc.ABC):
@@ -545,6 +532,23 @@ async def create_variable_item(
     return item["_id"]
 
 
+async def create_movies(folder, gc):
+    log = logging.getLogger("esimmon")
+    ignored_folders = ["timesteps", "movies"]
+    folders = await gc.list_folder(folder["_id"])
+    folders = [f for f in folders if f["name"] not in ignored_folders]
+    items = []
+    for f in folders:
+        items_list = await gc.list_item(f)
+        items.extend(items_list)
+    for item in items:
+        log.info(
+            f"Creating movies for item \"{item['name']}\" in run \"{folder['name']}\""
+        )
+        for ext in ["mp4", "mpg"]:
+            await gc.create_movie(item, ext)
+
+
 async def upload_timestep_bp_archive(
     gc,
     folder,
@@ -790,7 +794,7 @@ async def watch_run(
             scheduler.cancel()
             # Create movies for all run params
             log.info('Generating movies for run "%s".' % run_name)
-            await gc.create_movies(run_folder)
+            await create_movies(run_folder, gc)
             log.info('Movies for run "%s" have been generated.' % run_name)
             break
 
