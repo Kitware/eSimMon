@@ -74,7 +74,7 @@ export default {
       return this.maxTimeStep - this.minTimeStep;
     },
     averaging() {
-      return !this.itemInfo ? this.itemInfo?.averaging : false;
+      return !this.itemInfo ? false : !!this.itemInfo?.averaging;
     },
   },
 
@@ -111,6 +111,7 @@ export default {
       this.downloadData(endpoint, format, "movie");
     },
     downloadData(endpoint, format, type) {
+      this.showMenu = false;
       const uuid = uuidv4();
       this.updateItemInfo({ ...this.itemInfo, uuid });
       const { name } = this.itemInfo;
@@ -158,6 +159,7 @@ export default {
       this.downloads.splice(idx, 1);
     },
     downloadOptions() {
+      this.showMenu = false;
       this.showDownloadOptions(true);
     },
     clearGallery() {

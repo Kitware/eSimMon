@@ -12,6 +12,7 @@
       v-if="plotType === 'plotly'"
       :itemId="itemId"
       :timeAverage="timeAverage"
+      :plotDataLoaded="plotDataLoaded"
     />
     <vtk-plot :ref="row+'-'+col" v-if="plotType === 'vtk'" :itemId="itemId" />
   </v-card>

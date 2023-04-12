@@ -39,6 +39,10 @@ export default {
       type: Number,
       default: 0,
     },
+    plotDataLoaded: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   data() {
@@ -175,7 +179,9 @@ export default {
             this.computingTimeAverage = true;
           }
         }
-        this.react();
+        if (this.plotDataLoaded) {
+          this.react();
+        }
       },
     },
   },
