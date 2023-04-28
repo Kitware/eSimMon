@@ -59,6 +59,13 @@ export default {
         });
       }
     },
+    contextMenu(e) {
+      document.elementsFromPoint(e.clientX, e.clientY).forEach((elem) => {
+        if (elem.classList[0] === "v-card") {
+          elem.__vue__.$options.parent.requestContextMenu(e);
+        }
+      });
+    },
   },
 
   mounted() {
@@ -90,6 +97,7 @@ export default {
     // children. Instead we need to listen and handle them here.y
     this.container.addEventListener("dblclick", this.resetAllZoom);
     this.container.addEventListener("dblclick", this.resetZoom);
+    this.container.addEventListener("contextmenu", this.contextMenu);
     window.addEventListener("resize", this.resize);
     this.resize();
     window.requestAnimationFrame(this.animate);
