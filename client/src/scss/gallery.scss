@@ -60,7 +60,7 @@
 // and shows a scrollbar when necessary.
 .girder-data-browser-snippet {
   flex-grow: 1;
-  min-height: calc(100%-240);
+  min-height: calc(100%-175);
   overflow: auto;
   padding-top: 12px;
 }
@@ -73,8 +73,8 @@
 .playback-controls {
   display: flex;
   flex-flow: column;
-  max-height: 240px;
-  min-height: 240px;
+  max-height: 175px;
+  min-height: 175px;
   overflow: hidden;
   padding-bottom: 0;
   .row {
@@ -262,4 +262,21 @@ html {
 
 .user-select-none {
   margin: 2px 0 !important;
+}
+
+.settings {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  .logout {
+    max-height: 70px;
+  }
+  .main-content {
+    height: calc(100% - 120px);
+  }
+  .back {
+    max-height: 50px;
+  }
 }

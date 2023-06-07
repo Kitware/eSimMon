@@ -202,8 +202,8 @@ export default {
       });
       commit("VIEWS_INFO_SET", info);
     },
-    async VIEWS_FETCH_AUTO_SAVE({ state, commit }) {
-      commit("VIEWS_AUTO_SAVE_RUN_SET", false);
+    async VIEW_FETCH_AUTO_SAVE({ state, commit, getters }) {
+      commit("VIEW_AUTO_SAVE_RUN_SET", false);
       const userId = this.$girderRest.user._id;
       const viewName = `${state.simulation}_${state.runId}_${userId}`;
       commit("VIEWS_AUTO_SAVE_NAME_SET", viewName);
@@ -212,8 +212,9 @@ export default {
       );
       const view = data[0];
       if (view) {
-        commit("VIEWS_AUTO_SAVED_SET", view);
-        commit("UI_AUTO_SAVE_DIALOG_SET", true);
+        commit("VIEW_AUTO_SAVED_SET", view);
+        // Show the auto-save dialog if it hasn't been disabled in the settings
+        commit("UI_AUTO_SAVE_DIALOG_SET", getters.UI_AUTO_SAVE_DIALOG_ENABLED);
       }
     },
     VIEWS_LOAD_AUTO_SAVE({ state, commit, dispatch }) {

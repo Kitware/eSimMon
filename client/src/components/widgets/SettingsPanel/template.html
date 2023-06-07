@@ -1,0 +1,105 @@
+<v-card class="my-3 settings">
+  <v-row class="logout">
+    <v-col>
+      <v-btn class="my-2" block v-on:click="girderRest.logout()">
+        Logout <v-icon right> $vuetify.icons.logout </v-icon>
+      </v-btn>
+    </v-col>
+  </v-row>
+  <div class="main-content">
+    <v-card-title :style="{justifyContent: 'center', padding: '2px'}"
+      >Settings</v-card-title
+    >
+    <v-subheader> Views </v-subheader>
+    <v-divider />
+    <v-col>
+      <v-row>
+        <v-col sm="6">
+          <v-btn block v-on:click="loadView()">
+            Load View <v-icon right> mdi-view-grid-outline </v-icon>
+          </v-btn>
+        </v-col>
+        <v-col sm="6">
+          <v-btn block @click.stop="saveView()">
+            Save View <v-icon right> mdi-view-grid-plus-outline </v-icon>
+          </v-btn>
+        </v-col>
+      </v-row>
+      <v-subheader> Tools </v-subheader>
+      <v-divider />
+      <v-row>
+        <v-col sm="6">
+          <v-tooltip left>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch v-model="zoomSync" label="Sync zoom" hide-details />
+              </div>
+            </template>
+            <p class="mb-0">Syncronize the zoom across all</p>
+            <p class="mb-0">plots with the same x-axis.</p>
+          </v-tooltip>
+        </v-col>
+        <v-col sm="6">
+          <v-tooltip right>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch
+                  v-model="selectTimeStep"
+                  label="Time step selection"
+                  hide-details
+                />
+              </div>
+            </template>
+            <p class="mb-0">Double-click on a point on a time</p>
+            <p class="mb-0">plot to jump to that time step.</p>
+          </v-tooltip>
+        </v-col>
+      </v-row>
+      <v-subheader> Mode </v-subheader>
+      <v-divider />
+      <v-row>
+        <v-col sm="12">
+          <v-tooltip left>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch label="View completed runs" hide-details disabled />
+              </div>
+            </template>
+            <span>This feature is not currently enabled.</span>
+          </v-tooltip>
+        </v-col>
+      </v-row>
+      <v-subheader> UI </v-subheader>
+      <v-divider />
+      <v-row>
+        <v-col sm="12">
+          <v-tooltip left>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch
+                  v-model="autoSavePrompt"
+                  label="Auto-save prompt"
+                  hide-details
+                />
+              </div>
+            </template>
+            <p class="mb-0">
+              {{autoSavePrompt ? "Do not show" : "Show"}} the prompt asking if
+              you would
+            </p>
+            <p class="mb-0">like to load the last auto-saved layout.</p>
+          </v-tooltip>
+        </v-col>
+      </v-row>
+    </v-col>
+  </div>
+  <v-col class="back">
+    <v-row :style="{justifyContent: 'center'}">
+      <v-btn icon text v-on:click="toggleShowSettings()">
+        <v-icon left> mdi-arrow-left </v-icon>
+      </v-btn>
+    </v-row>
+  </v-col>
+  <save-dialog :layout="plots" @close="setSaveDialogVisible(false)" />
+  <load-dialog @close="setLoadDialogVisible(false)" />
+</v-card>

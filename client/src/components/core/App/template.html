@@ -28,15 +28,18 @@
           </div>
           <girder-file-manager
             ref="girderFileManager"
-            v-if="location"
+            v-if="location && !showSettings"
             v-on:mouseover.native="hoverIn($event)"
             v-on:mouseout.native="hoverOut"
             :location.sync="location"
             :selectable="false"
             :drag-enabled="true"
           />
+          <!--- Settings Panel -->
+          <settings-panel v-if="showSettings" :plots.sync="$refs.plots" />
           <!-- Playback controls. -->
           <v-container
+            v-if="!showSettings"
             :fluid="true"
             class="playback-controls"
             v-on:mouseover="hoverOut"
@@ -127,7 +130,28 @@
                 </v-row>
               </v-col>
             </v-row>
-            <view-controls :plots.sync="$refs.plots" />
+            <v-row :style="{height: '5px', margin: '0px'}">
+              <v-spacer />
+              <v-col :sm="2" v-bind:style="{alignItems: 'center'}">
+                <v-tooltip top>
+                  <template v-slot:activator="{on, attrs}">
+                    <v-btn icon v-on:click="toggleShowSettings()">
+                      <v-icon v-on="on" v-bind="attrs"> mdi-cog </v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Settings</span>
+                </v-tooltip>
+              </v-col>
+              <v-spacer />
+            </v-row>
+            <v-row
+              v-show="lastSaved"
+              :style="{height: '5px', alignContent: 'start'}"
+            >
+              <span v-bind:style="{fontSize: 'small', opacity: '0.5'}">
+                View Autosaved: {{ new Date(lastSaved).toLocaleTimeString() }}
+              </span>
+            </v-row>
           </v-container>
         </v-col>
       </v-row>

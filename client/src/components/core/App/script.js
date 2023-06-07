@@ -4,9 +4,9 @@ import _ from "lodash";
 import RenderWindow from "../../widgets/RenderWindow";
 import { GirderAuthentication as GirderAuthentication } from "@girder/components/src";
 import GirderFileManager from "../../widgets/GirderFileManager";
-import ViewControls from "../ViewControls";
 import ContextMenu from "../../widgets/ContextMenu";
 import Plots from "../../widgets/Plots";
+import SettingsPanel from "../../widgets/SettingsPanel";
 import { mapActions, mapGetters, mapMutations } from "vuex";
 
 export default {
@@ -19,7 +19,7 @@ export default {
     RenderWindow,
     Splitpanes,
     Pane,
-    ViewControls,
+    SettingsPanel,
     ContextMenu,
     Plots,
   },
@@ -44,6 +44,7 @@ export default {
   methods: {
     ...mapActions({
       togglePlayPause: "UI_TOGGLE_PLAY_PAUSE",
+      toggleShowSettings: "UI_TOGGLE_SHOW_SETTINGS",
       viewAutoSaved: "VIEWS_AUTO_SAVE",
       createItems: "VIEWS_BUILD_ITEMS_OBJECT",
       fetchAutoSave: "VIEWS_FETCH_AUTO_SAVE",
@@ -260,6 +261,7 @@ export default {
     ...mapGetters({
       autoSavedViewDialog: "UI_AUTO_SAVE_DIALOG",
       paused: "UI_PAUSE_GALLERY",
+      showSettings: "UI_SHOW_SETTINGS",
       cellCount: "VIEW_VISIBLE_CELL_COUNT",
       currentTimeStep: "VIEW_TIME_STEP",
       itemId: "VIEW_CURRENT_ITEM_ID",
@@ -269,6 +271,7 @@ export default {
       viewTimeStep: "VIEW_SAVED_TIME_STEP",
       numReady: "VIEW_NUM_READY",
       loadedFromSaved: "VIEW_LOADING_FROM_SAVED",
+      lastSaved: "VIEW_LAST_SAVED",
       creator: "VIEWS_CREATOR",
       gridSize: "VIEWS_GRID_SIZE",
       items: "VIEWS_ITEMS",

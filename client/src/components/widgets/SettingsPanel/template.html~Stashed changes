@@ -1,0 +1,82 @@
+<v-card class="my-3" :style="{width: '100%', minHeight: '100vh'}">
+  <v-row>
+    <v-col>
+      <v-btn class="my-2" block v-on:click="girderRest.logout()">
+        Logout <v-icon right> $vuetify.icons.logout </v-icon>
+      </v-btn>
+    </v-col>
+  </v-row>
+  <v-card-title :style="{justifyContent: 'center', padding: '2px'}"
+    >Settings</v-card-title
+  >
+  <v-subheader> Views </v-subheader>
+  <v-divider />
+  <v-col>
+    <v-row>
+      <v-col>
+        <v-btn block v-on:click="loadView()">
+          Load View <v-icon right> mdi-view-grid-outline </v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col>
+        <v-btn block @click.stop="saveView()">
+          Save View <v-icon right> mdi-view-grid-plus-outline </v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+    <v-subheader> Tools </v-subheader>
+    <v-divider />
+    <v-row>
+      <v-col sm="12">
+        <v-switch
+          v-model="zoomSync"
+          label="Sync zoom across plots"
+          color="primary"
+          hide-details
+        />
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col sm="12">
+        <v-switch
+          v-model="selectTimeStep"
+          label="Select time step from plot"
+          color="primary"
+          hide-details
+        />
+      </v-col>
+    </v-row>
+    <v-subheader> Mode </v-subheader>
+    <v-divider />
+    <v-row>
+      <v-col sm="12">
+        <v-switch
+          label="View completed runs"
+          color="red darken-3"
+          hide-details
+        />
+      </v-col>
+    </v-row>
+    <v-subheader> UI </v-subheader>
+    <v-divider />
+    <v-row>
+      <v-col sm="12">
+        <v-switch
+          label="Enable auto-save dialog"
+          color="orange darken-3"
+          hide-details
+        />
+      </v-col>
+    </v-row>
+    <v-spacer :style="{minHeight: '40vh'}" />
+    <v-row :style="{justifyContent: 'center'}">
+      <v-btn icon text v-on:click="toggleShowSettings()">
+        <v-icon left> mdi-arrow-left </v-icon>
+      </v-btn>
+    </v-row>
+  </v-col>
+  <save-dialog :layout="plots" @close="setSaveDialogVisible(false)" />
+  <load-dialog @close="setLoadDialogVisible(false)" />
+</v-card>
