@@ -28,8 +28,8 @@
     "@typescript-eslint/parser": "^5.4.0",
     "@vue/cli-plugin-babel": "^5.0.4",
     "@vue/cli-plugin-eslint": "^5.0.4",
-    "@vue/cli-plugin-unit-jest": "^5.0.4",
     "@vue/cli-plugin-typescript": "^5.0.4",
+    "@vue/cli-plugin-unit-jest": "^5.0.4",
     "@vue/cli-service": "^5.0.4",
     "@vue/eslint-config-typescript": "^9.1.0",
     "eslint": "^7.29.0",
@@ -56,7 +56,7 @@
     "not ie <= 8"
   ],
   "resolutions": {
-    "serialize-javascript": "^2.1.1",
+    "serialize-javascript": "^3.1.0",
     "kind-of": "^6.0.3",
     "set-value": "^2.0.1"
   },
