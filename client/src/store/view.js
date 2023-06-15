@@ -7,8 +7,6 @@ export default {
     loadedFromView: false,
     initialLoad: true,
     minTimeStep: 1,
-    boxSelector: null,
-    focalPoint: null,
     scale: 0,
     viewTimeStep: 1,
     numReady: 0,
@@ -39,12 +37,6 @@ export default {
     },
     VIEW_MIN_TIME_STEP(state) {
       return state.minTimeStep;
-    },
-    VIEW_BOX_SELECTOR(state) {
-      return state.boxSelector;
-    },
-    VIEW_FOCAL_POINT(state) {
-      return state.focalPoint;
     },
     VIEW_SCALE(state) {
       return state.scale;
@@ -92,12 +84,6 @@ export default {
     },
     VIEW_MIN_TIME_STEP_SET(state, val) {
       state.minTimeStep = val;
-    },
-    VIEW_BOX_SELECTOR_SET(state, val) {
-      state.boxSelector = val;
-    },
-    VIEW_FOCAL_POINT_SET(state, val) {
-      state.focalPoint = val;
     },
     VIEW_SCALE_SET(state, val) {
       state.scale = val;

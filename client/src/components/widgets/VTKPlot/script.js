@@ -68,7 +68,7 @@ export default {
       syncZoom: "UI_ZOOM_SYNC",
       minTimeStep: "VIEW_MIN_TIME_STEP",
       interactor: "UI_INTERACTOR",
-      boxSelector: "VIEW_BOX_SELECTOR",
+      boxSelector: "UI_BOX_SELECTOR",
       numReady: "VIEW_NUM_READY",
       maxTimeStep: "VIEW_MAX_TIME_STEP",
       allAvailableTimeSteps: "VIEW_AVAILABLE_TIME_STEPS",
