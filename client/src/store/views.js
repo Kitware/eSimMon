@@ -1,6 +1,5 @@
 export default {
   state: {
-    allNames: [],
     allViews: [],
     autoSaveName: "",
     autoSaveRun: false,
@@ -18,7 +17,6 @@ export default {
     runId: null,
     simulation: null,
     step: 1,
-    zoomLevels: null,
   },
   getters: {
     VIEWS_AUTO_SAVE_NAME(state) {
@@ -63,9 +61,6 @@ export default {
         run: state.runId,
       };
     },
-    VIEWS_NAMES(state) {
-      return state.allNames;
-    },
     VIEWS_PUBLIC(state) {
       return state.public;
     },
@@ -80,9 +75,6 @@ export default {
     },
     VIEWS_STEP(state) {
       return state.step;
-    },
-    VIEWS_ZOOM_LEVELS(state) {
-      return state.zoomLevels;
     },
   },
   mutations: {
@@ -122,9 +114,6 @@ export default {
     VIEWS_LIST_ALL_SET(state, val) {
       state.allViews = val;
     },
-    VIEWS_NAMES_SET(state, val) {
-      state.allNames = val;
-    },
     VIEWS_PUBLIC_SET(state, val) {
       state.public = val;
     },
@@ -139,9 +128,6 @@ export default {
     },
     VIEWS_STEP_SET(state, val) {
       state.step = val;
-    },
-    VIEWS_ZOOM_LEVELS_SET(state, val) {
-      state.zoomLevels = val;
     },
   },
   actions: {
@@ -213,7 +199,6 @@ export default {
           info[view.name] = view._id;
         }
       });
-      commit("VIEWS_NAMES_SET", viewNames);
       commit("VIEWS_INFO_SET", info);
     },
     async VIEWS_FETCH_AUTO_SAVE({ state, commit }) {
@@ -245,7 +230,6 @@ export default {
       commit("VIEWS_RUN_ID_SET", view.meta.run);
       commit("VIEWS_SIMULATION_SET", view.meta.simulation);
       commit("VIEWS_LAST_LOADED_ID_SET", view._id);
-      // commit('VIEWS_ZOOM_LEVELS', view.zoomLevels);
 
       commit("VIEW_SAVED_TIME_STEP_SET", parseInt(view.step));
       commit("UI_PAUSE_GALLERY_SET", true);
