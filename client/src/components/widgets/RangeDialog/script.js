@@ -41,7 +41,7 @@ export default {
   },
   methods: {
     ...mapActions({
-      updatePlotDetails: "PLOT_DETAILS_UPDATED",
+      updatePlotDetails: "VIEW_DETAILS_UPDATED",
     }),
     save() {
       const min = parseFloat(this.newStart);

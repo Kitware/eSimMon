@@ -25,12 +25,12 @@ export default {
 
   computed: {
     ...mapGetters({
-      columns: "VIEW_COLUMNS",
-      items: "VIEW_ITEMS",
-      meta: "VIEW_METAS",
-      rows: "VIEW_ROWS",
+      columns: "VIEWS_COLUMNS",
+      items: "VIEWS_ITEMS",
+      meta: "VIEWS_METAS",
+      rows: "VIEWS_ROWS",
       visible: "UI_SHOW_SAVE_DIALOG",
-      viewInfo: "VIEW_INFO",
+      viewInfo: "VIEWS_INFO",
     }),
     saveDialog: {
       get() {
@@ -51,12 +51,12 @@ export default {
 
   methods: {
     ...mapActions({
-      createView: "VIEW_CREATED",
-      setItems: "VIEW_BUILD_ITEMS_OBJECT",
-      updateView: "VIEW_UPDATE_EXISTING",
+      createView: "VIEWS_CREATED",
+      setItems: "VIEWS_BUILD_ITEMS_OBJECT",
+      updateView: "VIEWS_UPDATE_EXISTING",
     }),
     ...mapMutations({
-      setPublic: "VIEW_PUBLIC_SET",
+      setPublic: "VIEWS_PUBLIC_SET",
       setShowSaveDialog: "UI_SHOW_SAVE_DIALOG_SET",
     }),
     save(newView) {

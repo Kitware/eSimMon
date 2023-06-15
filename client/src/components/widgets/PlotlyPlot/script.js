@@ -60,16 +60,16 @@ export default {
 
   computed: {
     ...mapGetters({
-      currentTimeStep: "PLOT_TIME_STEP",
-      numcols: "VIEW_COLUMNS",
-      numrows: "VIEW_ROWS",
+      currentTimeStep: "VIEW_TIME_STEP",
+      numcols: "VIEWS_COLUMNS",
+      numrows: "VIEWS_ROWS",
       syncZoom: "UI_ZOOM_SYNC",
       timeStepSelectorMode: "UI_TIME_STEP_SELECTOR",
-      numReady: "PLOT_NUM_READY",
-      allTimes: "PLOT_TIMES",
-      allAvailableTimeSteps: "PLOT_AVAILABLE_TIME_STEPS",
-      allLoadedTimeStepData: "PLOT_LOADED_TIME_STEPS",
-      plotDetails: "PLOT_DETAILS",
+      numReady: "VIEW_NUM_READY",
+      allTimes: "VIEW_TIMES",
+      allAvailableTimeSteps: "VIEW_AVAILABLE_TIME_STEPS",
+      allLoadedTimeStepData: "VIEW_LOADED_TIME_STEPS",
+      plotDetails: "VIEW_DETAILS",
     }),
     availableTimeSteps() {
       if (!this.allAvailableTimeSteps) {
@@ -188,12 +188,12 @@ export default {
 
   methods: {
     ...mapActions({
-      updatePlotDetails: "PLOT_DETAILS_UPDATED",
+      updatePlotDetails: "VIEW_DETAILS_UPDATED",
     }),
     ...mapMutations({
-      setTimeStep: "PLOT_TIME_STEP_SET",
+      setTimeStep: "VIEW_TIME_STEP_SET",
       setPauseGallery: "UI_PAUSE_GALLERY_SET",
-      updateNumReady: "PLOT_NUM_READY_SET",
+      updateNumReady: "VIEW_NUM_READY_SET",
     }),
     relayoutPlotly() {
       if (this.zoom) {

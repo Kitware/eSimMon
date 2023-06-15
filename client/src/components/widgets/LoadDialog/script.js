@@ -19,8 +19,8 @@ export default {
   computed: {
     ...mapGetters({
       visible: "UI_SHOW_LOAD_DIALOG",
-      meta: "VIEW_META",
-      views: "VIEW_LIST_ALL",
+      meta: "VIEWS_META",
+      views: "VIEWS_LIST_ALL",
     }),
     loadDialog: {
       get() {
@@ -58,8 +58,8 @@ export default {
 
   methods: {
     ...mapActions({
-      fetchAllViews: "VIEW_FETCH_ALL_AVAILABLE",
-      loadView: "VIEW_LOADED",
+      fetchAllViews: "VIEWS_FETCH_ALL_AVAILABLE",
+      loadView: "VIEWS_LOADED",
     }),
     ...mapMutations({
       setShowLoadDialog: "UI_SHOW_LOAD_DIALOG_SET",

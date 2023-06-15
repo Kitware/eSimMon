@@ -23,7 +23,7 @@ export default {
     ...mapMutations({
       setInteractor: "UI_INTERACTOR_SET",
       setRenderWindow: "UI_RENDER_WINDOW_SET",
-      setBoxSelector: "PLOT_BOX_SELECTOR_SET",
+      setBoxSelector: "VIEW_BOX_SELECTOR_SET",
     }),
     resize() {
       const { width, height } = this.$el.getBoundingClientRect();

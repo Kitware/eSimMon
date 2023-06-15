@@ -61,19 +61,19 @@ export default {
 
   computed: {
     ...mapGetters({
-      currentTimeStep: "PLOT_TIME_STEP",
-      numcols: "VIEW_COLUMNS",
-      numrows: "VIEW_ROWS",
+      currentTimeStep: "VIEW_TIME_STEP",
+      numcols: "VIEWS_COLUMNS",
+      numrows: "VIEWS_ROWS",
       renderWindow: "UI_RENDER_WINDOW",
       syncZoom: "UI_ZOOM_SYNC",
-      minTimeStep: "PLOT_MIN_TIME_STEP",
+      minTimeStep: "VIEW_MIN_TIME_STEP",
       interactor: "UI_INTERACTOR",
-      boxSelector: "PLOT_BOX_SELECTOR",
-      numReady: "PLOT_NUM_READY",
-      maxTimeStep: "PLOT_MAX_TIME_STEP",
-      allAvailableTimeSteps: "PLOT_AVAILABLE_TIME_STEPS",
-      allLoadedTimeStepData: "PLOT_LOADED_TIME_STEPS",
-      plotDetails: "PLOT_DETAILS",
+      boxSelector: "VIEW_BOX_SELECTOR",
+      numReady: "VIEW_NUM_READY",
+      maxTimeStep: "VIEW_MAX_TIME_STEP",
+      allAvailableTimeSteps: "VIEW_AVAILABLE_TIME_STEPS",
+      allLoadedTimeStepData: "VIEW_LOADED_TIME_STEPS",
+      plotDetails: "VIEW_DETAILS",
     }),
     availableTimeSteps() {
       if (!this.allAvailableTimeSteps) {
@@ -153,21 +153,21 @@ export default {
 
   methods: {
     ...mapActions({
-      updatePlotDetails: "PLOT_DETAILS_UPDATED",
+      updatePlotDetails: "VIEW_DETAILS_UPDATED",
     }),
     ...mapMutations({
-      updateCellCount: "PLOT_VISIBLE_CELL_COUNT_SET",
-      setMaxTimeStep: "PLOT_MAX_TIME_STEP_SET",
-      setItemId: "PLOT_CURRENT_ITEM_ID_SET",
-      setLoadedFromView: "PLOT_LOADED_FROM_VIEW_SET",
-      setInitialLoad: "PLOT_INITIAL_LOAD_SET",
+      updateCellCount: "VIEW_VISIBLE_CELL_COUNT_SET",
+      setMaxTimeStep: "VIEW_MAX_TIME_STEP_SET",
+      setItemId: "VIEW_CURRENT_ITEM_ID_SET",
+      setLoadedFromView: "VIEW_LOADED_FROM_VIEW_SET",
+      setInitialLoad: "VIEW_INITIAL_LOAD_SET",
       updateRendererCount: "UI_RENDERER_COUNT_SET",
       showContextMenu: "UI_SHOW_CONTEXT_MENU_SET",
       setContextMenuItemData: "UI_CONTEXT_MENU_ITEM_DATA_SET",
-      setCurrentItemId: "PLOT_CURRENT_ITEM_ID_SET",
-      updateNumReady: "PLOT_NUM_READY_SET",
-      setRunId: "VIEW_RUN_ID_SET",
-      setSimulation: "VIEW_SIMULATION_SET",
+      setCurrentItemId: "VIEW_CURRENT_ITEM_ID_SET",
+      updateNumReady: "VIEW_NUM_READY_SET",
+      setRunId: "VIEWS_RUN_ID_SET",
+      setSimulation: "VIEWS_SIMULATION_SET",
     }),
     react: function () {
       let nextImage = this.loadedTimeStepData.find(

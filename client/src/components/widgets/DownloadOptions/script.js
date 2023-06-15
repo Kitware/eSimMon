@@ -42,7 +42,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      availableTimeSteps: "PLOT_AVAILABLE_TIME_STEPS",
+      availableTimeSteps: "VIEW_AVAILABLE_TIME_STEPS",
       visible: "UI_SHOW_DOWNLOAD_OPTIONS",
       mathJaxOptions: "UI_MATH_JAX_OPTIONS",
     }),
@@ -108,7 +108,7 @@ export default {
   },
   methods: {
     ...mapActions({
-      updatePlotDetails: "PLOT_DETAILS_UPDATED",
+      updatePlotDetails: "VIEW_DETAILS_UPDATED",
     }),
     ...mapMutations({
       showDownloadOptions: "UI_SHOW_DOWNLOAD_OPTIONS_SET",

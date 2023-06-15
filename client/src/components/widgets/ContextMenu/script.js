@@ -41,10 +41,10 @@ export default {
     ...mapGetters({
       visible: "UI_SHOW_CONTEXT_MENU",
       itemInfo: "UI_CONTEXT_MENU_ITEM_DATA",
-      plotDetails: "PLOT_DETAILS",
+      plotDetails: "VIEW_DETAILS",
       mathJaxOptions: "UI_MATH_JAX_OPTIONS",
-      minTimeStep: "PLOT_MIN_TIME_STEP",
-      maxTimeStep: "PLOT_MAX_TIME_STEP",
+      minTimeStep: "VIEW_MIN_TIME_STEP",
+      maxTimeStep: "VIEW_MAX_TIME_STEP",
     }),
     showMenu: {
       get() {
@@ -80,7 +80,7 @@ export default {
 
   methods: {
     ...mapActions({
-      updatePlotDetails: "PLOT_DETAILS_UPDATED",
+      updatePlotDetails: "VIEW_DETAILS_UPDATED",
     }),
     ...mapMutations({
       showContextMenu: "UI_SHOW_CONTEXT_MENU_SET",

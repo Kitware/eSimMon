@@ -21,132 +21,132 @@ export default {
     zoomLevels: null,
   },
   getters: {
-    VIEW_AUTO_SAVE_NAME(state) {
+    VIEWS_AUTO_SAVE_NAME(state) {
       return state.autoSaveName;
     },
-    VIEW_AUTO_SAVE_RUN(state) {
+    VIEWS_AUTO_SAVE_RUN(state) {
       return state.autoSaveRun;
     },
-    VIEW_AUTO_SAVED(state) {
+    VIEWS_AUTO_SAVED(state) {
       return state.autoSavedView;
     },
-    VIEW_COLUMNS(state) {
+    VIEWS_COLUMNS(state) {
       return state.columns;
     },
-    VIEW_CREATOR(state) {
+    VIEWS_CREATOR(state) {
       return state.creator;
     },
-    VIEW_FORM_DATA(state) {
+    VIEWS_FORM_DATA(state) {
       return state.formData;
     },
-    VIEW_GRID_SIZE(state) {
+    VIEWS_GRID_SIZE(state) {
       return state.gridSize;
     },
-    VIEW_INFO(state) {
+    VIEWS_INFO(state) {
       return state.info;
     },
-    VIEW_ITEMS(state) {
+    VIEWS_ITEMS(state) {
       return state.items;
     },
-    VIEW_LAST_LOADED_ID(state) {
+    VIEWS_LAST_LOADED_ID(state) {
       return state.lastLoadedID;
     },
-    VIEW_LAST_SAVED(state) {
+    VIEWS_LAST_SAVED(state) {
       return state.lastSaved;
     },
-    VIEW_LIST_ALL(state) {
+    VIEWS_LIST_ALL(state) {
       return state.allViews;
     },
-    VIEW_META(state) {
+    VIEWS_META(state) {
       return {
         simulation: state.simulation,
         run: state.runId,
       };
     },
-    VIEW_NAMES(state) {
+    VIEWS_NAMES(state) {
       return state.allNames;
     },
-    VIEW_PUBLIC(state) {
+    VIEWS_PUBLIC(state) {
       return state.public;
     },
-    VIEW_RUN_ID(state) {
+    VIEWS_RUN_ID(state) {
       return state.runId;
     },
-    VIEW_ROWS(state) {
+    VIEWS_ROWS(state) {
       return state.rows;
     },
-    VIEW_SIMULATION(state) {
+    VIEWS_SIMULATION(state) {
       return state.simulation;
     },
-    VIEW_STEP(state) {
+    VIEWS_STEP(state) {
       return state.step;
     },
-    VIEW_ZOOM_LEVELS(state) {
+    VIEWS_ZOOM_LEVELS(state) {
       return state.zoomLevels;
     },
   },
   mutations: {
-    VIEW_AUTO_SAVE_NAME_SET(state, val) {
+    VIEWS_AUTO_SAVE_NAME_SET(state, val) {
       state.autoSaveName = val;
     },
-    VIEW_AUTO_SAVE_RUN_SET(state, val) {
+    VIEWS_AUTO_SAVE_RUN_SET(state, val) {
       state.autoSaveRun = val;
     },
-    VIEW_AUTO_SAVED_SET(state, val) {
+    VIEWS_AUTO_SAVED_SET(state, val) {
       state.autoSavedView = val;
     },
-    VIEW_COLUMNS_SET(state, val) {
+    VIEWS_COLUMNS_SET(state, val) {
       state.columns = val;
     },
-    VIEW_CREATOR_SET(state, val) {
+    VIEWS_CREATOR_SET(state, val) {
       state.creator = val;
     },
-    VIEW_FORM_DATA_SET(state, val) {
+    VIEWS_FORM_DATA_SET(state, val) {
       state.formData = val;
     },
-    VIEW_GRID_SIZE_SET(state, val) {
+    VIEWS_GRID_SIZE_SET(state, val) {
       state.gridSize = val;
     },
-    VIEW_INFO_SET(state, val) {
+    VIEWS_INFO_SET(state, val) {
       state.info = val;
     },
-    VIEW_ITEMS_SET(state, val) {
+    VIEWS_ITEMS_SET(state, val) {
       state.items = val;
     },
-    VIEW_LAST_LOADED_ID_SET(state, val) {
+    VIEWS_LAST_LOADED_ID_SET(state, val) {
       state.lastLoadedID = val;
     },
-    VIEW_LAST_SAVED_SET(state, val) {
+    VIEWS_LAST_SAVED_SET(state, val) {
       state.lastSaved = val;
     },
-    VIEW_LIST_ALL_SET(state, val) {
+    VIEWS_LIST_ALL_SET(state, val) {
       state.allViews = val;
     },
-    VIEW_NAMES_SET(state, val) {
+    VIEWS_NAMES_SET(state, val) {
       state.allNames = val;
     },
-    VIEW_PUBLIC_SET(state, val) {
+    VIEWS_PUBLIC_SET(state, val) {
       state.public = val;
     },
-    VIEW_ROWS_SET(state, val) {
+    VIEWS_ROWS_SET(state, val) {
       state.rows = val;
     },
-    VIEW_RUN_ID_SET(state, val) {
+    VIEWS_RUN_ID_SET(state, val) {
       state.runId = val;
     },
-    VIEW_SIMULATION_SET(state, val) {
+    VIEWS_SIMULATION_SET(state, val) {
       state.simulation = val;
     },
-    VIEW_STEP_SET(state, val) {
+    VIEWS_STEP_SET(state, val) {
       state.step = val;
     },
-    VIEW_ZOOM_LEVELS_SET(state, val) {
+    VIEWS_ZOOM_LEVELS_SET(state, val) {
       state.zoomLevels = val;
     },
   },
   actions: {
-    async VIEW_AUTO_SAVE({ state, commit, dispatch }) {
-      dispatch("VIEW_BUILD_FORM_DATA", state.autoSaveName);
+    async VIEWS_AUTO_SAVE({ state, commit, dispatch }) {
+      dispatch("VIEWS_BUILD_FORM_DATA", state.autoSaveName);
       const formData = state.formData;
       // Check if auto-saved view already exists
       const { data } = await this.$girderRest.get(
@@ -157,29 +157,29 @@ export default {
         await this.$girderRest
           .put(`/view/${data[0]._id}`, formData)
           .then(() => {
-            commit("VIEW_LAST_SAVED_SET", new Date());
+            commit("VIEWS_LAST_SAVED_SET", new Date());
           });
       } else {
         // If not, create it
         await this.$girderRest.post("/view", formData).then(() => {
-          commit("VIEW_LAST_SAVED_SET", new Date());
+          commit("VIEWS_LAST_SAVED_SET", new Date());
         });
       }
     },
-    VIEW_BUILD_FORM_DATA({ state, commit, getters }, name) {
+    VIEWS_BUILD_FORM_DATA({ state, commit, getters }, name) {
       var formData = new FormData();
       formData.set("name", name);
       formData.set("rows", state.rows);
       formData.set("columns", state.columns);
-      formData.set("step", getters.PLOT_TIME_STEP);
+      formData.set("step", getters.VIEW_TIME_STEP);
       formData.set("public", state.public);
       formData.set("items", JSON.stringify(state.items));
-      formData.set("meta", JSON.stringify(getters.VIEW_META));
-      commit("VIEW_FORM_DATA_SET", formData);
+      formData.set("meta", JSON.stringify(getters.VIEWS_META));
+      commit("VIEWS_FORM_DATA_SET", formData);
     },
-    VIEW_BUILD_ITEMS_OBJECT({ commit, getters }, layout) {
+    VIEWS_BUILD_ITEMS_OBJECT({ commit, getters }, layout) {
       const items = {};
-      const plotDetails = getters.PLOT_DETAILS;
+      const plotDetails = getters.VIEW_DETAILS;
       layout.forEach((item) => {
         const { row, col } = item;
         const { legend, log, range, xAxis, zoom } =
@@ -193,18 +193,18 @@ export default {
           zoom,
         };
       });
-      commit("VIEW_ITEMS_SET", items);
+      commit("VIEWS_ITEMS_SET", items);
     },
-    VIEW_CREATED({ state, dispatch }, name) {
-      dispatch("VIEW_BUILD_FORM_DATA", name);
+    VIEWS_CREATED({ state, dispatch }, name) {
+      dispatch("VIEWS_BUILD_FORM_DATA", name);
       const formData = state.formData;
       this.$girderRest.post("/view", formData);
     },
-    async VIEW_FETCH_ALL_AVAILABLE({ state, commit }) {
+    async VIEWS_FETCH_ALL_AVAILABLE({ state, commit }) {
       const { data } = await this.$girderRest.get(
         "/view?exact=false&limit=50&sort=name&sortdir=1",
       );
-      commit("VIEW_LIST_ALL_SET", data);
+      commit("VIEWS_LIST_ALL_SET", data);
       let viewNames = [];
       let info = {};
       data.forEach((view) => {
@@ -213,45 +213,45 @@ export default {
           info[view.name] = view._id;
         }
       });
-      commit("VIEW_NAMES_SET", viewNames);
-      commit("VIEW_INFO_SET", info);
+      commit("VIEWS_NAMES_SET", viewNames);
+      commit("VIEWS_INFO_SET", info);
     },
-    async VIEW_FETCH_AUTO_SAVE({ state, commit }) {
-      commit("VIEW_AUTO_SAVE_RUN_SET", false);
+    async VIEWS_FETCH_AUTO_SAVE({ state, commit }) {
+      commit("VIEWS_AUTO_SAVE_RUN_SET", false);
       const userId = this.$girderRest.user._id;
       const viewName = `${state.simulation}_${state.runId}_${userId}`;
-      commit("VIEW_AUTO_SAVE_NAME_SET", viewName);
+      commit("VIEWS_AUTO_SAVE_NAME_SET", viewName);
       const { data } = await this.$girderRest.get(
         `/view?text=${viewName}&exact=true&limit=50&sort=name&sortdir=1`,
       );
       const view = data[0];
       if (view) {
-        commit("VIEW_AUTO_SAVED_SET", view);
+        commit("VIEWS_AUTO_SAVED_SET", view);
         commit("UI_AUTO_SAVE_DIALOG_SET", true);
       }
     },
-    VIEW_LOAD_AUTO_SAVE({ state, commit, dispatch }) {
+    VIEWS_LOAD_AUTO_SAVE({ state, commit, dispatch }) {
       commit("UI_AUTO_SAVE_DIALOG_SET", false);
-      dispatch("VIEW_LOADED", state.autoSavedView);
+      dispatch("VIEWS_LOADED", state.autoSavedView);
     },
-    VIEW_LOADED({ commit }, view) {
-      commit("VIEW_ROWS_SET", parseInt(view.rows));
-      commit("VIEW_COLUMNS_SET", parseInt(view.columns));
-      commit("VIEW_GRID_SIZE_SET", view.rows * view.columns);
-      commit("VIEW_ITEMS_SET", view.items);
-      commit("VIEW_PUBLIC_SET", view.public);
-      commit("VIEW_STEP_SET", parseInt(view.step));
-      commit("VIEW_ITEMS_SET", view.items);
-      commit("VIEW_RUN_ID_SET", view.meta.run);
-      commit("VIEW_SIMULATION_SET", view.meta.simulation);
-      commit("VIEW_LAST_LOADED_ID_SET", view._id);
-      // commit('VIEW_ZOOM_LEVELS', view.zoomLevels);
+    VIEWS_LOADED({ commit }, view) {
+      commit("VIEWS_ROWS_SET", parseInt(view.rows));
+      commit("VIEWS_COLUMNS_SET", parseInt(view.columns));
+      commit("VIEWS_GRID_SIZE_SET", view.rows * view.columns);
+      commit("VIEWS_ITEMS_SET", view.items);
+      commit("VIEWS_PUBLIC_SET", view.public);
+      commit("VIEWS_STEP_SET", parseInt(view.step));
+      commit("VIEWS_ITEMS_SET", view.items);
+      commit("VIEWS_RUN_ID_SET", view.meta.run);
+      commit("VIEWS_SIMULATION_SET", view.meta.simulation);
+      commit("VIEWS_LAST_LOADED_ID_SET", view._id);
+      // commit('VIEWS_ZOOM_LEVELS', view.zoomLevels);
 
-      commit("PLOT_VIEW_TIME_STEP_SET", parseInt(view.step));
+      commit("VIEW_SAVED_TIME_STEP_SET", parseInt(view.step));
       commit("UI_PAUSE_GALLERY_SET", true);
     },
-    VIEW_UPDATE_EXISTING({ state, dispatch }, name) {
-      dispatch("VIEW_BUILD_FORM_DATA", name);
+    VIEWS_UPDATE_EXISTING({ state, dispatch }, name) {
+      dispatch("VIEWS_BUILD_FORM_DATA", name);
       const formData = state.formData;
       this.$girderRest.put(`/view/${state.lastLoadedID}`, formData);
     },
