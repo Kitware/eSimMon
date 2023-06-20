@@ -49,7 +49,6 @@ export default {
       loadAutoSave: "VIEWS_LOAD_AUTO_SAVE",
       togglePlayPause: "UI_TOGGLE_PLAY_PAUSE",
     }),
-
     ...mapMutations({
       setAutoSaveName: "VIEWS_AUTO_SAVE_NAME_SET",
       setAutoSavedViewDialog: "UI_AUTO_SAVE_DIALOG_SET",

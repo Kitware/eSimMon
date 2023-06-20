@@ -10,10 +10,6 @@ export default {
     scale: 0,
     viewTimeStep: 1,
     numReady: 0,
-    times: null,
-    loadedTimeStepData: null,
-    availableTimeSteps: null,
-    details: null,
     selectedPlots: [],
   },
   getters: {
@@ -46,18 +42,6 @@ export default {
     },
     VIEW_NUM_READY(state) {
       return state.numReady;
-    },
-    VIEW_TIMES(state) {
-      return state.times;
-    },
-    VIEW_LOADED_TIME_STEPS(state) {
-      return state.loadedTimeStepData;
-    },
-    VIEW_AVAILABLE_TIME_STEPS(state) {
-      return state.availableTimeSteps;
-    },
-    VIEW_DETAILS(state) {
-      return state.details;
     },
     VIEW_SELECTIONS(state) {
       return state.selectedPlots;
@@ -103,11 +87,8 @@ export default {
     VIEW_AVAILABLE_TIME_STEPS_SET(state, val) {
       state.availableTimeSteps = val;
     },
-    VIEW_DETAILS_SET(state, val) {
-      state.details = val;
-    },
     VIEW_SELECTIONS_SET(state, val) {
-      return (state.selectedPlots = val);
+      state.selectedPlots = val;
     },
   },
   actions: {
@@ -154,16 +135,6 @@ export default {
         ...state.availableTimeSteps,
         ...data,
       });
-    },
-    VIEW_DETAILS_UPDATED({ state, commit }, data) {
-      let itemId = Object.keys(data)[0];
-      if (!state.details) {
-        commit("VIEW_DETAILS_SET", {});
-      }
-      let oldData = state.details[`${itemId}`] || {};
-      let newData = Object.values(data)[0];
-      let updated = { ...oldData, ...newData };
-      commit("VIEW_DETAILS_SET", { ...state.details, [`${itemId}`]: updated });
     },
     VIEW_SELECTIONS_UPDATED({ state }, data) {
       const { newId, oldId } = data;

@@ -165,19 +165,20 @@ export default {
     },
     VIEWS_BUILD_ITEMS_OBJECT({ commit, getters }, layout) {
       const items = {};
-      const plotDetails = getters.VIEW_DETAILS;
       layout.forEach((item) => {
-        const { row, col } = item;
-        const { legend, log, range, xAxis, zoom } =
-          plotDetails[`${item.itemId}`];
-        items[`${row}::${col}`] = {
-          id: item.itemId,
-          legend,
-          log,
-          range,
-          xAxis,
-          zoom,
-        };
+        const { row, col, itemId } = item;
+        if (itemId) {
+          const { legend, log, range, xAxis, zoom } =
+            getters[`${itemId}/PLOT_DATA_COMPLETE`];
+          items[`${row}::${col}`] = {
+            id: itemId,
+            legend,
+            log,
+            range,
+            xAxis,
+            zoom,
+          };
+        }
       });
       commit("VIEWS_ITEMS_SET", items);
     },

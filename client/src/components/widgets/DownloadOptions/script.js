@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { mapActions, mapGetters, mapMutations } from "vuex";
+import { mapGetters, mapMutations } from "vuex";
 
 export default {
   inject: ["girderRest"],
@@ -107,9 +107,6 @@ export default {
     },
   },
   methods: {
-    ...mapActions({
-      updatePlotDetails: "VIEW_DETAILS_UPDATED",
-    }),
     ...mapMutations({
       showDownloadOptions: "UI_SHOW_DOWNLOAD_OPTIONS_SET",
     }),

@@ -1,5 +1,5 @@
 import { isNil, isEqual } from "lodash";
-import { mapGetters, mapActions, mapMutations } from "vuex";
+import { mapGetters, mapMutations } from "vuex";
 import {
   setAxesStyling,
   scalarBarAutoLayout,
@@ -73,7 +73,6 @@ export default {
       maxTimeStep: "VIEW_MAX_TIME_STEP",
       allAvailableTimeSteps: "VIEW_AVAILABLE_TIME_STEPS",
       allLoadedTimeStepData: "VIEW_LOADED_TIME_STEPS",
-      plotDetails: "VIEW_DETAILS",
     }),
     availableTimeSteps() {
       if (!this.allAvailableTimeSteps) {
@@ -88,22 +87,13 @@ export default {
       return this.allLoadedTimeStepData[`${this.itemId}`] || [];
     },
     range() {
-      if (!this.itemId || !this.plotDetails) {
-        return null;
-      }
-      return this.plotDetails[`${this.itemId}`]?.range;
+      return this.$store.getters[`${this.itemId}/PLOT_GLOBAL_RANGE`] || null;
     },
     xAxis() {
-      if (!this.itemId || !this.plotDetails) {
-        return null;
-      }
-      return this.plotDetails[`${this.itemId}`]?.xAxis;
+      return this.$store.getters[`${this.itemId}/PLOT_X_AXIS`] || null;
     },
     zoom() {
-      if (!this.itemId || !this.plotDetails) {
-        return null;
-      }
-      return this.plotDetails[`${this.itemId}`]?.zoom;
+      return this.$store.getters[`${this.itemId}/PLOT_ZOOM`] || null;
     },
   },
 
@@ -152,9 +142,6 @@ export default {
   },
 
   methods: {
-    ...mapActions({
-      updatePlotDetails: "VIEW_DETAILS_UPDATED",
-    }),
     ...mapMutations({
       updateCellCount: "VIEW_VISIBLE_CELL_COUNT_SET",
       setMaxTimeStep: "VIEW_MAX_TIME_STEP_SET",
@@ -169,6 +156,9 @@ export default {
       setRunId: "VIEWS_RUN_ID_SET",
       setSimulation: "VIEWS_SIMULATION_SET",
     }),
+    updatePlotZoom(zoom) {
+      this.$store.dispatch(`${this.itemId}/PLOT_ZOOM_CHANGED`, zoom);
+    },
     react: function () {
       let nextImage = this.loadedTimeStepData.find(
         (img) => img.timestep == this.currentTimeStep,
@@ -193,7 +183,7 @@ export default {
       if (readyForUpdate) {
         if (!this.xaxis) {
           let xAxis = nextImage.data.xLabel;
-          this.updatePlotDetails({ [`${this.itemId}`]: { xAxis } });
+          this.$store.commit(`${this.itemId}/PLOT_X_AXIS_SET`, xAxis);
         }
         if (
           this.renderer &&
@@ -596,15 +586,7 @@ export default {
           const yMid = (finalY - startY) / 2 + startY;
           const focalPoint = [xMid, yMid, 0.0];
           let zoomData = { focalPoint: focalPoint, scale: scale, serverScale };
-          if (this.syncZoom) {
-            for (let [key, value] of Object.entries(this.plotDetails)) {
-              if (value.xAxis === this.xAxis) {
-                this.updatePlotDetails({ [`${key}`]: { zoom: zoomData } });
-              }
-            }
-          } else {
-            this.updatePlotDetails({ [`${this.itemId}`]: { zoom: zoomData } });
-          }
+          this.updatePlotZoom(zoomData);
           const range = this.actor.getBounds();
           const [x0, x1, y0, y1] = range.map((r) => r.toPrecision(4));
           this.rangeText = `xRange: [${x0}, ${x1}] yRange: [${y0}, ${y1}]`;
@@ -612,15 +594,7 @@ export default {
       });
     },
     resetZoom() {
-      if (this.syncZoom) {
-        for (let [key, value] of Object.entries(this.plotDetails)) {
-          if (value.xAxis === this.xAxis) {
-            this.updatePlotDetails({ [`${key}`]: { zoom: null } });
-          }
-        }
-      } else {
-        this.updatePlotDetails({ [`${this.itemId}`]: { zoom: null } });
-      }
+      this.updatePlotZoom(null);
     },
     updateZoomedView() {
       if (!this.renderer) {

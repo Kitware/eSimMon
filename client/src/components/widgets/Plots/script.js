@@ -6,6 +6,8 @@ import VtkPlot from "../VTKPlot";
 import { PlotType } from "../../../utils/constants";
 import { PlotFetcher } from "../../../utils/plotFetcher";
 
+import plot from "../../../store/plot";
+
 // // Number of timesteps to prefetch data for.
 // const TIMESTEPS_TO_PREFETCH = 3;
 
@@ -48,7 +50,6 @@ export default {
       allAvailableTimeSteps: "VIEW_AVAILABLE_TIME_STEPS",
       initialDataLoaded: "VIEW_INITIAL_LOAD",
       numReady: "VIEW_NUM_READY",
-      plotDetails: "VIEW_DETAILS",
     }),
     plotDataLoaded() {
       let loadedTimeSteps = this.allLoadedTimeStepData || [];
@@ -62,12 +63,10 @@ export default {
       return range.every((s) => loaded.includes(s) || !available.includes(s));
     },
     timeAverage() {
-      if (this.itemId) {
-        let details = this.plotDetails[this.itemId] || {};
-        let avg = details?.timeAverage || 0;
-        return avg;
-      }
-      return 0;
+      return this.$store.getters[`${this.itemId}/PLOT_TIME_AVERAGE`] || 0;
+    },
+    plotXAxis() {
+      return this.$store.getters[`${this.itemId}/PLOT_X_AXIS`] || 0;
     },
   },
 
@@ -121,7 +120,6 @@ export default {
       updateTimes: "VIEW_UPDATE_ITEM_TIMES",
       setLoadedTimeStepData: "VIEW_UPDATE_LOADED_TIME_STEPS",
       setAvailableTimeSteps: "VIEW_UPDATE_AVAILABLE_TIME_STEPS",
-      updatePlotDetails: "VIEW_DETAILS_UPDATED",
       updateVisiblePlots: "VIEW_SELECTIONS_UPDATED",
     }),
     ...mapMutations({
@@ -138,6 +136,23 @@ export default {
       setShouldAutoSave: "VIEWS_AUTO_SAVE_RUN_SET",
       updateNumReady: "VIEW_NUM_READY_SET",
     }),
+    updatePlotLegendVisibility: function (legend) {
+      this.$store.commit(`${this.itemId}/PLOT_LEGEND_VISIBILITY_SET`, legend);
+    },
+    updatePlotLogScaling: function (log) {
+      this.$store.commit(`${this.itemId}/PLOT_LOG_SCALING_SET`, log);
+    },
+    updatePlotXAxis: function (xAxis) {
+      this.$store.commit(`${this.itemId}/PLOT_X_AXIS_SET`, xAxis);
+    },
+    updatePlotZoom: function (zoom) {
+      this.$store.dispatch(`${this.itemId}/PLOT_ZOOM_CHANGED`, zoom);
+    },
+    resetPlotData: function () {
+      if (this.itemId) {
+        this.$store.dispatch(`${this.itemId}/PLOT_DATA_RESET`);
+      }
+    },
     preventDefault: function (event) {
       event.preventDefault();
     },
@@ -246,6 +261,18 @@ export default {
       this.setInitialLoad(false);
       this.$refs[`${this.row}-${this.col}`].react();
     },
+    /**
+     * One plot store module is registered for each instance.
+     * On plot change unregister the old module and register the new one.
+     */
+    updateRegisteredModules: function (oldId) {
+      if (this.$store.hasModule(oldId)) {
+        this.$store.unregisterModule(oldId);
+      }
+      if (!this.$store.hasModule(this.itemId)) {
+        this.$store.registerModule(this.itemId, plot);
+      }
+    },
     loadGallery: function (event) {
       this.preventDefault(event);
       var items = JSON.parse(
@@ -257,15 +284,7 @@ export default {
       this.cleanUpOldPlotData();
       const oldId = this.itemId;
       this.itemId = items[0]._id;
-      this.updatePlotDetails({
-        [`${this.itemId}`]: {
-          zoom: null,
-          log: false,
-          xAxis: "",
-          range: null,
-          legend: false,
-        },
-      });
+      this.updateRegisteredModules(oldId);
       this.updateVisiblePlots({ newId: this.itemId, oldId });
       this.setLoadedFromView(false);
       this.setRun();
@@ -274,16 +293,12 @@ export default {
       this.cleanUpOldPlotData();
       const oldId = this.itemId;
       this.itemId = item.id || "";
+      this.updateRegisteredModules(oldId);
       this.setLoadedFromView(true);
-      this.updatePlotDetails({
-        [`${this.itemId}`]: {
-          zoom: item.zoom,
-          log: item.log,
-          xAxis: item.xAxis,
-          range: item.range,
-          legend: item.legend,
-        },
-      });
+      this.updatePlotLegendVisibility(item.legend);
+      this.updatePlotLogScaling(item.log);
+      this.updatePlotXAxis(item.xAxis);
+      this.updatePlotZoom(item.zoom);
       this.updateVisiblePlots({ newId: this.itemId, oldId });
     },
     /**
@@ -372,7 +387,7 @@ export default {
         event: e,
         step: this.currentTimeStep,
         isPlotly: this.plotType === PlotType.Plotly,
-        xAxis: this.plotDetails[this.itemId].xAxis,
+        xAxis: this.plotXAxis,
         clearGallery: this.clearGallery,
         averaging: this.timeAverage,
       };
@@ -397,7 +412,7 @@ export default {
     },
     cleanUpOldPlotData() {
       this.updateTimes({ [`${this.itemId}`]: [] });
-      this.updatePlotDetails({ [`${this.itemId}`]: null });
+      this.resetPlotData();
     },
     loadedTimeStepData() {
       if (!this.allLoadedTimeStepData) {
@@ -434,5 +449,9 @@ export default {
 
   destroyed() {
     this.updateCellCount(-1);
+  },
+
+  beforeDestroyed() {
+    this.$store.unregisterModule(this.itemId);
   },
 };
