@@ -66,15 +66,11 @@ export default {
       syncZoom: "UI_ZOOM_SYNC",
       timeStepSelectorMode: "UI_TIME_STEP_SELECTOR",
       numReady: "VIEW_NUM_READY",
-      allTimes: "VIEW_TIMES",
-      allAvailableTimeSteps: "VIEW_AVAILABLE_TIME_STEPS",
-      allLoadedTimeStepData: "VIEW_LOADED_TIME_STEPS",
     }),
     availableTimeSteps() {
-      if (!this.allAvailableTimeSteps) {
-        return [];
-      }
-      return this.allAvailableTimeSteps[`${this.itemId}`] || [];
+      return (
+        this.$store.getters[`${this.itemId}/PLOT_AVAILABLE_TIME_STEPS`] || []
+      );
     },
     legendVisibility() {
       return (
@@ -82,10 +78,7 @@ export default {
       );
     },
     loadedTimeStepData() {
-      if (!this.allLoadedTimeStepData) {
-        return [];
-      }
-      return this.allLoadedTimeStepData[`${this.itemId}`] || [];
+      return this.$store.getters[`${this.itemId}/PLOT_LOADED_TIME_STEPS`] || [];
     },
     logScaling() {
       return this.$store.getters[`${this.itemId}/PLOT_LOG_SCALING`] || null;
@@ -94,7 +87,7 @@ export default {
       return this.$store.getters[`${this.itemId}/PLOT_GLOBAL_RANGE`] || null;
     },
     times() {
-      return this.allTimes[`${this.itemId}`] || [];
+      return this.$store.getters[`${this.itemId}/PLOT_TIMES`] || [];
     },
     xAxis() {
       return this.$store.getters[`${this.itemId}/PLOT_X_AXIS`] || null;

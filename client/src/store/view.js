@@ -1,13 +1,12 @@
 export default {
   state: {
     currentTimeStep: 1,
-    visibleCells: 0,
-    itemId: null,
+    cellCount: 0,
+    selectedPlotId: null,
     maxTimeStep: 0,
     loadedFromView: false,
     initialLoad: true,
     minTimeStep: 1,
-    scale: 0,
     viewTimeStep: 1,
     numReady: 0,
     selectedPlots: [],
@@ -17,10 +16,10 @@ export default {
       return state.currentTimeStep;
     },
     VIEW_VISIBLE_CELL_COUNT(state) {
-      return state.visibleCells;
+      return state.cellCount;
     },
     VIEW_CURRENT_ITEM_ID(state) {
-      return state.itemId;
+      return state.selectedPlotId;
     },
     VIEW_MAX_TIME_STEP(state) {
       return state.maxTimeStep;
@@ -33,9 +32,6 @@ export default {
     },
     VIEW_MIN_TIME_STEP(state) {
       return state.minTimeStep;
-    },
-    VIEW_SCALE(state) {
-      return state.scale;
     },
     VIEW_SAVED_TIME_STEP(state) {
       return state.viewTimeStep;
@@ -52,10 +48,10 @@ export default {
       state.currentTimeStep = val;
     },
     VIEW_VISIBLE_CELL_COUNT_SET(state, val) {
-      state.visibleCells += val;
+      state.cellCount += val;
     },
     VIEW_CURRENT_ITEM_ID_SET(state, val) {
-      state.itemId = val;
+      state.selectedPlotId = val;
     },
     VIEW_MAX_TIME_STEP_SET(state, val) {
       state.maxTimeStep = val;
@@ -69,73 +65,17 @@ export default {
     VIEW_MIN_TIME_STEP_SET(state, val) {
       state.minTimeStep = val;
     },
-    VIEW_SCALE_SET(state, val) {
-      state.scale = val;
-    },
     VIEW_SAVED_TIME_STEP_SET(state, val) {
       state.viewTimeStep = val;
     },
     VIEW_NUM_READY_SET(state, val) {
       state.numReady = val;
     },
-    VIEW_TIMES_SET(state, val) {
-      state.times = val;
-    },
-    VIEW_LOADED_TIME_STEPS_SET(state, val) {
-      state.loadedTimeStepData = val;
-    },
-    VIEW_AVAILABLE_TIME_STEPS_SET(state, val) {
-      state.availableTimeSteps = val;
-    },
     VIEW_SELECTIONS_SET(state, val) {
       state.selectedPlots = val;
     },
   },
   actions: {
-    VIEW_MIN_TIME_STEP_CHANGED({ state, commit }) {
-      let newMin = Infinity;
-      Object.values(state.availableTimeSteps).forEach((ats) => {
-        const itemMin = Math.min(...ats);
-        newMin = itemMin < newMin ? itemMin : newMin;
-      });
-      if (state.maxTimeStep < newMin) {
-        commit("VIEW_MAX_TIME_STEP_SET", newMin);
-      }
-      commit("VIEW_MIN_TIME_STEP_SET", newMin);
-      if (!state.loadedFromView || !state.initialLoad) {
-        commit("VIEW_TIME_STEP_SET", Math.max(state.currentTimeStep, newMin));
-      }
-    },
-    VIEW_UPDATE_ITEM_TIMES({ state, commit }, data) {
-      let itemId = Object.keys(data)[0];
-      if (!itemId) {
-        return;
-      }
-
-      commit("VIEW_TIMES_SET", { ...state.times, ...data });
-    },
-    VIEW_UPDATE_LOADED_TIME_STEPS({ state, commit }, data) {
-      let itemId = Object.keys(data)[0];
-      if (!itemId) {
-        return;
-      }
-
-      commit("VIEW_LOADED_TIME_STEPS_SET", {
-        ...state.loadedTimeStepData,
-        ...data,
-      });
-    },
-    VIEW_UPDATE_AVAILABLE_TIME_STEPS({ state, commit }, data) {
-      let itemId = Object.keys(data)[0];
-      if (!itemId) {
-        return;
-      }
-
-      commit("VIEW_AVAILABLE_TIME_STEPS_SET", {
-        ...state.availableTimeSteps,
-        ...data,
-      });
-    },
     VIEW_SELECTIONS_UPDATED({ state }, data) {
       const { newId, oldId } = data;
       const pos = state.selectedPlots.findIndex((id) => id === oldId);

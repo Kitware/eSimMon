@@ -46,27 +46,31 @@ export default {
       numrows: "VIEWS_ROWS",
       minTimeStep: "VIEW_MIN_TIME_STEP",
       maxTimeStep: "VIEW_MAX_TIME_STEP",
-      allLoadedTimeStepData: "VIEW_LOADED_TIME_STEPS",
-      allAvailableTimeSteps: "VIEW_AVAILABLE_TIME_STEPS",
       initialDataLoaded: "VIEW_INITIAL_LOAD",
       numReady: "VIEW_NUM_READY",
     }),
     plotDataLoaded() {
-      let loadedTimeSteps = this.allLoadedTimeStepData || [];
-      loadedTimeSteps = loadedTimeSteps[`${this.itemId}`] || [];
-      const loaded = loadedTimeSteps.map((data) => data.timestep);
+      const loaded = this.loadedTimeStepData.map((data) => data.timestep);
       let start = this.currentTimeStep;
       let end = this.currentTimeStep + this.timeAverage;
       const range = [...Array(end - start + 1).keys()].map((x) => x + start);
-      let available = this.allAvailableTimeSteps || [];
-      available = available[`${this.itemId}`] || [];
-      return range.every((s) => loaded.includes(s) || !available.includes(s));
+      return range.every(
+        (s) => loaded.includes(s) || !this.availableTimeSteps.includes(s),
+      );
     },
     timeAverage() {
       return this.$store.getters[`${this.itemId}/PLOT_TIME_AVERAGE`] || 0;
     },
     plotXAxis() {
       return this.$store.getters[`${this.itemId}/PLOT_X_AXIS`] || 0;
+    },
+    loadedTimeStepData() {
+      return this.$store.getters[`${this.itemId}/PLOT_LOADED_TIME_STEPS`] || [];
+    },
+    availableTimeSteps() {
+      return (
+        this.$store.getters[`${this.itemId}/PLOT_AVAILABLE_TIME_STEPS`] || []
+      );
     },
   },
 
@@ -116,10 +120,6 @@ export default {
 
   methods: {
     ...mapActions({
-      updateMinTimeStep: "VIEW_MIN_TIME_STEP_CHANGED",
-      updateTimes: "VIEW_UPDATE_ITEM_TIMES",
-      setLoadedTimeStepData: "VIEW_UPDATE_LOADED_TIME_STEPS",
-      setAvailableTimeSteps: "VIEW_UPDATE_AVAILABLE_TIME_STEPS",
       updateVisiblePlots: "VIEW_SELECTIONS_UPDATED",
     }),
     ...mapMutations({
@@ -136,6 +136,22 @@ export default {
       setShouldAutoSave: "VIEWS_AUTO_SAVE_RUN_SET",
       updateNumReady: "VIEW_NUM_READY_SET",
     }),
+    setAvailableTimeSteps: function (steps) {
+      this.$store.dispatch(
+        `${this.itemId}/PLOT_AVAILABLE_TIME_STEPS_CHANGED`,
+        steps,
+      );
+    },
+    setLoadedTimeStepData: function (loaded) {
+      this.$store.commit(`${this.itemId}/PLOT_LOADED_TIME_STEPS_SET`, loaded);
+    },
+    updateTimes: function (times) {
+      if (!this.itemId) {
+        return;
+      }
+
+      this.$store.commit(`${this.itemId}/PLOT_TIMES_SET`, times);
+    },
     updatePlotLegendVisibility: function (legend) {
       this.$store.commit(`${this.itemId}/PLOT_LEGEND_VISIBILITY_SET`, legend);
     },
@@ -182,34 +198,30 @@ export default {
       return new Promise((resolve) => {
         reader.onload = () => {
           let img;
-          const ltsd = this.loadedTimeStepData();
+          const ltsd = this.loadedTimeStepData;
           if (this.plotType === PlotType.VTK) {
             img = decode(reader.result);
             this.$refs[`${this.row}-${this.col}`].addRenderer(img);
             if (!this.isTimeStepLoaded(timeStep)) {
-              this.setLoadedTimeStepData({
-                [`${this.itemId}`]: [
-                  ...ltsd,
-                  {
-                    timestep: timeStep,
-                    data: img,
-                  },
-                ],
-              });
-            }
-          } else if (!this.isTimeStepLoaded(timeStep)) {
-            img = JSON.parse(reader.result);
-            this.setLoadedTimeStepData({
-              [`${this.itemId}`]: [
+              this.setLoadedTimeStepData([
                 ...ltsd,
                 {
                   timestep: timeStep,
-                  data: img.data,
-                  layout: img.layout,
-                  type: img.type,
+                  data: img,
                 },
-              ],
-            });
+              ]);
+            }
+          } else if (!this.isTimeStepLoaded(timeStep)) {
+            img = JSON.parse(reader.result);
+            this.setLoadedTimeStepData([
+              ...ltsd,
+              {
+                timestep: timeStep,
+                data: img.data,
+                layout: img.layout,
+                type: img.type,
+              },
+            ]);
           }
           return resolve(img);
         };
@@ -236,9 +248,8 @@ export default {
         .initialize()
         .then((response) => {
           ats = response.steps.sort((a, b) => a - b);
-          this.setAvailableTimeSteps({ [`${this.itemId}`]: ats });
-          this.updateTimes({ [`${this.itemId}`]: response.time });
-          this.updateMinTimeStep();
+          this.setAvailableTimeSteps(ats);
+          this.updateTimes(response.time);
           // Make sure there is an image associated with this time step
           let step = ats.find((step) => step === this.currentTimeStep);
           if (isNil(step)) {
@@ -309,7 +320,7 @@ export default {
       if (!this.itemId) {
         return null;
       }
-      const ats = this.availableTimeSteps();
+      const ats = this.availableTimeSteps;
       const previousTimeStep = ats.findIndex((step) => step >= timestep);
       return previousTimeStep !== -1 ? ats[previousTimeStep - 1] : ats[0];
     },
@@ -321,7 +332,7 @@ export default {
       if (!this.itemId) {
         return null;
       }
-      const ats = this.availableTimeSteps();
+      const ats = this.availableTimeSteps;
       const nextTimeStep = ats.findIndex((step) => step > timestep);
       return nextTimeStep !== -1 ? ats[nextTimeStep] : null;
     },
@@ -332,7 +343,7 @@ export default {
       if (!this.itemId) {
         return false;
       }
-      const ltsd = this.loadedTimeStepData();
+      const ltsd = this.loadedTimeStepData;
       return ltsd.findIndex((image) => image.timestep === timestep) !== -1;
     },
     /**
@@ -343,7 +354,7 @@ export default {
       if (!this.itemId) {
         return false;
       }
-      const ats = this.availableTimeSteps();
+      const ats = this.availableTimeSteps;
       return ats.findIndex((step) => step === timestep) !== -1;
     },
     /**
@@ -411,23 +422,8 @@ export default {
       this.setShouldAutoSave(true);
     },
     cleanUpOldPlotData() {
-      this.updateTimes({ [`${this.itemId}`]: [] });
+      this.updateTimes([]);
       this.resetPlotData();
-    },
-    loadedTimeStepData() {
-      if (!this.allLoadedTimeStepData) {
-        return [];
-      }
-
-      const ltsd = this.allLoadedTimeStepData[`${this.itemId}`] || [];
-      return ltsd;
-    },
-    availableTimeSteps() {
-      if (!this.allAvailableTimeSteps) {
-        return [];
-      }
-
-      return this.allAvailableTimeSteps[`${this.itemId}`] || [];
     },
     async fetchPlotsForAveraging() {
       if (this.timeAverage >= 0) {

@@ -71,20 +71,14 @@ export default {
       boxSelector: "UI_BOX_SELECTOR",
       numReady: "VIEW_NUM_READY",
       maxTimeStep: "VIEW_MAX_TIME_STEP",
-      allAvailableTimeSteps: "VIEW_AVAILABLE_TIME_STEPS",
-      allLoadedTimeStepData: "VIEW_LOADED_TIME_STEPS",
     }),
     availableTimeSteps() {
-      if (!this.allAvailableTimeSteps) {
-        return [];
-      }
-      return this.allAvailableTimeSteps[`${this.itemId}`] || [];
+      return (
+        this.$store.getters[`${this.itemId}/PLOT_AVAILABLE_TIME_STEPS`] || []
+      );
     },
     loadedTimeStepData() {
-      if (!this.allLoadedTimeStepData) {
-        return [];
-      }
-      return this.allLoadedTimeStepData[`${this.itemId}`] || [];
+      return this.$store.getters[`${this.itemId}/PLOT_LOADED_TIME_STEPS`] || [];
     },
     range() {
       return this.$store.getters[`${this.itemId}/PLOT_GLOBAL_RANGE`] || null;

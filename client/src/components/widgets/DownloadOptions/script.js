@@ -42,7 +42,6 @@ export default {
   },
   computed: {
     ...mapGetters({
-      availableTimeSteps: "VIEW_AVAILABLE_TIME_STEPS",
       visible: "UI_SHOW_DOWNLOAD_OPTIONS",
       mathJaxOptions: "UI_MATH_JAX_OPTIONS",
     }),
@@ -62,13 +61,17 @@ export default {
     },
     minStep() {
       if (this.id) {
-        return Math.min(...this.availableTimeSteps[`${this.id}`]) || 0;
+        return Math.min(
+          ...this.$store.getters[`${this.id}/PLOT_AVAILABLE_TIME_STEPS`],
+        );
       }
       return 0;
     },
     maxStep() {
       if (this.id) {
-        return Math.max(...this.availableTimeSteps[`${this.id}`]) || 0;
+        return Math.max(
+          ...this.$store.getters[`${this.id}/PLOT_AVAILABLE_TIME_STEPS`],
+        );
       }
       return 0;
     },

@@ -7,6 +7,9 @@ export default {
     timeAverage: 0,
     xAxis: "",
     zoom: null,
+    times: null,
+    loadedTimeStepData: null,
+    availableTimeSteps: null,
   }),
   getters: {
     PLOT_LEGEND_VISIBILITY(state) {
@@ -30,6 +33,15 @@ export default {
     PLOT_DATA_COMPLETE(state) {
       return { ...state };
     },
+    PLOT_TIMES(state) {
+      return state.times;
+    },
+    PLOT_LOADED_TIME_STEPS(state) {
+      return state.loadedTimeStepData;
+    },
+    PLOT_AVAILABLE_TIME_STEPS(state) {
+      return state.availableTimeSteps;
+    },
   },
   mutations: {
     PLOT_LEGEND_VISIBILITY_SET(state, val) {
@@ -50,6 +62,15 @@ export default {
     PLOT_ZOOM_SET(state, val) {
       state.zoom = val;
     },
+    PLOT_TIMES_SET(state, val) {
+      state.times = val;
+    },
+    PLOT_LOADED_TIME_STEPS_SET(state, val) {
+      state.loadedTimeStepData = val;
+    },
+    PLOT_AVAILABLE_TIME_STEPS_SET(state, val) {
+      state.availableTimeSteps = val;
+    },
   },
   actions: {
     PLOT_DATA_RESET({ commit }) {
@@ -69,6 +90,25 @@ export default {
           }
         });
       }
+    },
+    PLOT_AVAILABLE_TIME_STEPS_CHANGED({ commit, rootGetters }, timeSteps) {
+      commit("PLOT_AVAILABLE_TIME_STEPS_SET", timeSteps);
+
+      let timeStep = rootGetters.VIEW_TIME_STEP;
+      let minTimeStep = rootGetters.VIEW_MIN_TIME_STEP;
+      let maxTimeStep = rootGetters.VIEW_MAX_TIME_STEP;
+      let tsMin = Math.min(...timeSteps);
+      let tsMax = Math.max(...timeSteps);
+
+      let newMin =
+        maxTimeStep < minTimeStep ? tsMin : Math.min(minTimeStep, tsMin);
+      let newMax =
+        maxTimeStep < minTimeStep ? tsMax : Math.max(maxTimeStep, tsMax);
+      let newCurr = Math.max(Math.min(timeStep, newMax), newMin);
+
+      commit("VIEW_MIN_TIME_STEP_SET", newMin, { root: true });
+      commit("VIEW_MAX_TIME_STEP_SET", newMax, { root: true });
+      commit("VIEW_TIME_STEP_SET", newCurr, { root: true });
     },
   },
 };
