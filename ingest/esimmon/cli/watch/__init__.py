@@ -893,9 +893,9 @@ async def watch_shots_index(
             continue
 
         for shot in index:
-            username = shot["username"]
+            username = shot.get("username", None)
             users.add(username)
-            machine = shot["machine_name"]
+            machine = shot.get("machine_name", None)
             machines.add(machine)
 
             # TODO Update the meta data
