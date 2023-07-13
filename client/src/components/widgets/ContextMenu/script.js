@@ -7,6 +7,8 @@ import { mapGetters, mapMutations } from "vuex";
 const REQUEST = "in progress";
 const COMPLETE = "complete";
 const FAIL = "failed";
+const OFFSET_PLOTLY = [135, 150];
+const OFFSET_VTK = [90, 50];
 
 export default {
   name: "ContextMenu",
@@ -58,6 +60,12 @@ export default {
         return [this.itemInfo.event.clientX, this.itemInfo.event.clientY];
       }
       return [0, 0];
+    },
+    offsetPos() {
+      if (this.itemInfo?.isPlotly) {
+        return [this.pos[0] + OFFSET_PLOTLY[0], this.pos[1] + OFFSET_PLOTLY[1]];
+      }
+      return [this.pos[0] + OFFSET_VTK[0], this.pos[1] + OFFSET_VTK[1]];
     },
     parameter() {
       return this.itemInfo ? this.itemInfo.name : "";
