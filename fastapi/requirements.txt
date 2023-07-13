@@ -1,7 +1,7 @@
 fastapi
 ffmpeg-python
 girder-client
-pydantic[dotenv]
+pydantic[dotenv] == 1.10.11
 uvicorn[standard]
 msgpack
 plotly
