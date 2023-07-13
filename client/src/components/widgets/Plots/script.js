@@ -48,6 +48,7 @@ export default {
       maxTimeStep: "VIEW_MAX_TIME_STEP",
       initialDataLoaded: "VIEW_INITIAL_LOAD",
       numReady: "VIEW_NUM_READY",
+      gridSize: "VIEWS_GRID_SIZE",
     }),
     plotDataLoaded() {
       const loaded = this.loadedTimeStepData.map((data) => data.timestep);
@@ -124,9 +125,9 @@ export default {
     }),
     ...mapMutations({
       updateCellCount: "VIEW_VISIBLE_CELL_COUNT_SET",
+      setGridSize: "VIEWS_GRID_SIZE_SET",
       setMaxTimeStep: "VIEW_MAX_TIME_STEP_SET",
       setItemId: "VIEW_CURRENT_ITEM_ID_SET",
-      setLoadedFromView: "VIEW_LOADED_FROM_VIEW_SET",
       setInitialLoad: "VIEW_INITIAL_LOAD_SET",
       showContextMenu: "UI_SHOW_CONTEXT_MENU_SET",
       setContextMenuItemData: "UI_CONTEXT_MENU_ITEM_DATA_SET",
@@ -297,7 +298,6 @@ export default {
       this.itemId = items[0]._id;
       this.updateRegisteredModules(oldId);
       this.updateVisiblePlots({ newId: this.itemId, oldId });
-      this.setLoadedFromView(false);
       this.setRun();
     },
     loadTemplateGallery: function (item) {
@@ -305,7 +305,6 @@ export default {
       const oldId = this.itemId;
       this.itemId = item.id || "";
       this.updateRegisteredModules(oldId);
-      this.setLoadedFromView(true);
       this.updatePlotLegendVisibility(item.legend);
       this.updatePlotLogScaling(item.log);
       this.updatePlotXAxis(item.xAxis);
@@ -440,11 +439,11 @@ export default {
   },
 
   mounted() {
-    this.updateCellCount(1);
+    this.setGridSize(this.numcols * this.numrows);
   },
 
   destroyed() {
-    this.updateCellCount(-1);
+    this.setGridSize(this.gridSize - 1);
   },
 
   beforeDestroyed() {

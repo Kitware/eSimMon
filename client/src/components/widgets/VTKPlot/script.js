@@ -80,9 +80,6 @@ export default {
     loadedTimeStepData() {
       return this.$store.getters[`${this.itemId}/PLOT_LOADED_TIME_STEPS`] || [];
     },
-    range() {
-      return this.$store.getters[`${this.itemId}/PLOT_GLOBAL_RANGE`] || null;
-    },
     xAxis() {
       return this.$store.getters[`${this.itemId}/PLOT_X_AXIS`] || null;
     },
@@ -102,12 +99,6 @@ export default {
       immediate: true,
       handler() {
         this.$nextTick(this.updateViewPort);
-      },
-    },
-    range: {
-      immediate: true,
-      handler() {
-        this.react();
       },
     },
     zoom: {
@@ -137,10 +128,8 @@ export default {
 
   methods: {
     ...mapMutations({
-      updateCellCount: "VIEW_VISIBLE_CELL_COUNT_SET",
       setMaxTimeStep: "VIEW_MAX_TIME_STEP_SET",
       setItemId: "VIEW_CURRENT_ITEM_ID_SET",
-      setLoadedFromView: "VIEW_LOADED_FROM_VIEW_SET",
       setInitialLoad: "VIEW_INITIAL_LOAD_SET",
       updateRendererCount: "UI_RENDERER_COUNT_SET",
       showContextMenu: "UI_SHOW_CONTEXT_MENU_SET",

@@ -221,19 +221,22 @@ export default {
       dispatch("VIEWS_LOADED", state.autoSavedView);
     },
     VIEWS_LOADED({ commit }, view) {
+      // Make sure that view is registered as a change no matter size
+      commit("VIEWS_GRID_SIZE_SET", 0);
+
       commit("VIEWS_ROWS_SET", parseInt(view.rows));
       commit("VIEWS_COLUMNS_SET", parseInt(view.columns));
-      commit("VIEWS_GRID_SIZE_SET", view.rows * view.columns);
       commit("VIEWS_ITEMS_SET", view.items);
       commit("VIEWS_PUBLIC_SET", view.public);
       commit("VIEWS_STEP_SET", parseInt(view.step));
-      commit("VIEWS_ITEMS_SET", view.items);
       commit("VIEWS_RUN_ID_SET", view.meta.run);
       commit("VIEWS_SIMULATION_SET", view.meta.simulation);
       commit("VIEWS_LAST_LOADED_ID_SET", view._id);
 
       commit("VIEW_SAVED_TIME_STEP_SET", parseInt(view.step));
       commit("UI_PAUSE_GALLERY_SET", true);
+
+      commit("VIEW_LOADING_FROM_SAVED_SET", true);
     },
     VIEWS_UPDATE_EXISTING({ state, dispatch }, name) {
       dispatch("VIEWS_BUILD_FORM_DATA", name);

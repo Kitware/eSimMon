@@ -4,12 +4,12 @@ export default {
     cellCount: 0,
     selectedPlotId: null,
     maxTimeStep: 0,
-    loadedFromView: false,
     initialLoad: true,
     minTimeStep: 1,
     viewTimeStep: 1,
     numReady: 0,
     selectedPlots: [],
+    loadingFromSaved: false,
   },
   getters: {
     VIEW_TIME_STEP(state) {
@@ -23,9 +23,6 @@ export default {
     },
     VIEW_MAX_TIME_STEP(state) {
       return state.maxTimeStep;
-    },
-    VIEW_LOADED_FROM_VIEW(state) {
-      return state.loadedFromView;
     },
     VIEW_INITIAL_LOAD(state) {
       return state.initialLoad;
@@ -42,6 +39,9 @@ export default {
     VIEW_SELECTIONS(state) {
       return state.selectedPlots;
     },
+    VIEW_LOADING_FROM_SAVED(state) {
+      return state.loadingFromSaved;
+    },
   },
   mutations: {
     VIEW_TIME_STEP_SET(state, val) {
@@ -55,9 +55,6 @@ export default {
     },
     VIEW_MAX_TIME_STEP_SET(state, val) {
       state.maxTimeStep = val;
-    },
-    VIEW_LOADED_FROM_VIEW_SET(state, val) {
-      state.loadedFromView = val;
     },
     VIEW_INITIAL_LOAD_SET(state, val) {
       state.initialLoad = val;
@@ -73,6 +70,9 @@ export default {
     },
     VIEW_SELECTIONS_SET(state, val) {
       state.selectedPlots = val;
+    },
+    VIEW_LOADING_FROM_SAVED_SET(state, val) {
+      state.loadingFromSaved = val;
     },
   },
   actions: {

@@ -142,10 +142,6 @@ export default {
         this.load();
       }
     },
-    loadSelectedRow(_event, selection) {
-      this.selection = selection.item;
-      this.load();
-    },
     rowClass(item) {
       if (this.selection && this.selection._id === item._id) {
         return "selectedRow";

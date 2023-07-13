@@ -63,16 +63,17 @@ export default {
       setSimulation: "VIEWS_SIMULATION_SET",
       setMaxTimeStep: "VIEW_MAX_TIME_STEP_SET",
       updateNumReady: "VIEW_NUM_READY_SET",
+      loadingFromSaved: "VIEW_LOADING_FROM_SAVED_SET",
     }),
 
     addColumn() {
       this.setColumns(this.numcols + 1);
-      this.setGridSize(this.rows * this.columns);
+      this.setGridSize(this.numrows * this.numcols);
     },
 
     addRow() {
       this.setRows(this.numrows + 1);
-      this.setGridSize(this.rows * this.columns);
+      this.setGridSize(this.numrows * this.numcols);
     },
 
     decrementTimeStep(should_pause) {
@@ -168,12 +169,12 @@ export default {
 
     removeColumn() {
       this.setColumns(this.numcols - 1);
-      this.setGridSize(this.rows * this.columns);
+      this.setGridSize(this.numrows * this.numcols);
     },
 
     removeRow() {
       this.setRows(this.numrows - 1);
-      this.setGridSize(this.rows * this.columns);
+      this.setGridSize(this.numrows * this.numcols);
     },
 
     tick() {
@@ -181,7 +182,7 @@ export default {
         return;
       }
       var wait_ms = 500;
-      if (this.numReady >= this.cellCount) {
+      if (this.numReady >= this.gridSize) {
         this.incrementTimeStep(false);
       }
       this.setTickWait(wait_ms);
@@ -204,18 +205,16 @@ export default {
     },
 
     applyView() {
-      this.numLoadedGalleries = this.gridSize;
       this.$refs.plots.forEach((cell) => {
         const { row, col } = cell;
         const item = this.items[`${row}::${col}`];
+        cell.clearGallery();
         if (item) {
           cell.loadTemplateGallery(item);
-        } else {
-          cell.clearGallery();
         }
       });
-      this.setGridSize(0);
       this.setCurrentTimeStep(this.viewTimeStep);
+      this.loadingFromSaved(false);
     },
 
     resetView() {
@@ -275,11 +274,11 @@ export default {
       simulation: "VIEWS_SIMULATION",
       step: "VIEWS_STEP",
       maxTimeStep: "VIEW_MAX_TIME_STEP",
-      loadedFromView: "VIEW_LOADED_FROM_VIEW",
       initialDataLoaded: "VIEW_INITIAL_LOAD",
       minTimeStep: "VIEW_MIN_TIME_STEP",
       viewTimeStep: "VIEW_SAVED_TIME_STEP",
       numReady: "VIEW_NUM_READY",
+      loadedFromSaved: "VIEW_LOADING_FROM_SAVED",
     }),
 
     location: {
@@ -312,7 +311,7 @@ export default {
     loggedOut() {
       const loggedOut = this.girderRest.user === null;
       if (loggedOut) {
-        if (this.cellCount > 0) {
+        if (this.gridSize > 0) {
           this.resetView();
         }
       } else {
@@ -369,19 +368,15 @@ export default {
     },
 
     gridSize(size) {
-      if (size === this.cellCount && this.$refs.plots) {
-        this.applyView();
-      }
-    },
-
-    cellCount(count) {
-      if (this.gridSize === count) {
+      if (size === 0) {
+        this.setGridSize(this.numrows * this.numcols);
+      } else {
         if (this.loggedOut && this.$refs.plots) {
           this.$refs.plots.forEach((cell) => {
             cell.loadTemplateGallery({ id: null, zoom: null });
             cell.clearGallery();
           });
-        } else if (this.$refs.plots) {
+        } else if (this.$refs.plots && this.loadedFromSaved) {
           this.applyView();
         }
       }
