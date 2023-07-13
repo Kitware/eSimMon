@@ -118,7 +118,7 @@ export default {
     itemId: {
       immediate: true,
       handler(new_id, old_id) {
-        if (!new_id || new_id !== old_id) {
+        if (!new_id || (old_id && new_id !== old_id)) {
           this.removeRenderer();
           this.lastLoadedTimeStep = -1;
         }

@@ -15,5 +15,8 @@
       :plotDataLoaded="plotDataLoaded"
     />
     <vtk-plot :ref="row+'-'+col" v-if="plotType === 'vtk'" :itemId="itemId" />
+    <div class="plot">
+      <v-icon v-if="!plotType" large> input </v-icon>
+    </div>
   </v-card>
 </div>

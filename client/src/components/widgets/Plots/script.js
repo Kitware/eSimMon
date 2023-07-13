@@ -35,7 +35,7 @@ export default {
     return {
       itemId: "",
       plotFetcher: undefined,
-      plotType: PlotType.Plotly,
+      plotType: PlotType.None,
     };
   },
 
@@ -209,6 +209,7 @@ export default {
                 {
                   timestep: timeStep,
                   data: img,
+                  type: img.type,
                 },
               ]);
             }
@@ -220,7 +221,7 @@ export default {
                 timestep: timeStep,
                 data: img.data,
                 layout: img.layout,
-                type: img.type,
+                type: PlotType.Plotly,
               },
             ]);
           }
