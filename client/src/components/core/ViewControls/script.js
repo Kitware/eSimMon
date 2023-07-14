@@ -28,9 +28,9 @@ export default {
 
   methods: {
     ...mapActions({
-      fetchAllViews: "VIEWS_FETCH_ALL_AVAILABLE",
       toggleSyncZoom: "UI_TOGGLE_ZOOM_SYNC",
       toggleSelectTimeStep: "UI_TOGGLE_TIME_STEP",
+      fetchAllViews: "VIEWS_FETCH_ALL_AVAILABLE",
     }),
     ...mapMutations({
       setPaused: "UI_PAUSE_GALLERY_SET",

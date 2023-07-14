@@ -42,12 +42,12 @@ export default {
   computed: {
     ...mapGetters({
       currentTimeStep: "VIEW_TIME_STEP",
-      numcols: "VIEWS_COLUMNS",
-      numrows: "VIEWS_ROWS",
       minTimeStep: "VIEW_MIN_TIME_STEP",
       maxTimeStep: "VIEW_MAX_TIME_STEP",
       initialDataLoaded: "VIEW_INITIAL_LOAD",
       numReady: "VIEW_NUM_READY",
+      numcols: "VIEWS_COLUMNS",
+      numrows: "VIEWS_ROWS",
       gridSize: "VIEWS_GRID_SIZE",
     }),
     plotDataLoaded() {

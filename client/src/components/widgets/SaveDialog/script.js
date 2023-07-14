@@ -25,11 +25,11 @@ export default {
 
   computed: {
     ...mapGetters({
+      visible: "UI_SHOW_SAVE_DIALOG",
       columns: "VIEWS_COLUMNS",
       items: "VIEWS_ITEMS",
       meta: "VIEWS_METAS",
       rows: "VIEWS_ROWS",
-      visible: "UI_SHOW_SAVE_DIALOG",
       viewInfo: "VIEWS_INFO",
     }),
     saveDialog: {

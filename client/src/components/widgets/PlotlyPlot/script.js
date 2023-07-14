@@ -60,12 +60,12 @@ export default {
 
   computed: {
     ...mapGetters({
-      currentTimeStep: "VIEW_TIME_STEP",
-      numcols: "VIEWS_COLUMNS",
-      numrows: "VIEWS_ROWS",
       syncZoom: "UI_ZOOM_SYNC",
       timeStepSelectorMode: "UI_TIME_STEP_SELECTOR",
+      currentTimeStep: "VIEW_TIME_STEP",
       numReady: "VIEW_NUM_READY",
+      numcols: "VIEWS_COLUMNS",
+      numrows: "VIEWS_ROWS",
     }),
     availableTimeSteps() {
       return (
@@ -167,8 +167,8 @@ export default {
 
   methods: {
     ...mapMutations({
-      setTimeStep: "VIEW_TIME_STEP_SET",
       setPauseGallery: "UI_PAUSE_GALLERY_SET",
+      setTimeStep: "VIEW_TIME_STEP_SET",
       updateNumReady: "VIEW_NUM_READY_SET",
     }),
     updatePlotZoom(zoom) {
