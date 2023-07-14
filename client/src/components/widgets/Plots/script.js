@@ -6,6 +6,8 @@ import VtkPlot from "../VTKPlot";
 import { PlotType } from "../../../utils/constants";
 import { PlotFetcher } from "../../../utils/plotFetcher";
 
+import plot from "../../../store/plot";
+
 // // Number of timesteps to prefetch data for.
 // const TIMESTEPS_TO_PREFETCH = 3;
 
@@ -33,41 +35,43 @@ export default {
     return {
       itemId: "",
       plotFetcher: undefined,
-      plotType: PlotType.Plotly,
+      plotType: PlotType.None,
     };
   },
 
   computed: {
     ...mapGetters({
-      currentTimeStep: "PLOT_TIME_STEP",
-      numcols: "VIEW_COLUMNS",
-      numrows: "VIEW_ROWS",
-      minTimeStep: "PLOT_MIN_TIME_STEP",
-      maxTimeStep: "PLOT_MAX_TIME_STEP",
-      allLoadedTimeStepData: "PLOT_LOADED_TIME_STEPS",
-      allAvailableTimeSteps: "PLOT_AVAILABLE_TIME_STEPS",
-      initialDataLoaded: "PLOT_INITIAL_LOAD",
-      numReady: "PLOT_NUM_READY",
-      plotDetails: "PLOT_DETAILS",
+      currentTimeStep: "VIEW_TIME_STEP",
+      minTimeStep: "VIEW_MIN_TIME_STEP",
+      maxTimeStep: "VIEW_MAX_TIME_STEP",
+      initialDataLoaded: "VIEW_INITIAL_LOAD",
+      numReady: "VIEW_NUM_READY",
+      numcols: "VIEWS_COLUMNS",
+      numrows: "VIEWS_ROWS",
+      gridSize: "VIEWS_GRID_SIZE",
     }),
     plotDataLoaded() {
-      let loadedTimeSteps = this.allLoadedTimeStepData || [];
-      loadedTimeSteps = loadedTimeSteps[`${this.itemId}`] || [];
-      const loaded = loadedTimeSteps.map((data) => data.timestep);
+      const loaded = this.loadedTimeStepData.map((data) => data.timestep);
       let start = this.currentTimeStep;
       let end = this.currentTimeStep + this.timeAverage;
       const range = [...Array(end - start + 1).keys()].map((x) => x + start);
-      let available = this.allAvailableTimeSteps || [];
-      available = available[`${this.itemId}`] || [];
-      return range.every((s) => loaded.includes(s) || !available.includes(s));
+      return range.every(
+        (s) => loaded.includes(s) || !this.availableTimeSteps.includes(s),
+      );
     },
     timeAverage() {
-      if (this.itemId) {
-        let details = this.plotDetails[this.itemId] || {};
-        let avg = details?.timeAverage || 0;
-        return avg;
-      }
-      return 0;
+      return this.$store.getters[`${this.itemId}/PLOT_TIME_AVERAGE`] || 0;
+    },
+    plotXAxis() {
+      return this.$store.getters[`${this.itemId}/PLOT_X_AXIS`] || 0;
+    },
+    loadedTimeStepData() {
+      return this.$store.getters[`${this.itemId}/PLOT_LOADED_TIME_STEPS`] || [];
+    },
+    availableTimeSteps() {
+      return (
+        this.$store.getters[`${this.itemId}/PLOT_AVAILABLE_TIME_STEPS`] || []
+      );
     },
   },
 
@@ -117,27 +121,55 @@ export default {
 
   methods: {
     ...mapActions({
-      updateMinTimeStep: "PLOT_MIN_TIME_STEP_CHANGED",
-      updateTimes: "PLOT_UPDATE_ITEM_TIMES",
-      setLoadedTimeStepData: "PLOT_UPDATE_LOADED_TIME_STEPS",
-      setAvailableTimeSteps: "PLOT_UPDATE_AVAILABLE_TIME_STEPS",
-      updatePlotDetails: "PLOT_DETAILS_UPDATED",
-      updateVisiblePlots: "PLOT_SELECTIONS_UPDATED",
+      updateVisiblePlots: "VIEW_SELECTIONS_UPDATED",
     }),
     ...mapMutations({
-      updateCellCount: "PLOT_VISIBLE_CELL_COUNT_SET",
-      setMaxTimeStep: "PLOT_MAX_TIME_STEP_SET",
-      setItemId: "PLOT_CURRENT_ITEM_ID_SET",
-      setLoadedFromView: "PLOT_LOADED_FROM_VIEW_SET",
-      setInitialLoad: "PLOT_INITIAL_LOAD_SET",
+      updateCellCount: "VIEW_VISIBLE_CELL_COUNT_SET",
+      setGridSize: "VIEWS_GRID_SIZE_SET",
+      setMaxTimeStep: "VIEW_MAX_TIME_STEP_SET",
+      setItemId: "VIEW_CURRENT_ITEM_ID_SET",
+      setInitialLoad: "VIEW_INITIAL_LOAD_SET",
       showContextMenu: "UI_SHOW_CONTEXT_MENU_SET",
       setContextMenuItemData: "UI_CONTEXT_MENU_ITEM_DATA_SET",
-      setCurrentItemId: "PLOT_CURRENT_ITEM_ID_SET",
-      setRunId: "VIEW_RUN_ID_SET",
-      setSimulation: "VIEW_SIMULATION_SET",
-      setShouldAutoSave: "VIEW_AUTO_SAVE_RUN_SET",
-      updateNumReady: "PLOT_NUM_READY_SET",
+      setCurrentItemId: "VIEW_CURRENT_ITEM_ID_SET",
+      setRunId: "VIEWS_RUN_ID_SET",
+      setSimulation: "VIEWS_SIMULATION_SET",
+      setShouldAutoSave: "VIEWS_AUTO_SAVE_RUN_SET",
+      updateNumReady: "VIEW_NUM_READY_SET",
     }),
+    setAvailableTimeSteps: function (steps) {
+      this.$store.dispatch(
+        `${this.itemId}/PLOT_AVAILABLE_TIME_STEPS_CHANGED`,
+        steps,
+      );
+    },
+    setLoadedTimeStepData: function (loaded) {
+      this.$store.commit(`${this.itemId}/PLOT_LOADED_TIME_STEPS_SET`, loaded);
+    },
+    updateTimes: function (times) {
+      if (!this.itemId) {
+        return;
+      }
+
+      this.$store.commit(`${this.itemId}/PLOT_TIMES_SET`, times);
+    },
+    updatePlotLegendVisibility: function (legend) {
+      this.$store.commit(`${this.itemId}/PLOT_LEGEND_VISIBILITY_SET`, legend);
+    },
+    updatePlotLogScaling: function (log) {
+      this.$store.commit(`${this.itemId}/PLOT_LOG_SCALING_SET`, log);
+    },
+    updatePlotXAxis: function (xAxis) {
+      this.$store.commit(`${this.itemId}/PLOT_X_AXIS_SET`, xAxis);
+    },
+    updatePlotZoom: function (zoom) {
+      this.$store.dispatch(`${this.itemId}/PLOT_ZOOM_CHANGED`, zoom);
+    },
+    resetPlotData: function () {
+      if (this.itemId) {
+        this.$store.dispatch(`${this.itemId}/PLOT_DATA_RESET`);
+      }
+    },
     preventDefault: function (event) {
       event.preventDefault();
     },
@@ -167,34 +199,31 @@ export default {
       return new Promise((resolve) => {
         reader.onload = () => {
           let img;
-          const ltsd = this.loadedTimeStepData();
+          const ltsd = this.loadedTimeStepData;
           if (this.plotType === PlotType.VTK) {
             img = decode(reader.result);
             this.$refs[`${this.row}-${this.col}`].addRenderer(img);
             if (!this.isTimeStepLoaded(timeStep)) {
-              this.setLoadedTimeStepData({
-                [`${this.itemId}`]: [
-                  ...ltsd,
-                  {
-                    timestep: timeStep,
-                    data: img,
-                  },
-                ],
-              });
-            }
-          } else if (!this.isTimeStepLoaded(timeStep)) {
-            img = JSON.parse(reader.result);
-            this.setLoadedTimeStepData({
-              [`${this.itemId}`]: [
+              this.setLoadedTimeStepData([
                 ...ltsd,
                 {
                   timestep: timeStep,
-                  data: img.data,
-                  layout: img.layout,
+                  data: img,
                   type: img.type,
                 },
-              ],
-            });
+              ]);
+            }
+          } else if (!this.isTimeStepLoaded(timeStep)) {
+            img = JSON.parse(reader.result);
+            this.setLoadedTimeStepData([
+              ...ltsd,
+              {
+                timestep: timeStep,
+                data: img.data,
+                layout: img.layout,
+                type: PlotType.Plotly,
+              },
+            ]);
           }
           return resolve(img);
         };
@@ -221,9 +250,8 @@ export default {
         .initialize()
         .then((response) => {
           ats = response.steps.sort((a, b) => a - b);
-          this.setAvailableTimeSteps({ [`${this.itemId}`]: ats });
-          this.updateTimes({ [`${this.itemId}`]: response.time });
-          this.updateMinTimeStep();
+          this.setAvailableTimeSteps(ats);
+          this.updateTimes(response.time);
           // Make sure there is an image associated with this time step
           let step = ats.find((step) => step === this.currentTimeStep);
           if (isNil(step)) {
@@ -246,6 +274,18 @@ export default {
       this.setInitialLoad(false);
       this.$refs[`${this.row}-${this.col}`].react();
     },
+    /**
+     * One plot store module is registered for each instance.
+     * On plot change unregister the old module and register the new one.
+     */
+    updateRegisteredModules: function (oldId) {
+      if (this.$store.hasModule(oldId)) {
+        this.$store.unregisterModule(oldId);
+      }
+      if (!this.$store.hasModule(this.itemId)) {
+        this.$store.registerModule(this.itemId, plot);
+      }
+    },
     loadGallery: function (event) {
       this.preventDefault(event);
       var items = JSON.parse(
@@ -257,33 +297,19 @@ export default {
       this.cleanUpOldPlotData();
       const oldId = this.itemId;
       this.itemId = items[0]._id;
-      this.updatePlotDetails({
-        [`${this.itemId}`]: {
-          zoom: null,
-          log: false,
-          xAxis: "",
-          range: null,
-          legend: false,
-        },
-      });
+      this.updateRegisteredModules(oldId);
       this.updateVisiblePlots({ newId: this.itemId, oldId });
-      this.setLoadedFromView(false);
       this.setRun();
     },
     loadTemplateGallery: function (item) {
       this.cleanUpOldPlotData();
       const oldId = this.itemId;
       this.itemId = item.id || "";
-      this.setLoadedFromView(true);
-      this.updatePlotDetails({
-        [`${this.itemId}`]: {
-          zoom: item.zoom,
-          log: item.log,
-          xAxis: item.xAxis,
-          range: item.range,
-          legend: item.legend,
-        },
-      });
+      this.updateRegisteredModules(oldId);
+      this.updatePlotLegendVisibility(item.legend);
+      this.updatePlotLogScaling(item.log);
+      this.updatePlotXAxis(item.xAxis);
+      this.updatePlotZoom(item.zoom);
       this.updateVisiblePlots({ newId: this.itemId, oldId });
     },
     /**
@@ -294,7 +320,7 @@ export default {
       if (!this.itemId) {
         return null;
       }
-      const ats = this.availableTimeSteps();
+      const ats = this.availableTimeSteps;
       const previousTimeStep = ats.findIndex((step) => step >= timestep);
       return previousTimeStep !== -1 ? ats[previousTimeStep - 1] : ats[0];
     },
@@ -306,7 +332,7 @@ export default {
       if (!this.itemId) {
         return null;
       }
-      const ats = this.availableTimeSteps();
+      const ats = this.availableTimeSteps;
       const nextTimeStep = ats.findIndex((step) => step > timestep);
       return nextTimeStep !== -1 ? ats[nextTimeStep] : null;
     },
@@ -317,7 +343,7 @@ export default {
       if (!this.itemId) {
         return false;
       }
-      const ltsd = this.loadedTimeStepData();
+      const ltsd = this.loadedTimeStepData;
       return ltsd.findIndex((image) => image.timestep === timestep) !== -1;
     },
     /**
@@ -328,7 +354,7 @@ export default {
       if (!this.itemId) {
         return false;
       }
-      const ats = this.availableTimeSteps();
+      const ats = this.availableTimeSteps;
       return ats.findIndex((step) => step === timestep) !== -1;
     },
     /**
@@ -372,7 +398,7 @@ export default {
         event: e,
         step: this.currentTimeStep,
         isPlotly: this.plotType === PlotType.Plotly,
-        xAxis: this.plotDetails[this.itemId].xAxis,
+        xAxis: this.plotXAxis,
         clearGallery: this.clearGallery,
         averaging: this.timeAverage,
       };
@@ -396,23 +422,8 @@ export default {
       this.setShouldAutoSave(true);
     },
     cleanUpOldPlotData() {
-      this.updateTimes({ [`${this.itemId}`]: [] });
-      this.updatePlotDetails({ [`${this.itemId}`]: null });
-    },
-    loadedTimeStepData() {
-      if (!this.allLoadedTimeStepData) {
-        return [];
-      }
-
-      const ltsd = this.allLoadedTimeStepData[`${this.itemId}`] || [];
-      return ltsd;
-    },
-    availableTimeSteps() {
-      if (!this.allAvailableTimeSteps) {
-        return [];
-      }
-
-      return this.allAvailableTimeSteps[`${this.itemId}`] || [];
+      this.updateTimes([]);
+      this.resetPlotData();
     },
     async fetchPlotsForAveraging() {
       if (this.timeAverage >= 0) {
@@ -429,10 +440,14 @@ export default {
   },
 
   mounted() {
-    this.updateCellCount(1);
+    this.setGridSize(this.numcols * this.numrows);
   },
 
   destroyed() {
-    this.updateCellCount(-1);
+    this.setGridSize(this.gridSize - 1);
+  },
+
+  beforeDestroyed() {
+    this.$store.unregisterModule(this.itemId);
   },
 };

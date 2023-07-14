@@ -43,37 +43,37 @@ export default {
 
   methods: {
     ...mapActions({
-      viewAutoSaved: "VIEW_AUTO_SAVE",
-      createItems: "VIEW_BUILD_ITEMS_OBJECT",
-      fetchAutoSave: "VIEW_FETCH_AUTO_SAVE",
-      loadAutoSave: "VIEW_LOAD_AUTO_SAVE",
       togglePlayPause: "UI_TOGGLE_PLAY_PAUSE",
+      viewAutoSaved: "VIEWS_AUTO_SAVE",
+      createItems: "VIEWS_BUILD_ITEMS_OBJECT",
+      fetchAutoSave: "VIEWS_FETCH_AUTO_SAVE",
+      loadAutoSave: "VIEWS_LOAD_AUTO_SAVE",
     }),
-
     ...mapMutations({
-      setAutoSaveName: "VIEW_AUTO_SAVE_NAME_SET",
       setAutoSavedViewDialog: "UI_AUTO_SAVE_DIALOG_SET",
-      setColumns: "VIEW_COLUMNS_SET",
-      setCreator: "VIEW_CREATOR_SET",
-      setCurrentTimeStep: "PLOT_TIME_STEP_SET",
-      setGridSize: "VIEW_GRID_SIZE_SET",
       setPaused: "UI_PAUSE_GALLERY_SET",
-      setPublic: "VIEW_PUBLIC_SET",
-      setRows: "VIEW_ROWS_SET",
-      setRunId: "VIEW_RUN_ID_SET",
-      setSimulation: "VIEW_SIMULATION_SET",
-      setMaxTimeStep: "PLOT_MAX_TIME_STEP_SET",
-      updateNumReady: "PLOT_NUM_READY_SET",
+      setMaxTimeStep: "VIEW_MAX_TIME_STEP_SET",
+      updateNumReady: "VIEW_NUM_READY_SET",
+      loadingFromSaved: "VIEW_LOADING_FROM_SAVED_SET",
+      setCurrentTimeStep: "VIEW_TIME_STEP_SET",
+      setAutoSaveName: "VIEWS_AUTO_SAVE_NAME_SET",
+      setColumns: "VIEWS_COLUMNS_SET",
+      setCreator: "VIEWS_CREATOR_SET",
+      setGridSize: "VIEWS_GRID_SIZE_SET",
+      setPublic: "VIEWS_PUBLIC_SET",
+      setRows: "VIEWS_ROWS_SET",
+      setRunId: "VIEWS_RUN_ID_SET",
+      setSimulation: "VIEWS_SIMULATION_SET",
     }),
 
     addColumn() {
       this.setColumns(this.numcols + 1);
-      this.setGridSize(this.rows * this.columns);
+      this.setGridSize(this.numrows * this.numcols);
     },
 
     addRow() {
       this.setRows(this.numrows + 1);
-      this.setGridSize(this.rows * this.columns);
+      this.setGridSize(this.numrows * this.numcols);
     },
 
     decrementTimeStep(should_pause) {
@@ -169,12 +169,12 @@ export default {
 
     removeColumn() {
       this.setColumns(this.numcols - 1);
-      this.setGridSize(this.rows * this.columns);
+      this.setGridSize(this.numrows * this.numcols);
     },
 
     removeRow() {
       this.setRows(this.numrows - 1);
-      this.setGridSize(this.rows * this.columns);
+      this.setGridSize(this.numrows * this.numcols);
     },
 
     tick() {
@@ -182,7 +182,7 @@ export default {
         return;
       }
       var wait_ms = 500;
-      if (this.numReady >= this.cellCount) {
+      if (this.numReady >= this.gridSize) {
         this.incrementTimeStep(false);
       }
       this.setTickWait(wait_ms);
@@ -205,18 +205,16 @@ export default {
     },
 
     applyView() {
-      this.numLoadedGalleries = this.gridSize;
       this.$refs.plots.forEach((cell) => {
         const { row, col } = cell;
         const item = this.items[`${row}::${col}`];
+        cell.clearGallery();
         if (item) {
           cell.loadTemplateGallery(item);
-        } else {
-          cell.clearGallery();
         }
       });
-      this.setGridSize(0);
       this.setCurrentTimeStep(this.viewTimeStep);
+      this.loadingFromSaved(false);
     },
 
     resetView() {
@@ -262,25 +260,25 @@ export default {
   asyncComputed: {
     ...mapGetters({
       autoSavedViewDialog: "UI_AUTO_SAVE_DIALOG",
-      cellCount: "PLOT_VISIBLE_CELL_COUNT",
-      creator: "VIEW_CREATOR",
-      currentTimeStep: "PLOT_TIME_STEP",
-      gridSize: "VIEW_GRID_SIZE",
-      itemId: "PLOT_CURRENT_ITEM_ID",
-      items: "VIEW_ITEMS",
-      numcols: "VIEW_COLUMNS",
-      numrows: "VIEW_ROWS",
       paused: "UI_PAUSE_GALLERY",
-      runId: "VIEW_RUN_ID",
-      shouldAutoSave: "VIEW_AUTO_SAVE_RUN",
-      simulation: "VIEW_SIMULATION",
-      step: "VIEW_STEP",
-      maxTimeStep: "PLOT_MAX_TIME_STEP",
-      loadedFromView: "PLOT_LOADED_FROM_VIEW",
-      initialDataLoaded: "PLOT_INITIAL_LOAD",
-      minTimeStep: "PLOT_MIN_TIME_STEP",
-      viewTimeStep: "PLOT_VIEW_TIME_STEP",
-      numReady: "PLOT_NUM_READY",
+      cellCount: "VIEW_VISIBLE_CELL_COUNT",
+      currentTimeStep: "VIEW_TIME_STEP",
+      itemId: "VIEW_CURRENT_ITEM_ID",
+      maxTimeStep: "VIEW_MAX_TIME_STEP",
+      initialDataLoaded: "VIEW_INITIAL_LOAD",
+      minTimeStep: "VIEW_MIN_TIME_STEP",
+      viewTimeStep: "VIEW_SAVED_TIME_STEP",
+      numReady: "VIEW_NUM_READY",
+      loadedFromSaved: "VIEW_LOADING_FROM_SAVED",
+      creator: "VIEWS_CREATOR",
+      gridSize: "VIEWS_GRID_SIZE",
+      items: "VIEWS_ITEMS",
+      numcols: "VIEWS_COLUMNS",
+      numrows: "VIEWS_ROWS",
+      runId: "VIEWS_RUN_ID",
+      shouldAutoSave: "VIEWS_AUTO_SAVE_RUN",
+      simulation: "VIEWS_SIMULATION",
+      step: "VIEWS_STEP",
     }),
 
     location: {
@@ -313,7 +311,7 @@ export default {
     loggedOut() {
       const loggedOut = this.girderRest.user === null;
       if (loggedOut) {
-        if (this.cellCount > 0) {
+        if (this.gridSize > 0) {
           this.resetView();
         }
       } else {
@@ -370,19 +368,15 @@ export default {
     },
 
     gridSize(size) {
-      if (size === this.cellCount && this.$refs.plots) {
-        this.applyView();
-      }
-    },
-
-    cellCount(count) {
-      if (this.gridSize === count) {
+      if (size === 0) {
+        this.setGridSize(this.numrows * this.numcols);
+      } else {
         if (this.loggedOut && this.$refs.plots) {
           this.$refs.plots.forEach((cell) => {
             cell.loadTemplateGallery({ id: null, zoom: null });
             cell.clearGallery();
           });
-        } else if (this.$refs.plots) {
+        } else if (this.$refs.plots && this.loadedFromSaved) {
           this.applyView();
         }
       }

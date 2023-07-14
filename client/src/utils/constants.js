@@ -4,4 +4,5 @@ export const PlotType = {
   Mesh: "mesh-colormap",
   ColorMap: "colormap",
   Scatter: "scatter",
+  None: null,
 };

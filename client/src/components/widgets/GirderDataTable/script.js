@@ -10,7 +10,7 @@ export default {
 
   computed: {
     ...mapGetters({
-      selectedPlots: "PLOT_SELECTIONS",
+      selectedPlots: "VIEW_SELECTIONS",
     }),
   },
 

@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { mapActions, mapGetters, mapMutations } from "vuex";
+import { mapGetters, mapMutations } from "vuex";
 
 export default {
   inject: ["girderRest"],
@@ -42,7 +42,6 @@ export default {
   },
   computed: {
     ...mapGetters({
-      availableTimeSteps: "PLOT_AVAILABLE_TIME_STEPS",
       visible: "UI_SHOW_DOWNLOAD_OPTIONS",
       mathJaxOptions: "UI_MATH_JAX_OPTIONS",
     }),
@@ -62,13 +61,17 @@ export default {
     },
     minStep() {
       if (this.id) {
-        return Math.min(...this.availableTimeSteps[`${this.id}`]) || 0;
+        return Math.min(
+          ...this.$store.getters[`${this.id}/PLOT_AVAILABLE_TIME_STEPS`],
+        );
       }
       return 0;
     },
     maxStep() {
       if (this.id) {
-        return Math.max(...this.availableTimeSteps[`${this.id}`]) || 0;
+        return Math.max(
+          ...this.$store.getters[`${this.id}/PLOT_AVAILABLE_TIME_STEPS`],
+        );
       }
       return 0;
     },
@@ -107,9 +110,6 @@ export default {
     },
   },
   methods: {
-    ...mapActions({
-      updatePlotDetails: "PLOT_DETAILS_UPDATED",
-    }),
     ...mapMutations({
       showDownloadOptions: "UI_SHOW_DOWNLOAD_OPTIONS_SET",
     }),

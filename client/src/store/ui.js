@@ -22,6 +22,7 @@ export default {
       },
     },
     showDownloadOptions: false,
+    boxSelector: null,
   },
   getters: {
     UI_AUTO_SAVE_DIALOG(state) {
@@ -63,6 +64,9 @@ export default {
     UI_SHOW_DOWNLOAD_OPTIONS(state) {
       return state.showDownloadOptions;
     },
+    UI_BOX_SELECTOR(state) {
+      return state.boxSelector;
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {
@@ -100,6 +104,9 @@ export default {
     },
     UI_SHOW_DOWNLOAD_OPTIONS_SET(state, val) {
       state.showDownloadOptions = val;
+    },
+    UI_BOX_SELECTOR_SET(state, val) {
+      state.boxSelector = val;
     },
   },
   actions: {

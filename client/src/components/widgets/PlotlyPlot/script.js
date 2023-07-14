@@ -1,6 +1,6 @@
 import Plotly from "plotly.js-basic-dist-min";
 import { isEmpty, isEqual, isNil } from "lodash";
-import { mapGetters, mapActions, mapMutations } from "vuex";
+import { mapGetters, mapMutations } from "vuex";
 import { PlotType } from "../../../utils/constants";
 import Annotations from "../Annotations";
 
@@ -60,61 +60,40 @@ export default {
 
   computed: {
     ...mapGetters({
-      currentTimeStep: "PLOT_TIME_STEP",
-      numcols: "VIEW_COLUMNS",
-      numrows: "VIEW_ROWS",
       syncZoom: "UI_ZOOM_SYNC",
       timeStepSelectorMode: "UI_TIME_STEP_SELECTOR",
-      numReady: "PLOT_NUM_READY",
-      allTimes: "PLOT_TIMES",
-      allAvailableTimeSteps: "PLOT_AVAILABLE_TIME_STEPS",
-      allLoadedTimeStepData: "PLOT_LOADED_TIME_STEPS",
-      plotDetails: "PLOT_DETAILS",
+      currentTimeStep: "VIEW_TIME_STEP",
+      numReady: "VIEW_NUM_READY",
+      numcols: "VIEWS_COLUMNS",
+      numrows: "VIEWS_ROWS",
     }),
     availableTimeSteps() {
-      if (!this.allAvailableTimeSteps) {
-        return [];
-      }
-      return this.allAvailableTimeSteps[`${this.itemId}`] || [];
+      return (
+        this.$store.getters[`${this.itemId}/PLOT_AVAILABLE_TIME_STEPS`] || []
+      );
     },
     legendVisibility() {
-      if (!this.itemId || !this.plotDetails) {
-        return false;
-      }
-      return this.plotDetails[`${this.itemId}`]?.legend;
+      return (
+        this.$store.getters[`${this.itemId}/PLOT_LEGEND_VISIBILITY`] || false
+      );
     },
     loadedTimeStepData() {
-      if (!this.allLoadedTimeStepData) {
-        return [];
-      }
-      return this.allLoadedTimeStepData[`${this.itemId}`] || [];
+      return this.$store.getters[`${this.itemId}/PLOT_LOADED_TIME_STEPS`] || [];
     },
     logScaling() {
-      if (!this.itemId || !this.plotDetails) {
-        return null;
-      }
-      return this.plotDetails[`${this.itemId}`]?.log;
+      return this.$store.getters[`${this.itemId}/PLOT_LOG_SCALING`] || null;
     },
     range() {
-      if (!this.itemId || !this.plotDetails) {
-        return null;
-      }
-      return this.plotDetails[`${this.itemId}`]?.range;
+      return this.$store.getters[`${this.itemId}/PLOT_GLOBAL_RANGE`] || null;
     },
     times() {
-      return this.allTimes[`${this.itemId}`] || [];
+      return this.$store.getters[`${this.itemId}/PLOT_TIMES`] || [];
     },
     xAxis() {
-      if (!this.itemId || !this.plotDetails) {
-        return null;
-      }
-      return this.plotDetails[`${this.itemId}`]?.xAxis;
+      return this.$store.getters[`${this.itemId}/PLOT_X_AXIS`] || null;
     },
     zoom() {
-      if (!this.itemId || !this.plotDetails) {
-        return null;
-      }
-      return this.plotDetails[`${this.itemId}`]?.zoom;
+      return this.$store.getters[`${this.itemId}/PLOT_ZOOM`] || null;
     },
   },
 
@@ -187,14 +166,14 @@ export default {
   },
 
   methods: {
-    ...mapActions({
-      updatePlotDetails: "PLOT_DETAILS_UPDATED",
-    }),
     ...mapMutations({
-      setTimeStep: "PLOT_TIME_STEP_SET",
       setPauseGallery: "UI_PAUSE_GALLERY_SET",
-      updateNumReady: "PLOT_NUM_READY_SET",
+      setTimeStep: "VIEW_TIME_STEP_SET",
+      updateNumReady: "VIEW_NUM_READY_SET",
     }),
+    updatePlotZoom(zoom) {
+      this.$store.dispatch(`${this.itemId}/PLOT_ZOOM_CHANGED`, zoom);
+    },
     relayoutPlotly() {
       if (this.zoom) {
         return;
@@ -212,7 +191,7 @@ export default {
     },
     setXAxis(image) {
       let xAxis = image.layout.xaxis.title.text;
-      this.updatePlotDetails({ [`${this.itemId}`]: { xAxis } });
+      this.$store.commit(`${this.itemId}/PLOT_X_AXIS_SET`, xAxis);
     },
     applyLogScaling(image) {
       image.layout.xaxis.type = this.logScaling ? "log" : "linear";
@@ -355,15 +334,7 @@ export default {
           return;
         }
         let zoomRange = parseZoomValues(eventdata, this.range);
-        if (this.syncZoom) {
-          for (let [key, value] of Object.entries(this.plotDetails)) {
-            if (value.xAxis === this.xAxis) {
-              this.updatePlotDetails({ [`${key}`]: { zoom: zoomRange } });
-            }
-          }
-        } else {
-          this.updatePlotDetails({ [`${this.itemId}`]: { zoom: zoomRange } });
-        }
+        this.updatePlotZoom(zoomRange);
         this.react();
       });
       this.$refs.plotly.on("plotly_click", (data) => {
@@ -382,15 +353,7 @@ export default {
           return false;
         } else {
           this.rangeText = "";
-          if (this.syncZoom) {
-            for (let [key, value] of Object.entries(this.plotDetails)) {
-              if (value.xAxis === this.xAxis) {
-                this.updatePlotDetails({ [`${key}`]: { zoom: null } });
-              }
-            }
-          } else {
-            this.updatePlotDetails({ [`${this.itemId}`]: { zoom: null } });
-          }
+          this.updatePlotZoom(null);
         }
       });
       this.eventHandlersSet = true;
@@ -439,12 +402,16 @@ export default {
       this.rangeText = `xRange: [${x0}, ${x1}] yRange: [${y0}, ${y1}]`;
     },
     toggleLogScale() {
-      this.updatePlotDetails({ [`${this.itemId}`]: { log: !this.logScaling } });
+      this.$store.commit(
+        `${this.itemId}/PLOT_LOG_SCALING_SET`,
+        !this.logScaling,
+      );
     },
     toggleLegendVisibility() {
-      this.updatePlotDetails({
-        [`${this.itemId}`]: { legend: !this.legendVisibility },
-      });
+      this.$store.commit(
+        `${this.itemId}/PLOT_LEGEND_VISIBILITY_SET`,
+        !this.legendVisibility,
+      );
     },
   },
 

@@ -28,9 +28,9 @@ export default {
 
   methods: {
     ...mapActions({
-      fetchAllViews: "VIEW_FETCH_ALL_AVAILABLE",
       toggleSyncZoom: "UI_TOGGLE_ZOOM_SYNC",
       toggleSelectTimeStep: "UI_TOGGLE_TIME_STEP",
+      fetchAllViews: "VIEWS_FETCH_ALL_AVAILABLE",
     }),
     ...mapMutations({
       setPaused: "UI_PAUSE_GALLERY_SET",
@@ -50,12 +50,12 @@ export default {
 
   computed: {
     ...mapGetters({
-      lastSaved: "VIEW_LAST_SAVED",
-      numcols: "VIEW_COLUMNS",
-      numrows: "VIEW_ROWS",
-      run: "VIEW_RUN_ID",
-      simulation: "VIEW_SIMULATION",
-      step: "PLOT_TIME_STEP",
+      lastSaved: "VIEWS_LAST_SAVED",
+      numcols: "VIEWS_COLUMNS",
+      numrows: "VIEWS_ROWS",
+      run: "VIEWS_RUN_ID",
+      simulation: "VIEWS_SIMULATION",
+      step: "VIEW_TIME_STEP",
     }),
   },
 };

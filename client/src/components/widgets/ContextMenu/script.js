@@ -1,12 +1,14 @@
 import RangeDialog from "../RangeDialog";
 import DownloadOptions from "../DownloadOptions";
 import { v4 as uuidv4 } from "uuid";
-import { mapActions, mapGetters, mapMutations } from "vuex";
+import { mapGetters, mapMutations } from "vuex";
 
 // Enum values
 const REQUEST = "in progress";
 const COMPLETE = "complete";
 const FAIL = "failed";
+const OFFSET_PLOTLY = [135, 150];
+const OFFSET_VTK = [90, 50];
 
 export default {
   name: "ContextMenu",
@@ -41,10 +43,9 @@ export default {
     ...mapGetters({
       visible: "UI_SHOW_CONTEXT_MENU",
       itemInfo: "UI_CONTEXT_MENU_ITEM_DATA",
-      plotDetails: "PLOT_DETAILS",
       mathJaxOptions: "UI_MATH_JAX_OPTIONS",
-      minTimeStep: "PLOT_MIN_TIME_STEP",
-      maxTimeStep: "PLOT_MAX_TIME_STEP",
+      minTimeStep: "VIEW_MIN_TIME_STEP",
+      maxTimeStep: "VIEW_MAX_TIME_STEP",
     }),
     showMenu: {
       get() {
@@ -59,6 +60,12 @@ export default {
         return [this.itemInfo.event.clientX, this.itemInfo.event.clientY];
       }
       return [0, 0];
+    },
+    offsetPos() {
+      if (this.itemInfo?.isPlotly) {
+        return [this.pos[0] + OFFSET_PLOTLY[0], this.pos[1] + OFFSET_PLOTLY[1]];
+      }
+      return [this.pos[0] + OFFSET_VTK[0], this.pos[1] + OFFSET_VTK[1]];
     },
     parameter() {
       return this.itemInfo ? this.itemInfo.name : "";
@@ -76,12 +83,14 @@ export default {
     averaging() {
       return !this.itemInfo ? false : !!this.itemInfo?.averaging;
     },
+    plotDetails() {
+      return (
+        this.$store.getters[`${this.itemInfo?.id}/PLOT_DATA_COMPLETE`] || {}
+      );
+    },
   },
 
   methods: {
-    ...mapActions({
-      updatePlotDetails: "PLOT_DETAILS_UPDATED",
-    }),
     ...mapMutations({
       showContextMenu: "UI_SHOW_CONTEXT_MENU_SET",
       updateItemInfo: "UI_CONTEXT_MENU_ITEM_DATA_SET",
@@ -116,8 +125,9 @@ export default {
       this.updateItemInfo({ ...this.itemInfo, uuid });
       const { name } = this.itemInfo;
       this.downloads.push({ type, uuid, name, status: REQUEST });
-      let details = this.plotDetails[`${this.itemInfo.id}`];
-      details = details ? `&details=${JSON.stringify(details)}` : "";
+      let details = this.plotDetails
+        ? `&details=${JSON.stringify(this.plotDetails)}`
+        : "";
       this.girderRest
         .get(`${this.fastRestUrl}/${endpoint}${details}`, {
           responseType: "blob",
@@ -170,9 +180,10 @@ export default {
       if (clear) {
         this.range = 0;
       }
-      this.updatePlotDetails({
-        [`${this.itemInfo.id}`]: { timeAverage: Number(this.range) },
-      });
+      this.$store.commit(
+        `${this.itemInfo.id}/PLOT_TIME_AVERAGE_SET`,
+        Number(this.range),
+      );
     },
     canAverage() {
       const xAxis = this.itemInfo?.xAxis || "";

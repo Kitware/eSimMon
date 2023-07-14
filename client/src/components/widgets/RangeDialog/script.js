@@ -41,13 +41,16 @@ export default {
   },
   methods: {
     ...mapActions({
-      updatePlotDetails: "PLOT_DETAILS_UPDATED",
+      updatePlotGlobalRange: "VIEW_PLOT_GLOBAL_RANGE_UPDATED",
     }),
+    updatePlotGlobalRange(range) {
+      this.$store.commit(`${this.id}/PLOT_GLOBAL_RANGE_SET`, range);
+    },
     save() {
       const min = parseFloat(this.newStart);
       const max = parseFloat(this.newEnd);
       const range = max - min < 1 ? null : [min, max];
-      this.updatePlotDetails({ [`${this.id}`]: { range } });
+      this.updatePlotGlobalRange(range);
       this.settingsDialog = false;
     },
     clear() {

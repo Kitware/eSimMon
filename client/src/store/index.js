@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import plots from "./plots";
+import plots from "./view";
 import ui from "./ui";
 import views from "./views";
 
