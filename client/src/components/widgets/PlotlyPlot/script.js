@@ -1,6 +1,6 @@
 import Plotly from "plotly.js-basic-dist-min";
 import { isEmpty, isEqual, isNil } from "lodash";
-import { mapGetters, mapMutations } from "vuex";
+import { mapActions, mapGetters, mapMutations } from "vuex";
 import { PlotType } from "../../../utils/constants";
 import Annotations from "../Annotations";
 
@@ -166,6 +166,9 @@ export default {
   },
 
   methods: {
+    ...mapActions({
+      toggleSelectTimeStep: "UI_TOGGLE_TIME_STEP",
+    }),
     ...mapMutations({
       setPauseGallery: "UI_PAUSE_GALLERY_SET",
       setTimeStep: "VIEW_TIME_STEP_SET",
@@ -344,6 +347,7 @@ export default {
             this.selectedTime = parseFloat(data.points[0].x);
             this.findClosestTime();
             this.selectTimeStepFromPlot();
+            this.toggleSelectTimeStep();
           }
         }
       });
