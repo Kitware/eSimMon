@@ -51,9 +51,7 @@ export default {
     resetZoom(e) {
       if (!this.syncZoom && !this.selectTimeStep) {
         document.elementsFromPoint(e.clientX, e.clientY).forEach((elem) => {
-          console.log(elem.classList);
           if (elem.classList[0] === "plot") {
-            console.log(elem.__vue__);
             elem.__vue__.resetZoom();
           }
         });
