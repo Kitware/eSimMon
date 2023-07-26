@@ -986,10 +986,10 @@
   resolved "https://registry.yarnpkg.com/@babel/regjsgen/-/regjsgen-0.8.0.tgz#f0ba69b075e1f05fb2825b7fad991e7adbb18310"
   integrity sha512-x/rqGMdzj+fWZvCOYForTghzbtqPDZ5gPwaoNGHdgDfF2QA/XZbCBp4Moo5scrkAMPhB7z26XM/AaHuIJdgauA==
 
-"@babel/runtime@7.16.7":
-  version "7.16.7"
-  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.16.7.tgz#03ff99f64106588c9c403c6ecb8c3bafbbdff1fa"
-  integrity sha512-9E9FJowqAsytyOY6LG+1KuueckRL+aQW+mKvXRXnuFGyRAyepJPmEo9vgMfXUA6O9u3IeEdv9MAkppFcaQwogQ==
+"@babel/runtime@7.17.9":
+  version "7.17.9"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.17.9.tgz#d19fbf802d01a8cb6cf053a64e472d42c434ba72"
+  integrity sha512-lSiBBvodq29uShpWGNbgFdKYNiFDo5/HIYsaCEY9ff4sb10x9jizo2+pRrSyF4jKZCXqgzuqBOQKbUm90gQwJg==
   dependencies:
     regenerator-runtime "^0.13.4"
 
@@ -1414,10 +1414,10 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
-"@kitware/vtk.js@^22.6.1":
-  version "22.6.2"
-  resolved "https://registry.yarnpkg.com/@kitware/vtk.js/-/vtk.js-22.6.2.tgz#3bc2902c191a9e4224493a5101050bbff90eec07"
-  integrity sha512-w2nOL1LGOOY8zVyKQ/ZhiBXyaoF73EwowvYsIdMJsdqUy7B9Vx1lbl8O5OyqA+Dp7ck7cOsB+PKK3I1P7PFFAA==
+"@kitware/vtk.js@^25.15.1":
+  version "25.15.2"
+  resolved "https://registry.yarnpkg.com/@kitware/vtk.js/-/vtk.js-25.15.2.tgz#314dbb7c25edfd44b134185be6493a6f775d8a88"
+  integrity sha512-bekuiKfB2O9IRJBGXScnWDqA1nT9yAoJJ9t/GTritdrhx4B9kwtcj8sc4MTX000UN7sVruyHoM/NF5qeKvx+fQ==
   dependencies:
     "@babel/runtime" "7.17.9"
     commander "9.2.0"
@@ -7699,7 +7699,7 @@ read-pkg@^5.1.1, read-pkg@^5.2.0:
     parse-json "^5.0.0"
     type-fest "^0.6.0"
 
-readable-stream@^2.0.1, readable-stream@~2.3.6:
+readable-stream@^2.0.1:
   version "2.3.8"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.3.8.tgz#91125e8042bba1b9887f49345f6277027ce8be9b"
   integrity sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA==
