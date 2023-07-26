@@ -90,18 +90,22 @@ export default {
     },
     itemId: {
       immediate: true,
-      handler() {
-        this.plotFetcher = new PlotFetcher(
-          this.itemId,
-          (itemId) => this.callFastEndpoint(`variables/${itemId}/timesteps`),
-          (itemId, timestep) =>
-            this.callFastEndpoint(
-              `variables/${itemId}/timesteps/${timestep}/plot`,
-              { responseType: "blob" },
-            ),
-          (response, timeStep) => this.resolveTimeStepData(response, timeStep),
-        );
+      handler(newId, oldId) {
+        if (this.plotFetcher && oldId !== newId) {
+          this.plotFetcher.cancelAllTasks();
+        }
         if (this.itemId) {
+          this.plotFetcher = new PlotFetcher(
+            this.itemId,
+            (itemId) => this.callFastEndpoint(`variables/${itemId}/timesteps`),
+            (itemId, timestep) =>
+              this.callFastEndpoint(
+                `variables/${itemId}/timesteps/${timestep}/plot`,
+                { responseType: "blob" },
+              ),
+            (response, timeStep, itemId) =>
+              this.resolveTimeStepData(response, timeStep, itemId),
+          );
           this.plotFetcher.initialize().then(() => {
             this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
             this.loadVariable();
@@ -197,6 +201,10 @@ export default {
         this.plotType = PlotType.Plotly;
       }
       return new Promise((resolve) => {
+        if (this.plotType === PlotType.None) {
+          return;
+        }
+
         reader.onload = () => {
           let img;
           const ltsd = this.loadedTimeStepData;
@@ -306,11 +314,11 @@ export default {
       const oldId = this.itemId;
       this.itemId = item.id || "";
       this.updateRegisteredModules(oldId);
+      this.updateVisiblePlots({ newId: this.itemId, oldId });
       this.updatePlotLegendVisibility(item.legend);
       this.updatePlotLogScaling(item.log);
       this.updatePlotXAxis(item.xAxis);
       this.updatePlotZoom(item.zoom);
-      this.updateVisiblePlots({ newId: this.itemId, oldId });
     },
     /**
      * Returns the previous valid timestep, first image if no timestep exists.
