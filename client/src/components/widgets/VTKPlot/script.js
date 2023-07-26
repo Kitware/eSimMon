@@ -535,8 +535,8 @@ export default {
         const pos = callData.position;
         const point = [pos.x, pos.y, 0.0];
         picker.pick(point, this.renderer);
-        if (picker.getActors().length !== 0 && this.startPoints) {
-          const pickedPoints = picker.getPickedPositions();
+        const pickedPoints = picker.getPickedPositions();
+        if (pickedPoints.length && this.startPoints) {
           if (isEqual(pickedPoints[0], this.startPoints)) {
             // This was just a single click
             return;
