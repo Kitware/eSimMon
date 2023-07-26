@@ -41,11 +41,28 @@ export default {
       if (this.syncZoom && !this.selectTimeStep) {
         const allRenderers = this.$root.$children[0].$refs.plots;
         allRenderers.forEach((plotCell) => {
-          if (plotCell.renderer) {
-            plotCell.resetZoom();
+          const { col, row } = plotCell.$options.propsData;
+          if (plotCell.$refs[`${row}-${col}`]?.renderer) {
+            plotCell.$refs[`${row}-${col}`].resetZoom();
           }
         });
       }
+    },
+    resetZoom(e) {
+      if (!this.syncZoom && !this.selectTimeStep) {
+        document.elementsFromPoint(e.clientX, e.clientY).forEach((elem) => {
+          if (elem.classList[0] === "plot") {
+            elem.__vue__.resetZoom();
+          }
+        });
+      }
+    },
+    contextMenu(e) {
+      document.elementsFromPoint(e.clientX, e.clientY).forEach((elem) => {
+        if (elem.classList[0] === "v-card") {
+          elem.__vue__.$options.parent.requestContextMenu(e);
+        }
+      });
     },
   },
 
@@ -74,7 +91,11 @@ export default {
     this.interactor.bindEvents(this.container);
     this.interactor.disable();
 
-    window.addEventListener("dblclick", this.resetAllZoom);
+    // After vtk.js 24.0.0 these events no longer propogate down to the correct
+    // children. Instead we need to listen and handle them here.y
+    this.container.addEventListener("dblclick", this.resetAllZoom);
+    this.container.addEventListener("dblclick", this.resetZoom);
+    this.container.addEventListener("contextmenu", this.contextMenu);
     window.addEventListener("resize", this.resize);
     this.resize();
     window.requestAnimationFrame(this.animate);

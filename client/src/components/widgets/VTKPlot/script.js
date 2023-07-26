@@ -1,8 +1,8 @@
 import { isNil, isEqual } from "lodash";
 import { mapGetters, mapMutations } from "vuex";
 import {
-  setAxesStyling,
   scalarBarAutoLayout,
+  customGenerateTicks,
 } from "../../../utils/vtkPlotStyling";
 import { PlotType } from "../../../utils/constants";
 import Annotations from "../Annotations";
@@ -13,13 +13,13 @@ import "@kitware/vtk.js/Rendering/Profiles/Geometry";
 import vtkActor from "@kitware/vtk.js/Rendering/Core/Actor";
 import vtkColorMaps from "@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps";
 import vtkColorTransferFunction from "@kitware/vtk.js/Rendering/Core/ColorTransferFunction";
-import vtkCubeAxesActor from "@kitware/vtk.js/Rendering/Core/CubeAxesActor";
 import vtkDataArray from "@kitware/vtk.js/Common/Core/DataArray";
 import vtkMapper from "@kitware/vtk.js/Rendering/Core/Mapper";
 import vtkPointPicker from "@kitware/vtk.js/Rendering/Core/PointPicker";
 import vtkPolyData from "@kitware/vtk.js/Common/DataModel/PolyData";
 import vtkRenderer from "@kitware/vtk.js/Rendering/Core/Renderer";
 import vtkScalarBarActor from "@kitware/vtk.js/Rendering/Core/ScalarBarActor";
+import vtkCustomCubeAxesActor from "../../../utils/vtkCustomCubeAxesActor";
 
 const X_AXES_LABEL_BOUNDS_ADJUSTMENT = 0.3;
 const Y_AXES_LABEL_BOUNDS_ADJUSTMENT = 0.001;
@@ -248,11 +248,11 @@ export default {
       this.camera.setParallelProjection(true);
 
       // Create axis
-      this.axes = vtkCubeAxesActor.newInstance();
+      this.axes = vtkCustomCubeAxesActor.newInstance();
       this.axes.setCamera(this.camera);
       this.axes.setAxisLabels(data.xLabel, data.yLabel, "");
-      this.axes.getGridActor().getProperty().setColor("black");
-      this.axes.getGridActor().getProperty().setLineWidth(0.1);
+      this.axes.getProperty().setColor("black");
+      this.axes.getProperty().setLineWidth(0.1);
       if (this.plotType === PlotType.ColorMap) {
         this.axes.setGridLines(false);
       }
@@ -260,6 +260,7 @@ export default {
 
       // Build color bar
       this.scalarBar = vtkScalarBarActor.newInstance();
+      this.scalarBar.setGenerateTicks(customGenerateTicks(6));
       this.scalarBar.setScalarsToColors(lut);
       this.scalarBar.setAxisLabel(data.colorLabel);
       this.scalarBar.setAxisTextStyle({ fontColor: "black" });
@@ -349,16 +350,9 @@ export default {
       // TODO: Remove this when we have more functionality in VTK charts
       // Use the original data from the mesh rather than the potentially scaled
       // actor data
-      this.axes.setDataBounds(this.mesh.getBounds());
-      this.axes.setScaleFrom(this.actor.getScale());
+      this.axes.setDataBounds(this.actor.getBounds());
       const [scale] = this.actor.getScale();
-      const { faces, edges, ticks, labels } = setAxesStyling(this.axes, scale);
-      this.axes.updateTextData(faces, edges, ticks, labels);
-      if (scale !== 1) {
-        // TODO: Remove this when we have more functionality in VTK charts
-        // Remove the axis border since scaling does not shrink the bounding box
-        this.axes.getGridActor().getMapper().getInputData().getLines().delete();
-      }
+      this.axes.setTicksScale(scale);
 
       // TODO: Remove this when we have more functionality in VTK charts
       // Hack to adjust the bounds to include the x label
@@ -541,8 +535,8 @@ export default {
         const pos = callData.position;
         const point = [pos.x, pos.y, 0.0];
         picker.pick(point, this.renderer);
-        if (picker.getActors().length !== 0 && this.startPoints) {
-          const pickedPoints = picker.getPickedPositions();
+        const pickedPoints = picker.getPickedPositions();
+        if (pickedPoints.length && this.startPoints) {
           if (isEqual(pickedPoints[0], this.startPoints)) {
             // This was just a single click
             return;
@@ -610,11 +604,6 @@ export default {
   mounted() {
     this.$el.addEventListener("mouseenter", this.enterCurrentRenderer);
     this.$el.addEventListener("mouseleave", this.exitCurrentRenderer);
-    this.$el.addEventListener("dblclick", () => {
-      if (this.renderer) {
-        this.resetZoom();
-      }
-    });
   },
 
   beforeDestroy() {
