@@ -213,8 +213,7 @@ export default {
           cell.loadTemplateGallery(item);
         }
       });
-      this.setCurrentTimeStep(this.viewTimeStep);
-      this.loadingFromSaved(false);
+      this.setCurrentTimeStep(this.minTimeStep);
     },
 
     resetView() {
@@ -405,6 +404,13 @@ export default {
 
       // Setup polling to autosave view
       this.autosave();
+    },
+
+    numReady(ready) {
+      if ((ready === this.gridSize) & this.loadedFromSaved) {
+        this.loadingFromSaved(false);
+        this.setCurrentTimeStep(this.viewTimeStep);
+      }
     },
   },
 };

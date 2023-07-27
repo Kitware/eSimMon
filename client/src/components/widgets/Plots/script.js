@@ -142,6 +142,10 @@ export default {
       updateNumReady: "VIEW_NUM_READY_SET",
     }),
     setAvailableTimeSteps: function (steps) {
+      if (!this.itemId) {
+        return;
+      }
+
       this.$store.dispatch(
         `${this.itemId}/PLOT_AVAILABLE_TIME_STEPS_CHANGED`,
         steps,
@@ -388,6 +392,7 @@ export default {
 
       // Update this plot
       this.$refs[`${this.row}-${this.col}`].react();
+      this.updateNumReady(this.numReady + 1);
     },
     /**
      * Display the the current timestep, if the current timestep is not valid
@@ -416,6 +421,7 @@ export default {
     },
     clearGallery() {
       this.updateVisiblePlots({ newId: null, oldId: this.itemId });
+      this.setAvailableTimeSteps([]);
       this.itemId = "";
       this.setInitialLoad(true);
     },
@@ -457,5 +463,6 @@ export default {
 
   beforeDestroyed() {
     this.$store.unregisterModule(this.itemId);
+    this.updateVisiblePlots({ newId: null, oldId: this.itemId });
   },
 };

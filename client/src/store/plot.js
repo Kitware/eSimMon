@@ -94,21 +94,23 @@ export default {
     PLOT_AVAILABLE_TIME_STEPS_CHANGED({ commit, rootGetters }, timeSteps) {
       commit("PLOT_AVAILABLE_TIME_STEPS_SET", timeSteps);
 
-      let timeStep = rootGetters.VIEW_TIME_STEP;
-      let minTimeStep = rootGetters.VIEW_MIN_TIME_STEP;
-      let maxTimeStep = rootGetters.VIEW_MAX_TIME_STEP;
-      let tsMin = Math.min(...timeSteps);
-      let tsMax = Math.max(...timeSteps);
+      let newMin = Infinity;
+      let newMax = -Infinity;
+      rootGetters.VIEW_SELECTIONS.forEach((id) => {
+        let steps = rootGetters[`${id}/PLOT_AVAILABLE_TIME_STEPS`] || [];
+        let tsMin = Math.min(...steps);
+        let tsMax = Math.max(...steps);
 
-      let newMin =
-        maxTimeStep < minTimeStep ? tsMin : Math.min(minTimeStep, tsMin);
-      let newMax =
-        maxTimeStep < minTimeStep ? tsMax : Math.max(maxTimeStep, tsMax);
-      let newCurr = Math.max(Math.min(timeStep, newMax), newMin);
-
+        newMin = Math.min(newMin, tsMin);
+        newMax = Math.max(newMax, tsMax);
+      });
       commit("VIEW_MIN_TIME_STEP_SET", newMin, { root: true });
       commit("VIEW_MAX_TIME_STEP_SET", newMax, { root: true });
-      commit("VIEW_TIME_STEP_SET", newCurr, { root: true });
+      if (!rootGetters.VIEW_LOADING_FROM_SAVED) {
+        let timeStep = rootGetters.VIEW_TIME_STEP;
+        let newCurr = Math.max(Math.min(timeStep, newMax), newMin);
+        commit("VIEW_TIME_STEP_SET", newCurr, { root: true });
+      }
     },
   },
 };
