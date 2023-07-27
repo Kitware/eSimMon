@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 RUN conda install -c \
   conda-forge \
   python=3.9 \
-  cmake \
+  cmake=3.26.4 \
   ninja \
   mako
 
