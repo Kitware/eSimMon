@@ -41,97 +41,91 @@
             class="playback-controls"
             v-on:mouseover="hoverOut"
           >
-            <v-row class="mx-1" :style="{height: '10px'}">
-              <v-col :sm="1" class="text-xs-center">
-                <v-icon
-                  v-on:click="decrementTimeStep(true)"
-                  :disabled="!dataLoaded || currentTimeStep === minTimeStep"
-                >
-                  arrow_back_ios
-                </v-icon>
-              </v-col>
-              <v-col :sm="10">
-                <v-slider
-                  :min="minTimeStep"
-                  :max="maxTimeStep"
-                  :disabled="!dataLoaded"
-                  height="1px"
-                  :value="sliderValue"
-                  @change="updateTimeStep"
-                />
-              </v-col>
-              <v-col :sm="1" class="text-xs-center">
-                <v-icon
-                  v-on:click="incrementTimeStep(true)"
-                  :disabled="!dataLoaded || currentTimeStep === maxTimeStep"
-                >
-                  arrow_forward_ios
-                </v-icon>
-              </v-col>
+            <v-row class="ma-0 pa-0" :style="{height: '25px'}">
+              <v-slider
+                dense
+                :min="minTimeStep"
+                :max="maxTimeStep"
+                :disabled="!dataLoaded"
+                :value="sliderValue"
+                @change="updateTimeStep"
+              >
+                <template v-slot:prepend>
+                  <v-icon
+                    v-on:click="decrementTimeStep(true)"
+                    :disabled="!dataLoaded || currentTimeStep === minTimeStep"
+                  >
+                    arrow_back_ios
+                  </v-icon>
+                </template>
+                <template v-slot:append>
+                  <v-icon
+                    v-on:click="incrementTimeStep(true)"
+                    :disabled="!dataLoaded || currentTimeStep === maxTimeStep"
+                  >
+                    arrow_forward_ios
+                  </v-icon>
+                </template>
+              </v-slider>
             </v-row>
-            <v-row class="ma-0 pa-0" :style="{height: '15px'}">
-              <v-col :sm="5" :style="{alignItems: 'flex-end'}">
-                <v-icon
-                  v-show="paused"
-                  v-on:click="togglePlayPause"
-                  :disabled="!dataLoaded"
-                >
-                  &#9654;
-                </v-icon>
-                <v-icon
-                  v-show="!paused"
-                  v-on:click="togglePlayPause"
-                  :disabled="!dataLoaded"
-                >
-                  &#9208;
-                </v-icon>
-              </v-col>
-              <v-spacer />
-              <v-col :sm="6">
-                <input
+            <v-row class="ma-0 pa-0" :style="{height: '25px'}">
+              <v-col :sm="4">
+                <v-text-field
+                  dense
+                  filled
                   type="number"
                   min="minTimeStep"
                   :max="maxTimeStep"
-                  size="4"
                   :disabled="!dataLoaded"
                   :value="currentTimeStep"
                   @change="(e) => {updateTimeStep(e.target.value)}"
-                />
+                >
+                  <template>
+                    <v-icon
+                      slot="prepend"
+                      v-show="paused"
+                      v-on:click="togglePlayPause"
+                      :disabled="!dataLoaded"
+                    >
+                      &#9654;
+                    </v-icon>
+                    <v-icon
+                      slot="prepend"
+                      v-show="!paused"
+                      v-on:click="togglePlayPause"
+                      :disabled="!dataLoaded"
+                    >
+                      &#9208;
+                    </v-icon>
+                  </template>
+                </v-text-field>
               </v-col>
             </v-row>
-            <v-row class="ma-0 pa-0">
+            <v-row class="ma-0 pa-0" :style="{height: '25px'}">
               <v-col :sm="6">
-                <v-row :style="{alignItems: 'center'}">
-                  <v-col :sm="4">
-                    <v-icon v-on:click="removeRow()" :disabled="numrows < 2">
-                      remove_circle_outline
-                    </v-icon>
-                  </v-col>
-                  <v-col :sm="4" :style="{alignItems: 'center'}">
-                    <span> rows </span>
-                  </v-col>
-                  <v-col :sm="4">
-                    <v-icon v-on:click="addRow()" :disabled="numrows > 7">
-                      add_circle_outline
-                    </v-icon>
-                  </v-col>
+                <v-row
+                  :style="{alignItems: 'center', justifyContent: 'space-evenly'}"
+                >
+                  <v-icon v-on:click="removeRow()" :disabled="numrows < 2">
+                    remove_circle_outline
+                  </v-icon>
+                  <span> rows </span>
+                  <v-icon v-on:click="addRow()" :disabled="numrows > 7">
+                    add_circle_outline
+                  </v-icon>
                 </v-row>
               </v-col>
               <v-col :sm="6">
-                <v-row :style="{alignItems: 'center'}">
-                  <v-col :sm="4">
-                    <v-icon v-on:click="removeColumn()" :disabled="numcols < 2">
-                      remove_circle_outline
-                    </v-icon>
-                  </v-col>
-                  <v-col :sm="4" :style="{alignItems: 'center'}">
-                    <span> cols </span>
-                  </v-col>
-                  <v-col :sm="4">
-                    <v-icon v-on:click="addColumn()" :disabled="numcols > 7">
-                      add_circle_outline
-                    </v-icon>
-                  </v-col>
+                <v-row
+                  :style="{alignItems: 'center', justifyContent: 'space-evenly'}"
+                >
+                  <v-icon v-on:click="removeColumn()" :disabled="numcols < 2">
+                    remove_circle_outline
+                  </v-icon>
+                  <span> cols </span>
+                  <v-icon v-on:click="addColumn()" :disabled="numcols > 7">
+                    add_circle_outline
+                  </v-icon>
                 </v-row>
               </v-col>
             </v-row>
