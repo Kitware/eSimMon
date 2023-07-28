@@ -184,10 +184,13 @@ export default {
       this.$nextTick(() => {
         const node = this.$refs.plotly;
         const elems = node?.getElementsByClassName("plot-container");
+        const { width, height } = this.$el.getBoundingClientRect();
         if (node !== undefined && elems.length > 0) {
           Plotly.relayout(this.$refs.plotly, {
             "xaxis.autorange": true,
             "yaxis.autorange": true,
+            width: width - 4,
+            height: height - 10,
           });
         }
       });
@@ -311,7 +314,13 @@ export default {
       if (plotReadyForUpdate) {
         this.lastLoadedTimeStep = nextImage.timestep;
         this.plotPreProcessing(nextImage);
-        Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {
+        const { width, height } = this.$el.getBoundingClientRect();
+        let layout = {
+          ...nextImage.layout,
+          width: width - 4,
+          height: height - 10,
+        };
+        Plotly.react(this.$refs.plotly, nextImage.data, layout, {
           autosize: true,
           modeBarButtonsToAdd: [
             {
