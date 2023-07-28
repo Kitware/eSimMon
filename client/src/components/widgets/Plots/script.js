@@ -458,11 +458,11 @@ export default {
   },
 
   destroyed() {
+    this.updateVisiblePlots({ newId: null, oldId: this.itemId });
     this.setGridSize(this.gridSize - 1);
   },
 
   beforeDestroyed() {
     this.$store.unregisterModule(this.itemId);
-    this.updateVisiblePlots({ newId: null, oldId: this.itemId });
   },
 };
