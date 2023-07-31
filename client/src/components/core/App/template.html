@@ -44,6 +44,7 @@
             <v-row class="ma-0 pa-0" :style="{height: '25px'}">
               <v-slider
                 dense
+                hide-details
                 :min="minTimeStep"
                 :max="maxTimeStep"
                 :disabled="!dataLoaded"
@@ -72,6 +73,7 @@
               <v-col :sm="4">
                 <v-text-field
                   dense
+                  hide-details
                   filled
                   type="number"
                   min="minTimeStep"
