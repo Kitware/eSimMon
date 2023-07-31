@@ -56,6 +56,7 @@ export default {
       updateView: "VIEWS_UPDATE_EXISTING",
     }),
     ...mapMutations({
+      setLastLoaded: "VIEWS_LAST_LOADED_ID_SET",
       setPublic: "VIEWS_PUBLIC_SET",
       setShowSaveDialog: "UI_SHOW_SAVE_DIALOG_SET",
     }),
@@ -66,6 +67,7 @@ export default {
       if (newView) {
         this.createView(this.newViewName);
       } else {
+        this.setLastLoaded(this.viewInfo[this.newViewName]);
         this.updateView(this.newViewName);
       }
       this.setShowSaveDialog(false);

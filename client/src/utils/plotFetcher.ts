@@ -221,6 +221,16 @@ export class PlotFetcher {
     return task.result;
   }
 
+  cancelAllTasks() {
+    if (!this.initialized) {
+      throw new Error(`The PlotFetcher for item ${this.itemId} has not been initialized.`);
+    }
+
+    Object.entries(this.tasks).forEach(([, task]) => {
+      registry.cancelTask(task.id)
+    });
+  }
+
   private preFetchPlots(timestep: number) {
     let idx = this.availableTimesteps.indexOf(timestep);
 

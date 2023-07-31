@@ -325,8 +325,8 @@ export default {
           modeBarButtonsToRemove: ["toImage"],
         });
         if (!this.eventHandlersSet) this.setEventHandlers();
+        this.updateNumReady(this.numReady + 1);
       }
-      this.updateNumReady(this.numReady + 1);
     },
     setEventHandlers() {
       this.$refs.plotly.on("plotly_relayout", (eventdata) => {

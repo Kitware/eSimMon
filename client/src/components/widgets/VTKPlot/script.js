@@ -176,8 +176,8 @@ export default {
           this.updateRenderer(nextImage.data);
           this.lastLoadedTimeStep = nextImage.timestep;
         }
+        this.updateNumReady(this.numReady + 1);
       }
-      this.updateNumReady(this.numReady + 1);
     },
     updateViewPort() {
       this.$nextTick(() => {

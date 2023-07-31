@@ -90,18 +90,22 @@ export default {
     },
     itemId: {
       immediate: true,
-      handler() {
-        this.plotFetcher = new PlotFetcher(
-          this.itemId,
-          (itemId) => this.callFastEndpoint(`variables/${itemId}/timesteps`),
-          (itemId, timestep) =>
-            this.callFastEndpoint(
-              `variables/${itemId}/timesteps/${timestep}/plot`,
-              { responseType: "blob" },
-            ),
-          (response, timeStep) => this.resolveTimeStepData(response, timeStep),
-        );
+      handler(newId, oldId) {
+        if (this.plotFetcher && oldId !== newId) {
+          this.plotFetcher.cancelAllTasks();
+        }
         if (this.itemId) {
+          this.plotFetcher = new PlotFetcher(
+            this.itemId,
+            (itemId) => this.callFastEndpoint(`variables/${itemId}/timesteps`),
+            (itemId, timestep) =>
+              this.callFastEndpoint(
+                `variables/${itemId}/timesteps/${timestep}/plot`,
+                { responseType: "blob" },
+              ),
+            (response, timeStep, itemId) =>
+              this.resolveTimeStepData(response, timeStep, itemId),
+          );
           this.plotFetcher.initialize().then(() => {
             this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
             this.loadVariable();
@@ -138,6 +142,10 @@ export default {
       updateNumReady: "VIEW_NUM_READY_SET",
     }),
     setAvailableTimeSteps: function (steps) {
+      if (!this.itemId) {
+        return;
+      }
+
       this.$store.dispatch(
         `${this.itemId}/PLOT_AVAILABLE_TIME_STEPS_CHANGED`,
         steps,
@@ -197,6 +205,10 @@ export default {
         this.plotType = PlotType.Plotly;
       }
       return new Promise((resolve) => {
+        if (this.plotType === PlotType.None) {
+          return;
+        }
+
         reader.onload = () => {
           let img;
           const ltsd = this.loadedTimeStepData;
@@ -306,11 +318,11 @@ export default {
       const oldId = this.itemId;
       this.itemId = item.id || "";
       this.updateRegisteredModules(oldId);
+      this.updateVisiblePlots({ newId: this.itemId, oldId });
       this.updatePlotLegendVisibility(item.legend);
       this.updatePlotLogScaling(item.log);
       this.updatePlotXAxis(item.xAxis);
       this.updatePlotZoom(item.zoom);
-      this.updateVisiblePlots({ newId: this.itemId, oldId });
     },
     /**
      * Returns the previous valid timestep, first image if no timestep exists.
@@ -380,6 +392,7 @@ export default {
 
       // Update this plot
       this.$refs[`${this.row}-${this.col}`].react();
+      this.updateNumReady(this.numReady + 1);
     },
     /**
      * Display the the current timestep, if the current timestep is not valid
@@ -408,6 +421,7 @@ export default {
     },
     clearGallery() {
       this.updateVisiblePlots({ newId: null, oldId: this.itemId });
+      this.setAvailableTimeSteps([]);
       this.itemId = "";
       this.setInitialLoad(true);
     },
@@ -444,6 +458,7 @@ export default {
   },
 
   destroyed() {
+    this.updateVisiblePlots({ newId: null, oldId: this.itemId });
     this.setGridSize(this.gridSize - 1);
   },
 
