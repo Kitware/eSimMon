@@ -15,7 +15,7 @@
     <v-col :sm="2" v-bind:style="{alignItems: 'center'}">
       <v-tooltip top>
         <template v-slot:activator="{on, attrs}">
-          <v-btn-toggle v-model="selectTimeStep" borderless rounded>
+          <v-btn-toggle v-model="timeStepSelectorMode" borderless rounded>
             <v-btn icon v-on:click="toggleSelectTimeStep">
               <v-icon v-on="on" v-bind="attrs"> mdi-timetable </v-icon>
             </v-btn>

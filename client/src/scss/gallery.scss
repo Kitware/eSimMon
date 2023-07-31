@@ -151,6 +151,7 @@
 // Create border on data browser panel
 .splitpanes--vertical > .splitpanes__splitter {
   min-width: 3px;
+  width: 10px;
   background: linear-gradient(90deg, #ccc, #a5a4a4);
 }
 
@@ -257,4 +258,8 @@
 
 html {
   overflow: hidden;
+}
+
+.user-select-none {
+  margin: 2px 0 !important;
 }

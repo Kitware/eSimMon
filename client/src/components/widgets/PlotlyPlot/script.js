@@ -1,6 +1,6 @@
 import Plotly from "plotly.js-basic-dist-min";
 import { isEmpty, isEqual, isNil } from "lodash";
-import { mapGetters, mapMutations } from "vuex";
+import { mapActions, mapGetters, mapMutations } from "vuex";
 import { PlotType } from "../../../utils/constants";
 import Annotations from "../Annotations";
 
@@ -166,6 +166,9 @@ export default {
   },
 
   methods: {
+    ...mapActions({
+      toggleSelectTimeStep: "UI_TOGGLE_TIME_STEP",
+    }),
     ...mapMutations({
       setPauseGallery: "UI_PAUSE_GALLERY_SET",
       setTimeStep: "VIEW_TIME_STEP_SET",
@@ -181,10 +184,13 @@ export default {
       this.$nextTick(() => {
         const node = this.$refs.plotly;
         const elems = node?.getElementsByClassName("plot-container");
+        const { width, height } = this.$el.getBoundingClientRect();
         if (node !== undefined && elems.length > 0) {
           Plotly.relayout(this.$refs.plotly, {
             "xaxis.autorange": true,
             "yaxis.autorange": true,
+            width: width - 4,
+            height: height - 10,
           });
         }
       });
@@ -308,7 +314,13 @@ export default {
       if (plotReadyForUpdate) {
         this.lastLoadedTimeStep = nextImage.timestep;
         this.plotPreProcessing(nextImage);
-        Plotly.react(this.$refs.plotly, nextImage.data, nextImage.layout, {
+        const { width, height } = this.$el.getBoundingClientRect();
+        let layout = {
+          ...nextImage.layout,
+          width: width - 4,
+          height: height - 10,
+        };
+        Plotly.react(this.$refs.plotly, nextImage.data, layout, {
           autosize: true,
           modeBarButtonsToAdd: [
             {
@@ -344,6 +356,7 @@ export default {
             this.selectedTime = parseFloat(data.points[0].x);
             this.findClosestTime();
             this.selectTimeStepFromPlot();
+            this.toggleSelectTimeStep();
           }
         }
       });

@@ -15,7 +15,6 @@ export default {
       showSaveDialog: false,
       showLoadDialog: false,
       zoomSync: 0,
-      selectTimeStep: null,
     };
   },
 
@@ -50,6 +49,7 @@ export default {
 
   computed: {
     ...mapGetters({
+      timeStepSelectorMode: "UI_TIME_STEP_SELECTOR",
       lastSaved: "VIEWS_LAST_SAVED",
       numcols: "VIEWS_COLUMNS",
       numrows: "VIEWS_ROWS",
