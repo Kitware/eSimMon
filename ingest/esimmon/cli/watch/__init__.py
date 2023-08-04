@@ -17,6 +17,7 @@ import adios2
 import aiofiles
 import aiohttp
 import click
+import numpy as np
 import tenacity
 from async_lru import alru_cache
 
@@ -400,6 +401,12 @@ class FileSystemUploadSource(UploadSource):
 
 
 async def update_range_metadata(gc, image_tarball, bp_path, variable_items, semaphore):
+    def _update_range(old_range, new_data):
+        data_is_dict = isinstance(new_data, dict)
+        v0 = float(new_data["Min"]) if data_is_dict else np.min(new_data)
+        v1 = float(new_data["Max"]) if data_is_dict else np.max(new_data)
+        return [min(old_range[0], v0), max(old_range[1], v1)]
+
     with tempfile.TemporaryDirectory() as tempdir:
         image_tarball.extractall(tempdir)
         with adios2.open(f"{tempdir}/{bp_path}", "r") as fh:
@@ -417,38 +424,46 @@ async def update_range_metadata(gc, image_tarball, bp_path, variable_items, sema
                 attrs = json.loads(attrs[0])
                 vars = fh.available_variables()
 
-                if attrs["type"] != "mesh-colormap":
-                    # All plots except mesh-colormap have x and y vars to grab
-                    new_meta["x_range"] = item_meta.get(
-                        "x_range", [INFINITY, -INFINITY]
-                    )
-                    x0 = float(vars[attrs["x"]]["Min"])
-                    x1 = float(vars[attrs["x"]]["Max"])
-                    old_x0, old_x1 = new_meta["x_range"]
-                    new_meta["x_range"] = [min(old_x0, x0), max(old_x1, x1)]
-
+                if y_names := attrs.get("y", None):
+                    y_names = [y_names] if not isinstance(y_names, list) else y_names
                     new_meta["y_range"] = item_meta.get(
                         "y_range", [INFINITY, -INFINITY]
                     )
-                    old_y0, old_y1 = new_meta["y_range"]
-                    y_attrs = attrs["y"]
-                    if not isinstance(attrs["y"], list):
-                        y_attrs = [attrs["y"]]
-                    for y in [vars[n] for n in y_attrs]:
-                        start = min(old_y0, float(y["Min"]))
-                        end = max(old_y1, float(y["Max"]))
-                        new_meta["y_range"] = [start, end]
+                    for y_name in y_names:
+                        new_meta["y_range"] = _update_range(
+                            new_meta["y_range"], vars[y_name]
+                        )
 
-                color = attrs.get("color", None)
-                if color is not None:
-                    # Only some 2D plots have a color scalar variable
+                if x_attr := attrs.get("x", None):
+                    new_meta["x_range"] = item_meta.get(
+                        "x_range", [INFINITY, -INFINITY]
+                    )
+                    new_meta["x_range"] = _update_range(
+                        new_meta["x_range"], vars[x_attr]
+                    )
+
+                if color_attr := attrs.get("color", None):
                     new_meta["color_range"] = item_meta.get(
                         "color_range", [INFINITY, -INFINITY]
                     )
-                    c0 = float(vars[color]["Min"])
-                    c1 = float(vars[color]["Max"])
-                    old_c0, old_c1 = new_meta["color_range"]
-                    new_meta["color_range"] = [min(old_c0, c0), max(old_c1, c1)]
+                    new_meta["color_range"] = _update_range(
+                        new_meta["color_range"], vars[color_attr]
+                    )
+
+                if y_attr := attrs.get("nodes", None):
+                    new_meta["x_range"] = item_meta.get(
+                        "x_range", [INFINITY, -INFINITY]
+                    )
+                    new_meta["y_range"] = item_meta.get(
+                        "y_range", [INFINITY, -INFINITY]
+                    )
+                    nodes = fh.read(y_attr)
+                    new_meta["x_range"] = _update_range(
+                        new_meta["x_range"], nodes[:, 0]
+                    )
+                    new_meta["y_range"] = _update_range(
+                        new_meta["y_range"], nodes[:, 1]
+                    )
 
                 # update item metadata
                 await gc.set_metadata("item", id, new_meta, semaphore)
