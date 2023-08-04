@@ -130,19 +130,22 @@
                 </v-row>
               </v-col>
             </v-row>
-            <v-row :style="{height: '5px', margin: '0px'}">
-              <v-spacer />
-              <v-col :sm="2" v-bind:style="{alignItems: 'center'}">
+            <v-row class="ma-0 pa-0" :style="{height: '25px'}">
+              <v-col class="align-center">
                 <v-tooltip top>
                   <template v-slot:activator="{on, attrs}">
-                    <v-btn icon v-on:click="toggleShowSettings()">
+                    <v-btn
+                      small
+                      elevation="0"
+                      :style="{width: 'inherit'}"
+                      v-on:click="toggleShowSettings()"
+                    >
                       <v-icon v-on="on" v-bind="attrs"> mdi-cog </v-icon>
                     </v-btn>
                   </template>
                   <span>Settings</span>
                 </v-tooltip>
               </v-col>
-              <v-spacer />
             </v-row>
             <v-row
               v-show="lastSaved"

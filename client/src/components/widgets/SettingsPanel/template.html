@@ -1,15 +1,13 @@
 <v-card class="my-3 settings">
-  <v-row class="logout">
+  <v-row class="ma-0 pa-0" :style="{height: '25px'}">
     <v-col>
-      <v-btn class="my-2" block v-on:click="girderRest.logout()">
+      <v-btn v-on:click="girderRest.logout()">
         Logout <v-icon right> $vuetify.icons.logout </v-icon>
       </v-btn>
     </v-col>
   </v-row>
   <div class="main-content">
-    <v-card-title :style="{justifyContent: 'center', padding: '2px'}"
-      >Settings</v-card-title
-    >
+    <v-card-title class="pa-2 justify-center">Settings</v-card-title>
     <v-subheader> Views </v-subheader>
     <v-divider />
     <v-col>
@@ -93,13 +91,23 @@
       </v-row>
     </v-col>
   </div>
-  <v-col class="back">
-    <v-row :style="{justifyContent: 'center'}">
-      <v-btn icon text v-on:click="toggleShowSettings()">
-        <v-icon left> mdi-arrow-left </v-icon>
-      </v-btn>
-    </v-row>
-  </v-col>
+  <v-row class="ma-0 pa-0" :style="{height: '25px'}">
+    <v-col class="align-center">
+      <v-tooltip top>
+        <template v-slot:activator="{on, attrs}">
+          <v-btn
+            small
+            elevation="0"
+            :style="{width: 'inherit'}"
+            v-on:click="toggleShowSettings()"
+          >
+            <v-icon v-on="on" v-bind="attrs"> mdi-arrow-left </v-icon>
+          </v-btn>
+        </template>
+        <span>Data Selection</span>
+      </v-tooltip>
+    </v-col>
+  </v-row>
   <save-dialog :layout="plots" @close="setSaveDialogVisible(false)" />
   <load-dialog @close="setLoadDialogVisible(false)" />
 </v-card>
