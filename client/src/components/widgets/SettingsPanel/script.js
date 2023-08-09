@@ -17,6 +17,11 @@ export default {
       zoomSync: true,
       selectTimeStep: false,
       autoSavePrompt: true,
+      runGlobals: true,
+      xAxis: false,
+      yAxis: false,
+      scalarBar: false,
+      title: false,
     };
   },
 
@@ -37,6 +42,21 @@ export default {
     autoSavePrompt(status) {
       this.setAutoSaveDialogEnabled(status);
     },
+    runGlobals() {
+      this.toggleRunGlobals();
+    },
+    xAxis() {
+      this.toggleXAxis();
+    },
+    yAxis() {
+      this.toggleYAxis();
+    },
+    scalarBar() {
+      this.toggleScalarBar();
+    },
+    title() {
+      this.toggleTitle();
+    },
   },
 
   methods: {
@@ -45,6 +65,11 @@ export default {
       toggleSelectTimeStep: "UI_TOGGLE_TIME_STEP",
       fetchAllViews: "VIEWS_FETCH_ALL_AVAILABLE",
       toggleShowSettings: "UI_TOGGLE_SHOW_SETTINGS",
+      toggleRunGlobals: "UI_TOGGLE_RUN_GLOBALS",
+      toggleXAxis: "UI_TOGGLE_X_AXIS",
+      toggleYAxis: "UI_TOGGLE_Y_AXIS",
+      toggleScalarBar: "UI_TOGGLE_SCALAR_BAR",
+      toggleTitle: "UI_TOGGLE_TITLE",
     }),
     ...mapMutations({
       setPaused: "UI_PAUSE_GALLERY_SET",
