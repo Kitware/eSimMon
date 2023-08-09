@@ -1,5 +1,5 @@
-import SaveDialog from "../../widgets/SaveDialog";
-import LoadDialog from "../../widgets/LoadDialog";
+import SaveDialog from "../SaveDialog";
+import LoadDialog from "../LoadDialog";
 import { mapActions, mapGetters, mapMutations } from "vuex";
 
 export default {
@@ -14,7 +14,9 @@ export default {
     return {
       showSaveDialog: false,
       showLoadDialog: false,
-      zoomSync: 0,
+      zoomSync: true,
+      selectTimeStep: false,
+      autoSavePrompt: true,
     };
   },
 
@@ -25,16 +27,31 @@ export default {
     },
   },
 
+  watch: {
+    zoomSync() {
+      this.toggleSyncZoom();
+    },
+    selectTimeStep() {
+      this.toggleSelectTimeStep();
+    },
+    autoSavePrompt(status) {
+      this.setAutoSaveDialogEnabled(status);
+    },
+  },
+
   methods: {
     ...mapActions({
       toggleSyncZoom: "UI_TOGGLE_ZOOM_SYNC",
       toggleSelectTimeStep: "UI_TOGGLE_TIME_STEP",
       fetchAllViews: "VIEWS_FETCH_ALL_AVAILABLE",
+      toggleShowSettings: "UI_TOGGLE_SHOW_SETTINGS",
     }),
     ...mapMutations({
       setPaused: "UI_PAUSE_GALLERY_SET",
       setLoadDialogVisible: "UI_SHOW_LOAD_DIALOG_SET",
       setSaveDialogVisible: "UI_SHOW_SAVE_DIALOG_SET",
+      toggleSettingsVisibility: "UI_SHOW_SETTINGS_SET",
+      setAutoSaveDialogEnabled: "UI_AUTO_SAVE_DIALOG_ENABLED_SET",
     }),
     async saveView() {
       await this.fetchAllViews();
@@ -49,6 +66,7 @@ export default {
 
   computed: {
     ...mapGetters({
+      showSettings: "UI_SHOW_SETTINGS",
       timeStepSelectorMode: "UI_TIME_STEP_SELECTOR",
       lastSaved: "VIEWS_LAST_SAVED",
       numcols: "VIEWS_COLUMNS",

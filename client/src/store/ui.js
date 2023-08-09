@@ -23,6 +23,8 @@ export default {
     },
     showDownloadOptions: false,
     boxSelector: null,
+    showSettings: false,
+    autoSavedViewDialogEnabled: true,
   },
   getters: {
     UI_AUTO_SAVE_DIALOG(state) {
@@ -67,6 +69,12 @@ export default {
     UI_BOX_SELECTOR(state) {
       return state.boxSelector;
     },
+    UI_SHOW_SETTINGS(state) {
+      return state.showSettings;
+    },
+    UI_AUTO_SAVE_DIALOG_ENABLED(state) {
+      return state.autoSavedViewDialogEnabled;
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {
@@ -108,6 +116,12 @@ export default {
     UI_BOX_SELECTOR_SET(state, val) {
       state.boxSelector = val;
     },
+    UI_SHOW_SETTINGS_SET(state, val) {
+      state.showSettings = val;
+    },
+    UI_AUTO_SAVE_DIALOG_ENABLED_SET(state, val) {
+      state.autoSavedViewDialogEnabled = val;
+    },
   },
   actions: {
     UI_TOGGLE_PLAY_PAUSE({ state }) {
@@ -118,6 +132,9 @@ export default {
     },
     UI_TOGGLE_TIME_STEP({ state }) {
       state.timeStepSelection = !state.timeStepSelection;
+    },
+    UI_TOGGLE_SHOW_SETTINGS({ state }) {
+      state.showSettings = !state.showSettings;
     },
   },
 };
