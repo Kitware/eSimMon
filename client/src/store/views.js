@@ -168,11 +168,10 @@ export default {
       layout.forEach((item) => {
         const { row, col, itemId } = item;
         if (itemId) {
-          const { legend, log, range, xAxis, zoom } =
+          const { log, range, xAxis, zoom } =
             getters[`${itemId}/PLOT_DATA_COMPLETE`];
           items[`${row}::${col}`] = {
             id: itemId,
-            legend,
             log,
             range,
             xAxis,

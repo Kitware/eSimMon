@@ -58,8 +58,6 @@ def create_plotly_image(plot_data: dict, format: str, details: dict):
     plot_data["layout"]["xaxis"]["automargin"] = True
     plot_data["layout"]["yaxis"]["automargin"] = True
     plot_data["layout"]["title"]["x"] = 0.5
-    # TODO: Find the best solution for legends that take up too much space
-    # plot_data["layout"]["showlegend"] = False
     plot_data["layout"].pop("name", None)
     plot_data["layout"].pop("frames", None)
     if details:

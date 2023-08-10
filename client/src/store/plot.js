@@ -1,7 +1,6 @@
 export default {
   namespaced: true,
   state: () => ({
-    legend: false,
     log: false,
     range: null,
     timeAverage: 0,
@@ -15,9 +14,6 @@ export default {
     colorRange: null,
   }),
   getters: {
-    PLOT_LEGEND_VISIBILITY(state) {
-      return state.legend;
-    },
     PLOT_LOG_SCALING(state) {
       return state.log;
     },
@@ -56,9 +52,6 @@ export default {
     },
   },
   mutations: {
-    PLOT_LEGEND_VISIBILITY_SET(state, val) {
-      state.legend = val;
-    },
     PLOT_LOG_SCALING_SET(state, val) {
       state.log = val;
     },
@@ -95,7 +88,6 @@ export default {
   },
   actions: {
     PLOT_DATA_RESET({ commit }) {
-      commit("PLOT_LEGEND_VISIBILITY_SET", false);
       commit("PLOT_LOG_SCALING_SET", false);
       commit("PLOT_GLOBAL_RANGE_SET", null);
       commit("PLOT_TIME_AVERAGE_SET", 0);

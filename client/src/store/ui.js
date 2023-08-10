@@ -30,6 +30,7 @@ export default {
     showYAxis: false,
     showScalarBar: false,
     showTitle: false,
+    showLegend: false,
   },
   getters: {
     UI_AUTO_SAVE_DIALOG(state) {
@@ -95,6 +96,9 @@ export default {
     UI_SHOW_TITLE(state) {
       return state.showTitle;
     },
+    UI_SHOW_LEGEND(state) {
+      return state.showLegend;
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {
@@ -154,8 +158,11 @@ export default {
     UI_SHOW_SCALAR_BAR_SET(state, val) {
       state.showScalarBar = val;
     },
-    UI_SHOW_TITLE(state, val) {
+    UI_SHOW_TITLE_SET(state, val) {
       state.showTitle = val;
+    },
+    UI_SHOW_LEGEND_SET(state, val) {
+      state.showLegend = val;
     },
   },
   actions: {
@@ -185,6 +192,9 @@ export default {
     },
     UI_TOGGLE_TITLE({ state }) {
       state.showTitle = !state.showTitle;
+    },
+    UI_TOGGLE_LEGEND({ state }) {
+      state.showLegend = !state.showLegend;
     },
   },
 };

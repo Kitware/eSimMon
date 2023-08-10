@@ -64,6 +64,7 @@ export default {
       xaxisVisible: "UI_SHOW_X_AXIS",
       yaxisVisible: "UI_SHOW_Y_AXIS",
       showTitle: "UI_SHOW_TITLE",
+      legendVisibility: "UI_SHOW_LEGEND",
       runGlobals: "UI_USE_RUN_GLOBALS",
       syncZoom: "UI_ZOOM_SYNC",
       timeStepSelectorMode: "UI_TIME_STEP_SELECTOR",
@@ -75,11 +76,6 @@ export default {
     availableTimeSteps() {
       return (
         this.$store.getters[`${this.itemId}/PLOT_AVAILABLE_TIME_STEPS`] || []
-      );
-    },
-    legendVisibility() {
-      return (
-        this.$store.getters[`${this.itemId}/PLOT_LEGEND_VISIBILITY`] || false
       );
     },
     loadedTimeStepData() {
@@ -401,11 +397,6 @@ export default {
               icon: Plotly.Icons["3d_rotate"],
               click: this.toggleLogScale,
             },
-            {
-              name: "toggle legend visibility",
-              icon: Plotly.Icons["tooltip_basic"],
-              click: this.toggleLegendVisibility,
-            },
           ],
           modeBarButtonsToRemove: ["toImage"],
         });
@@ -495,12 +486,6 @@ export default {
       this.$store.commit(
         `${this.itemId}/PLOT_LOG_SCALING_SET`,
         !this.logScaling,
-      );
-    },
-    toggleLegendVisibility() {
-      this.$store.commit(
-        `${this.itemId}/PLOT_LEGEND_VISIBILITY_SET`,
-        !this.legendVisibility,
       );
     },
   },

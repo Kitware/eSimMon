@@ -145,6 +145,18 @@
           <v-tooltip left bottom>
             <template v-slot:activator="{on, attrs}">
               <div v-on="on" v-bind="attrs">
+                <v-switch dense v-model="legend" label="legend" hide-details />
+              </div>
+            </template>
+            <p class="mb-0">
+              {{legend ? "Showing" : "Hiding"}} the plot legend.
+            </p>
+          </v-tooltip>
+        </v-col>
+        <v-col>
+          <v-tooltip left bottom>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
                 <v-switch
                   dense
                   v-model="runGlobals"

@@ -159,9 +159,6 @@ export default {
 
       this.$store.commit(`${this.itemId}/PLOT_TIMES_SET`, times);
     },
-    updatePlotLegendVisibility: function (legend) {
-      this.$store.commit(`${this.itemId}/PLOT_LEGEND_VISIBILITY_SET`, legend);
-    },
     updatePlotLogScaling: function (log) {
       this.$store.commit(`${this.itemId}/PLOT_LOG_SCALING_SET`, log);
     },
@@ -317,7 +314,6 @@ export default {
       this.itemId = item.id || "";
       this.updateRegisteredModules(oldId);
       this.updateVisiblePlots({ newId: this.itemId, oldId });
-      this.updatePlotLegendVisibility(item.legend);
       this.updatePlotLogScaling(item.log);
       this.updatePlotXAxis(item.xAxis);
       this.updatePlotZoom(item.zoom);

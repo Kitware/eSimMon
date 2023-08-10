@@ -22,6 +22,7 @@ export default {
       yAxis: false,
       scalarBar: false,
       title: false,
+      legend: false,
     };
   },
 
@@ -57,6 +58,9 @@ export default {
     title() {
       this.toggleTitle();
     },
+    legend() {
+      this.toggleLegend();
+    },
   },
 
   methods: {
@@ -70,6 +74,7 @@ export default {
       toggleYAxis: "UI_TOGGLE_Y_AXIS",
       toggleScalarBar: "UI_TOGGLE_SCALAR_BAR",
       toggleTitle: "UI_TOGGLE_TITLE",
+      toggleLegend: "UI_TOGGLE_LEGEND",
     }),
     ...mapMutations({
       setPaused: "UI_PAUSE_GALLERY_SET",
