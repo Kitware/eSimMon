@@ -126,15 +126,8 @@
 // Make sure toolbar doesn't cover plot title
 // when visible
 .show-toolbar {
-  .modebar-container {
-    display: flex;
-    height: auto;
-    div {
-      height: auto;
-    }
-  }
   .modebar {
-    top: 20px !important;
+    display: none;
   }
 }
 
