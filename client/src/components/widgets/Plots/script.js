@@ -97,7 +97,8 @@ export default {
         if (this.itemId) {
           this.plotFetcher = new PlotFetcher(
             this.itemId,
-            (itemId) => this.callFastEndpoint(`variables/${itemId}/timesteps`),
+            (itemId) =>
+              this.callFastEndpoint(`variables/${itemId}/timesteps/meta`),
             (itemId, timestep) =>
               this.callFastEndpoint(
                 `variables/${itemId}/timesteps/${timestep}/plot`,
@@ -141,15 +142,12 @@ export default {
       setShouldAutoSave: "VIEWS_AUTO_SAVE_RUN_SET",
       updateNumReady: "VIEW_NUM_READY_SET",
     }),
-    setAvailableTimeSteps: function (steps) {
+    setMetaData: function (meta) {
       if (!this.itemId) {
         return;
       }
 
-      this.$store.dispatch(
-        `${this.itemId}/PLOT_AVAILABLE_TIME_STEPS_CHANGED`,
-        steps,
-      );
+      this.$store.dispatch(`${this.itemId}/PLOT_META_DATA_CHANGED`, meta);
     },
     setLoadedTimeStepData: function (loaded) {
       this.$store.commit(`${this.itemId}/PLOT_LOADED_TIME_STEPS_SET`, loaded);
@@ -261,8 +259,8 @@ export default {
       const firstAvailableStep = await this.plotFetcher
         .initialize()
         .then((response) => {
+          this.setMetaData(response);
           ats = response.steps.sort((a, b) => a - b);
-          this.setAvailableTimeSteps(ats);
           this.updateTimes(response.time);
           // Make sure there is an image associated with this time step
           let step = ats.find((step) => step === this.currentTimeStep);
@@ -421,7 +419,7 @@ export default {
     },
     clearGallery() {
       this.updateVisiblePlots({ newId: null, oldId: this.itemId });
-      this.setAvailableTimeSteps([]);
+      this.setMetaData({});
       this.itemId = "";
       this.setInitialLoad(true);
     },
