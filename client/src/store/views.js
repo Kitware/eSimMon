@@ -168,14 +168,13 @@ export default {
       layout.forEach((item) => {
         const { row, col, itemId } = item;
         if (itemId) {
-          const { log, range, xAxis, zoom } =
-            getters[`${itemId}/PLOT_DATA_COMPLETE`];
+          const plotData = getters[`${itemId}/PLOT_DATA_COMPLETE`];
           items[`${row}::${col}`] = {
             id: itemId,
-            log,
-            range,
-            xAxis,
-            zoom,
+            log: plotData?.log || false,
+            range: plotData?.range || null,
+            xAxis: plotData?.xAxis || "",
+            zoom: plotData?.zoom || null,
           };
         }
       });

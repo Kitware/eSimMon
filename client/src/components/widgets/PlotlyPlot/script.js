@@ -391,14 +391,6 @@ export default {
         };
         Plotly.react(this.$refs.plotly, nextImage.data, layout, {
           autosize: true,
-          modeBarButtonsToAdd: [
-            {
-              name: "toggle log scaling",
-              icon: Plotly.Icons["3d_rotate"],
-              click: this.toggleLogScale,
-            },
-          ],
-          modeBarButtonsToRemove: ["toImage"],
         });
         if (!this.eventHandlersSet) this.setEventHandlers();
         this.updateNumReady(this.numReady + 1);
@@ -481,12 +473,6 @@ export default {
       const range = [...xRange, ...yRange];
       const [x0, x1, y0, y1] = range.map((r) => r.toPrecision(4));
       this.rangeText = `xRange: [${x0}, ${x1}] yRange: [${y0}, ${y1}]`;
-    },
-    toggleLogScale() {
-      this.$store.commit(
-        `${this.itemId}/PLOT_LOG_SCALING_SET`,
-        !this.logScaling,
-      );
     },
   },
 

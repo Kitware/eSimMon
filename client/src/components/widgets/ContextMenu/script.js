@@ -88,6 +88,15 @@ export default {
         this.$store.getters[`${this.itemInfo?.id}/PLOT_DATA_COMPLETE`] || {}
       );
     },
+    logScaling() {
+      if (!this.itemInfo?.id) {
+        return false;
+      }
+
+      return (
+        this.$store.getters[`${this.itemInfo?.id}/PLOT_LOG_SCALING`] || false
+      );
+    },
   },
 
   methods: {
@@ -188,6 +197,14 @@ export default {
     canAverage() {
       const xAxis = this.itemInfo?.xAxis || "";
       return !xAxis.toLowerCase().includes("time") && this.itemInfo?.isPlotly;
+    },
+    toggleLogScale() {
+      if (this.itemInfo?.id) {
+        this.$store.commit(
+          `${this.itemInfo.id}/PLOT_LOG_SCALING_SET`,
+          !this.logScaling,
+        );
+      }
     },
   },
 };
