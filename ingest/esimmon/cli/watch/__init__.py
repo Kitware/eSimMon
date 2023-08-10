@@ -435,20 +435,25 @@ async def update_range_metadata(gc, image_tarball, bp_path, variable_items, sema
                                 new_meta[f"{attr}_range"], vars[name]
                             )
 
-                if y_attr := attrs.get("nodes", None):
+                if xy_attrs := attrs.get("nodes", None):
                     new_meta["x_range"] = item_meta.get(
                         "x_range", [INFINITY, -INFINITY]
                     )
                     new_meta["y_range"] = item_meta.get(
                         "y_range", [INFINITY, -INFINITY]
                     )
-                    nodes = fh.read(y_attr)
-                    new_meta["x_range"] = _update_range(
-                        new_meta["x_range"], nodes[:, 0]
-                    )
-                    new_meta["y_range"] = _update_range(
-                        new_meta["y_range"], nodes[:, 1]
-                    )
+                    if (
+                        attrs.get("type", None) == "mesh-colormap"
+                        and any(np.isinf(new_meta["x_range"]))
+                        or any(np.isinf(new_meta["y_range"]))
+                    ):
+                        nodes = fh.read(xy_attrs)
+                        new_meta["x_range"] = _update_range(
+                            new_meta["x_range"], nodes[:, 0]
+                        )
+                        new_meta["y_range"] = _update_range(
+                            new_meta["y_range"], nodes[:, 1]
+                        )
 
                 # update item metadata
                 await gc.set_metadata("item", id, new_meta, semaphore)
