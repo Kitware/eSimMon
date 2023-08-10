@@ -424,31 +424,16 @@ async def update_range_metadata(gc, image_tarball, bp_path, variable_items, sema
                 attrs = json.loads(attrs[0])
                 vars = fh.available_variables()
 
-                if y_names := attrs.get("y", None):
-                    y_names = [y_names] if not isinstance(y_names, list) else y_names
-                    new_meta["y_range"] = item_meta.get(
-                        "y_range", [INFINITY, -INFINITY]
-                    )
-                    for y_name in y_names:
-                        new_meta["y_range"] = _update_range(
-                            new_meta["y_range"], vars[y_name]
+                for attr in ["x", "y", "color"]:
+                    if names := attrs.get(attr, None):
+                        names = [names] if not isinstance(names, list) else names
+                        new_meta[f"{attr}_range"] = item_meta.get(
+                            f"{attr}_range", [INFINITY, -INFINITY]
                         )
-
-                if x_attr := attrs.get("x", None):
-                    new_meta["x_range"] = item_meta.get(
-                        "x_range", [INFINITY, -INFINITY]
-                    )
-                    new_meta["x_range"] = _update_range(
-                        new_meta["x_range"], vars[x_attr]
-                    )
-
-                if color_attr := attrs.get("color", None):
-                    new_meta["color_range"] = item_meta.get(
-                        "color_range", [INFINITY, -INFINITY]
-                    )
-                    new_meta["color_range"] = _update_range(
-                        new_meta["color_range"], vars[color_attr]
-                    )
+                        for name in names:
+                            new_meta[f"{attr}_range"] = _update_range(
+                                new_meta[f"{attr}_range"], vars[name]
+                            )
 
                 if y_attr := attrs.get("nodes", None):
                     new_meta["x_range"] = item_meta.get(
