@@ -14,15 +14,6 @@ export default {
     return {
       showSaveDialog: false,
       showLoadDialog: false,
-      zoomSync: true,
-      selectTimeStep: false,
-      autoSavePrompt: true,
-      runGlobals: true,
-      xAxis: false,
-      yAxis: false,
-      scalarBar: false,
-      title: false,
-      legend: false,
     };
   },
 
@@ -30,36 +21,6 @@ export default {
     plots: {
       type: Array,
       default: () => [],
-    },
-  },
-
-  watch: {
-    zoomSync() {
-      this.toggleSyncZoom();
-    },
-    selectTimeStep() {
-      this.toggleSelectTimeStep();
-    },
-    autoSavePrompt(status) {
-      this.setAutoSaveDialogEnabled(status);
-    },
-    runGlobals() {
-      this.toggleRunGlobals();
-    },
-    xAxis() {
-      this.toggleXAxis();
-    },
-    yAxis() {
-      this.toggleYAxis();
-    },
-    scalarBar() {
-      this.toggleScalarBar();
-    },
-    title() {
-      this.toggleTitle();
-    },
-    legend() {
-      this.toggleLegend();
     },
   },
 
@@ -96,6 +57,14 @@ export default {
 
   computed: {
     ...mapGetters({
+      showLegend: "UI_SHOW_LEGEND",
+      showScalarBar: "UI_SHOW_SCALAR_BAR",
+      showYAxis: "UI_SHOW_Y_AXIS",
+      showXAxis: "UI_SHOW_X_AXIS",
+      useRunGlobals: "UI_USE_RUN_GLOBALS",
+      showAutoSaveDialog: "UI_AUTO_SAVE_DIALOG_ENABLED",
+      syncZoom: "UI_ZOOM_SYNC",
+      showTitle: "UI_SHOW_TITLE",
       showSettings: "UI_SHOW_SETTINGS",
       timeStepSelectorMode: "UI_TIME_STEP_SELECTOR",
       lastSaved: "VIEWS_LAST_SAVED",
@@ -105,5 +74,77 @@ export default {
       simulation: "VIEWS_SIMULATION",
       step: "VIEW_TIME_STEP",
     }),
+    zoomSync: {
+      get() {
+        return this.syncZoom;
+      },
+      set() {
+        this.toggleSyncZoom();
+      },
+    },
+    selectTimeStep: {
+      get() {
+        return this.timeStepSelectorMode;
+      },
+      set() {
+        this.toggleSelectTimeStep();
+      },
+    },
+    autoSavePrompt: {
+      get() {
+        return this.showAutoSaveDialog;
+      },
+      set(val) {
+        this.setAutoSaveDialogEnabled(val);
+      },
+    },
+    runGlobals: {
+      get() {
+        return this.useRunGlobals;
+      },
+      set() {
+        this.toggleRunGlobals();
+      },
+    },
+    xAxis: {
+      get() {
+        return this.showXAxis;
+      },
+      set() {
+        this.toggleXAxis();
+      },
+    },
+    yAxis: {
+      get() {
+        return this.showYAxis;
+      },
+      set() {
+        this.toggleYAxis();
+      },
+    },
+    scalarBar: {
+      get() {
+        return this.showScalarBar;
+      },
+      set() {
+        this.toggleScalarBar();
+      },
+    },
+    legend: {
+      get() {
+        return this.showLegend;
+      },
+      set() {
+        this.toggleLegend();
+      },
+    },
+    title: {
+      get() {
+        return this.showTitle;
+      },
+      set() {
+        this.toggleTitle();
+      },
+    },
   },
 };
