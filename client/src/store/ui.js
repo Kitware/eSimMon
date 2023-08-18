@@ -29,7 +29,7 @@ export default {
     showXAxis: false,
     showYAxis: false,
     showScalarBar: false,
-    showTitle: false,
+    showTitle: true,
     showLegend: false,
     rangeTooltip: true,
   },
