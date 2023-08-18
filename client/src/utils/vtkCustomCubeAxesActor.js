@@ -45,11 +45,16 @@ function vtkCustomCubeAxesActor(publicAPI, model) {
       tickStrings[2] = ["0"];
       ticks[2] = [0];
 
+      const [showX, showY] = model.visibleLabels;
+      let edges = [...edgesToDraw];
+      edges[4] = showX ? 1 : 2;
+      edges[7] = showY ? 1 : 2;
+
       // update gridlines / edge lines
-      publicAPI.updatePolyData(facesToDraw, edgesToDraw, ticks);
+      publicAPI.updatePolyData(facesToDraw, edges, ticks);
 
       // compute label world coords and text
-      publicAPI.updateTextData(facesToDraw, edgesToDraw, ticks, tickStrings);
+      publicAPI.updateTextData(facesToDraw, edges, ticks, tickStrings);
 
       // rebuild the texture only when force or changed bounds, face
       // visibility changes do to change the atlas
@@ -65,6 +70,7 @@ function vtkCustomCubeAxesActor(publicAPI, model) {
 const DEFAULT_VALUES = {
   ticksNo: 4,
   ticksScale: 1,
+  visibleLabels: [true, true],
 };
 
 export function extend(publicAPI, model, initialValues = {}) {
@@ -73,6 +79,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkCubeAxesActor.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ["ticksNo"]);
   macro.setGet(publicAPI, model, ["ticksScale"]);
+  macro.setGetArray(publicAPI, model, ["visibleLabels"], 2);
   vtkCustomCubeAxesActor(publicAPI, model);
 }
 
