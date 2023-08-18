@@ -56,11 +56,16 @@ export default {
       rangeText: "",
       plotType: null,
       lastLoadedTimeStep: -1,
+      currentRange: null,
     };
   },
 
   computed: {
     ...mapGetters({
+      enableRangeTooltip: "UI_SHOW_RANGE_TOOLTIP",
+      xaxisVisible: "UI_SHOW_X_AXIS",
+      yaxisVisible: "UI_SHOW_Y_AXIS",
+      showScalarBar: "UI_SHOW_SCALAR_BAR",
       renderWindow: "UI_RENDER_WINDOW",
       syncZoom: "UI_ZOOM_SYNC",
       interactor: "UI_INTERACTOR",
@@ -82,6 +87,15 @@ export default {
     },
     xAxis() {
       return this.$store.getters[`${this.itemId}/PLOT_X_AXIS`] || null;
+    },
+    scalarRange() {
+      return this.$store.getters[`${this.itemId}/PLOT_COLOR_RANGE`] || null;
+    },
+    xRange() {
+      return this.$store.getters[`${this.itemId}/PLOT_X_RANGE`] || null;
+    },
+    yRange() {
+      return this.$store.getters[`${this.itemId}/PLOT_Y_RANGE`] || null;
     },
     zoom() {
       return this.$store.getters[`${this.itemId}/PLOT_ZOOM`] || null;
@@ -122,6 +136,27 @@ export default {
           this.removeRenderer();
           this.lastLoadedTimeStep = -1;
         }
+      },
+    },
+    xaxisVisible: {
+      immediate: true,
+      handler(newVal, oldVal) {
+        let forceRerender = !isEqual(newVal, oldVal);
+        this.react(forceRerender);
+      },
+    },
+    yaxisVisible: {
+      immediate: true,
+      handler(newVal, oldVal) {
+        let forceRerender = !isEqual(newVal, oldVal);
+        this.react(forceRerender);
+      },
+    },
+    showScalarBar: {
+      immediate: true,
+      handler(newVal, oldVal) {
+        let forceRerender = !isEqual(newVal, oldVal);
+        this.react(forceRerender);
       },
     },
   },
@@ -598,6 +633,20 @@ export default {
           this.camera.setParallelScale(this.zoom.scale);
         }
       }
+    },
+    tooltipText() {
+      let [x0, x1] = this.xRange;
+      let [y0, y1] = this.yRange;
+      let [s0, s1] = this.scalarRange;
+      if (!this.runGlobals && this.currentRange) {
+        [x0, x1, y0, y1] = this.currentRange;
+        [s0, s1] = this.mapper.getScalarRange();
+      }
+      return {
+        x: `[${x0.toExponential(3)}, ${x1.toExponential(3)}]`,
+        y: `[${y0.toExponential(3)}, ${y1.toExponential(3)}]`,
+        scalar: `[${s0.toExponential(3)}, ${s1.toExponential(3)}]`,
+      };
     },
   },
 

@@ -56,11 +56,13 @@ export default {
       avgAnnotation: "",
       computingTimeAverage: false,
       plotLabels: {},
+      currentRange: null,
     };
   },
 
   computed: {
     ...mapGetters({
+      enableRangeTooltip: "UI_SHOW_RANGE_TOOLTIP",
       xaxisVisible: "UI_SHOW_X_AXIS",
       yaxisVisible: "UI_SHOW_Y_AXIS",
       showTitle: "UI_SHOW_TITLE",
@@ -310,6 +312,11 @@ export default {
       if (this.range) this.useGlobalRange(image);
       if (this.runGlobals) this.useRunGlobals(image);
       if (this.zoom) this.applyZoom(image);
+      const data = image.data[0];
+      const xRange = [Math.min(...data.x), Math.max(...data.y)];
+      let yRange = this.range;
+      if (!yRange) yRange = [Math.min(...data.y), Math.max(...data.y)];
+      this.currentRange = [...xRange, ...yRange];
       this.setAnnotations(image.data[0]);
       this.updatePlotDetails(image);
     },
@@ -467,12 +474,19 @@ export default {
         this.rangeText = "";
         return;
       }
-      const xRange = [data.x[0], data.x[data.x.length - 1]];
-      let yRange = this.range;
-      if (!yRange) yRange = [Math.min(...data.y), Math.max(...data.y)];
-      const range = [...xRange, ...yRange];
-      const [x0, x1, y0, y1] = range.map((r) => r.toPrecision(4));
+      const [x0, x1, y0, y1] = this.currentRange.map((r) => r.toPrecision(4));
       this.rangeText = `xRange: [${x0}, ${x1}] yRange: [${y0}, ${y1}]`;
+    },
+    tooltipText() {
+      let [x0, x1] = this.xRange;
+      let [y0, y1] = this.yRange;
+      if (!this.runGlobals && this.currentRange) {
+        [x0, x1, y0, y1] = this.currentRange;
+      }
+      return {
+        x: `[${x0.toExponential(3)}, ${x1.toExponential(3)}]`,
+        y: `[${y0.toExponential(3)}, ${y1.toExponential(3)}]`,
+      };
     },
   },
 

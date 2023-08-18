@@ -31,6 +31,7 @@ export default {
     showScalarBar: false,
     showTitle: false,
     showLegend: false,
+    rangeTooltip: true,
   },
   getters: {
     UI_AUTO_SAVE_DIALOG(state) {
@@ -99,6 +100,9 @@ export default {
     UI_SHOW_LEGEND(state) {
       return state.showLegend;
     },
+    UI_SHOW_RANGE_TOOLTIP(state) {
+      return state.rangeTooltip;
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {
@@ -163,6 +167,9 @@ export default {
     },
     UI_SHOW_LEGEND_SET(state, val) {
       state.showLegend = val;
+    },
+    UI_SHOW_RANGE_TOOLTIP_SET(state, val) {
+      state.rangeTooltip = val;
     },
   },
   actions: {

@@ -171,6 +171,25 @@
           </v-tooltip>
         </v-col>
       </v-row>
+      <v-row>
+        <v-col>
+          <v-tooltip left bottom>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch
+                  dense
+                  v-model="rangeInfo"
+                  label="range info"
+                  hide-details
+                />
+              </div>
+            </template>
+            <p class="mb-0">
+              Range info on hover {{rangeInfo ? "enabled" : "disabled"}}.
+            </p>
+          </v-tooltip>
+        </v-col>
+      </v-row>
     </v-col>
   </div>
   <v-row class="ma-0 pa-0" :style="{height: '25px'}">
