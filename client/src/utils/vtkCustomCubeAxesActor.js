@@ -3,7 +3,7 @@ import vtkCubeAxesActor from "@kitware/vtk.js/Rendering/Core/CubeAxesActor";
 import * as d3 from "d3-scale";
 
 const facesToDraw = [false, false, false, false, false, true];
-const edgesToDraw = [0, 0, 0, 0, 1, 2, 2, 1, 0, 0, 0, 0];
+const edgesToDraw = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 function vtkCustomCubeAxesActor(publicAPI, model) {
   model.classHierarchy.push("vtkCustomCubeAxesActor");
@@ -47,8 +47,8 @@ function vtkCustomCubeAxesActor(publicAPI, model) {
 
       const [showX, showY] = model.visibleLabels;
       let edges = [...edgesToDraw];
-      edges[4] = showX ? 1 : 2;
-      edges[7] = showY ? 1 : 2;
+      edges[4] = showX ? 1 : 0;
+      edges[7] = showY ? 1 : 0;
 
       // update gridlines / edge lines
       publicAPI.updatePolyData(facesToDraw, edges, ticks);

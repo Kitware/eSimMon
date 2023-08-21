@@ -21,9 +21,9 @@ import vtkRenderer from "@kitware/vtk.js/Rendering/Core/Renderer";
 import vtkScalarBarActor from "@kitware/vtk.js/Rendering/Core/ScalarBarActor";
 import vtkCustomCubeAxesActor from "../../../utils/vtkCustomCubeAxesActor";
 
-const X_AXES_LABEL_BOUNDS_ADJUSTMENT = 0.3;
 const Y_AXES_LABEL_BOUNDS_ADJUSTMENT = 0.001;
 const MESH_XAXIS_SCALE_OFFSET = 0.1;
+const RECTANGULAR_VIEWPORT_SCALING = 1.5;
 
 export default {
   name: "VTKPlot",
@@ -154,6 +154,7 @@ export default {
       handler(newVal, oldVal) {
         if (!isEqual(newVal, oldVal)) {
           this.react();
+          this.resetCameraBounds();
         }
       },
     },
@@ -162,6 +163,7 @@ export default {
       handler(newVal, oldVal) {
         if (!isEqual(newVal, oldVal)) {
           this.react();
+          this.resetCameraBounds();
         }
       },
     },
@@ -240,22 +242,25 @@ export default {
           (x - parent.x + width) / parent.width,
           1 - y / parent.height,
         ];
+        const h = viewport[3] - viewport[1];
+        const w = viewport[2] - viewport[0];
+        const midx = w / 2 + viewport[0];
+        const midy = h / 2 + viewport[1];
+        // Keep the viewport square for square plots
+        let size = h > w ? w / 2 : h / 2;
         if (this.plotType === PlotType.Mesh) {
-          this.renderer.setViewport(...viewport);
-        } else {
-          // Keep the viewport square for square plots
-          const h = viewport[3] - viewport[1];
-          const w = viewport[2] - viewport[0];
-          const midx = w / 2 + viewport[0];
-          const midy = h / 2 + viewport[1];
-          let size = h > w ? w / 2 : h / 2;
-          this.renderer.setViewport(
-            midx - size,
-            midy - size,
-            midx + size,
-            midy + size,
-          );
+          if (h > w && this.numrows !== this.numcols) {
+            // Keep the viewport rectangular for Mesh plots
+            size *= RECTANGULAR_VIEWPORT_SCALING;
+          }
         }
+        this.renderer.setViewport(
+          Math.max(viewport[0], midx - size),
+          Math.max(viewport[1], midy - size),
+          Math.min(viewport[2], midx + size),
+          Math.min(viewport[3], midy + size),
+        );
+        this.resetCameraBounds();
       });
     },
     addRenderer(data) {
@@ -406,21 +411,10 @@ export default {
       // Update scalar bar
       this.scalarBar.setVisibility(this.showScalarBar);
 
-      // TODO: Remove this when we have more functionality in VTK charts
-      // Hack to adjust the bounds to include the x label
-      const bounds = [...this.actor.getBounds()];
-
       // Update camera
       if (!this.zoom) {
         // TODO: Remove this when we have more functionality in VTK charts
-        if (this.plotType === PlotType.Mesh) {
-          // Hack to adjust the bounds to include the x label
-          bounds[2] -= X_AXES_LABEL_BOUNDS_ADJUSTMENT;
-        } else if (this.plotType === PlotType.Scatter) {
-          // Hack to adjust the bounds to include the y label
-          bounds[1] -= Y_AXES_LABEL_BOUNDS_ADJUSTMENT;
-        }
-        this.renderer.resetCamera(bounds);
+        this.resetCameraBounds();
         if (!this.position) {
           this.position = this.camera.getPosition();
         }
@@ -626,19 +620,11 @@ export default {
         return;
       }
       if (!this.zoom) {
-        const bounds = [...this.actor.getBounds()];
+        // TODO: Remove this when we have more functionality in VTK charts
         if (this.plotType !== PlotType.ColorMap) {
           this.camera.setPosition(...this.position);
-          // Hack to adjust the bounds to include the x label
-          if (this.plotType === PlotType.Mesh) {
-            // This can be removed when vtk.js include the text labels in its bounds.
-            bounds[2] -= X_AXES_LABEL_BOUNDS_ADJUSTMENT;
-          } else if (this.plotType === PlotType.Scatter) {
-            // This can be removed when vtk.js include the text labels in its bounds.
-            bounds[1] -= Y_AXES_LABEL_BOUNDS_ADJUSTMENT;
-          }
         }
-        this.renderer.resetCamera(bounds);
+        this.resetCameraBounds();
         this.rangeText = "";
       } else if (!isEqual(this.zoom.focalPoint, this.camera.getFocalPoint())) {
         if (this.zoom.scale) {
@@ -705,7 +691,8 @@ export default {
         bounds[1] -= Y_AXES_LABEL_BOUNDS_ADJUSTMENT;
       } else if (this.plotType === PlotType.ColorMap) {
         if (this.yaxisVisible) {
-          bounds[0] -= this.cameraBoundsOffset() * 0.0005;
+          bounds[0] -=
+            this.cameraBoundsOffset() * (Y_AXES_LABEL_BOUNDS_ADJUSTMENT / 2);
         }
       }
       this.renderer.resetCamera(bounds);
@@ -719,20 +706,6 @@ export default {
         : [Math.min(...yVals), Math.max(...yVals)];
       this.currentRange = [x0, x1, y0, y1];
       return (y1 - y0) / (x1 - x0);
-    },
-    tooltipText() {
-      let [x0, x1] = this.xRange;
-      let [y0, y1] = this.yRange;
-      let [s0, s1] = this.scalarRange;
-      if (!this.runGlobals && this.currentRange) {
-        [x0, x1, y0, y1] = this.currentRange;
-        [s0, s1] = this.mapper.getScalarRange();
-      }
-      return {
-        x: `[${x0.toExponential(3)}, ${x1.toExponential(3)}]`,
-        y: `[${y0.toExponential(3)}, ${y1.toExponential(3)}]`,
-        scalar: `[${s0.toExponential(3)}, ${s1.toExponential(3)}]`,
-      };
     },
   },
 
