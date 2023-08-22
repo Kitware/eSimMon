@@ -68,7 +68,8 @@
                   :max="maxTimeStep"
                   :disabled="!dataLoaded"
                   :value="currentTimeStep"
-                  @change="(e) => {updateTimeStep(e.target.value)}"
+                  @change="updateTimeStep"
+                  :style="{minWidth: '110px'}"
                 >
                   <template>
                     <v-icon
