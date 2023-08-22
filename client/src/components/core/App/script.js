@@ -237,7 +237,7 @@ export default {
       viewTimeStep: "VIEW_SAVED_TIME_STEP",
       numReady: "VIEW_NUM_READY",
       loadedFromSaved: "VIEW_LOADING_FROM_SAVED",
-      lastSaved: "VIEW_LAST_SAVED",
+      lastSaved: "VIEWS_LAST_SAVED",
       creator: "VIEWS_CREATOR",
       gridSize: "VIEWS_GRID_SIZE",
       items: "VIEWS_ITEMS",

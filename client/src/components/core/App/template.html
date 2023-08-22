@@ -29,7 +29,7 @@
             :fluid="true"
             class="playback-controls"
           >
-            <v-row class="ma-0 pa-0" :style="{height: '25px'}">
+            <v-row class="mx-0 my-1 pa-0" :style="{height: '25px'}">
               <v-slider
                 dense
                 hide-details
@@ -57,7 +57,7 @@
                 </template>
               </v-slider>
             </v-row>
-            <v-row class="ma-0 pa-0" :style="{height: '25px'}">
+            <v-row class="mx-0 my-1 pa-0" :style="{height: '25px'}">
               <v-col :sm="4">
                 <v-text-field
                   dense
@@ -91,7 +91,7 @@
                 </v-text-field>
               </v-col>
             </v-row>
-            <v-row class="ma-0 pa-0" :style="{height: '25px'}">
+            <v-row class="mx-0 mt-4 mb-0 pa-0" :style="{height: '25px'}">
               <v-col :sm="6">
                 <v-row class="align-center justify-space-evenly">
                   <v-icon v-on:click="removeRow()" :disabled="numrows < 2">
@@ -115,7 +115,7 @@
                 </v-row>
               </v-col>
             </v-row>
-            <v-row class="ma-0 pa-0" :style="{height: '25px'}">
+            <v-row class="mx-0 my-1 pa-0" :style="{height: '25px'}">
               <v-col class="align-center">
                 <v-tooltip top>
                   <template v-slot:activator="{on, attrs}">
@@ -134,7 +134,8 @@
             </v-row>
             <v-row
               v-show="lastSaved"
-              :style="{height: '5px', alignContent: 'start'}"
+              class="mx-0 my-1 pa-0"
+              :style="{height: '25px'}"
             >
               <span v-bind:style="{fontSize: 'small', opacity: '0.5'}">
                 View Autosaved: {{ new Date(lastSaved).toLocaleTimeString() }}
