@@ -172,6 +172,7 @@ export default {
     },
 
     applyView() {
+      this.updateNumReady(0);
       this.$refs.plots.forEach((cell) => {
         const { row, col } = cell;
         const item = this.items[`${row}::${col}`];

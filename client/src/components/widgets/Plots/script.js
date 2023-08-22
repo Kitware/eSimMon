@@ -447,13 +447,8 @@ export default {
     },
   },
 
-  mounted() {
-    this.setGridSize(this.numcols * this.numrows);
-  },
-
   destroyed() {
     this.updateVisiblePlots({ newId: null, oldId: this.itemId });
-    this.setGridSize(this.gridSize - 1);
   },
 
   beforeDestroyed() {
