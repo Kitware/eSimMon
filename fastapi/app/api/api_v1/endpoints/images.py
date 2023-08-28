@@ -74,6 +74,19 @@ def create_plotly_image(plot_data: dict, format: str, details: dict):
         legend = details.get("legend", False)
         plot_data["layout"]["showlegend"] = legend
 
+        x_range = details.get("x_range", None)
+        y_range = details.get("y_range", None)
+        if x_range:
+            plot_data["layout"]["xaxis"]["range"] = [
+                x_range[0],
+                x_range[1],
+            ]
+        if y_range:
+            plot_data["layout"]["yaxis"]["range"] = [
+                y_range[0],
+                y_range[1],
+            ]
+
     # Get image as bytes
     fig = go.Figure(plot_data["data"], plot_data["layout"])
     return fig.to_image(format, width=1000, height=1000)
@@ -97,7 +110,7 @@ def _mkVtkIdList(it):
 
 
 class MeshImagePipeline:
-    def _retrieve_mesh_data(self, plot_type: str, plot_data: Dict):
+    def _retrieve_mesh_data(self, plot_type: str, plot_data: Dict, details: Dict):
         if plot_type == PlotFormat.mesh:
             nodes = np.asarray(plot_data["nodes"])
             connectivity = np.asarray(plot_data["connectivity"])
@@ -124,13 +137,17 @@ class MeshImagePipeline:
             connectivity = np.array(connectivity)
             # TODO: Remove this when we have more functionality in VTK charts
             # Manipulate actor scale to ensure the plot remains square
-            scale = (max(ypoints) - min(ypoints)) / (max(xpoints) - min(xpoints))
+            x0, x1 = details.get("x_range", [min(xpoints), max(xpoints)])
+            y0, y1 = details.get("y_range", [min(ypoints), max(ypoints)])
+            scale = (y1 - y0) / (x1 - x0)
 
         return nodes, connectivity, scale
 
     def render_image(self, plot_data: Dict, format: str, details: Dict):
         plot_type = plot_data["type"]
-        nodes, connectivity, scale = self._retrieve_mesh_data(plot_type, plot_data)
+        nodes, connectivity, scale = self._retrieve_mesh_data(
+            plot_type, plot_data, details
+        )
         color = np.asarray(plot_data["color"])
 
         if color.ndim > 1:
@@ -163,7 +180,8 @@ class MeshImagePipeline:
 
         # Setup mapper and actor
         self.mesh_mapper.SetInputData(self.mesh)
-        self.mesh_mapper.SetScalarRange(scalars.GetRange())
+        scalar_range = details.get("color_range", scalars.GetRange())
+        self.mesh_mapper.SetScalarRange(scalar_range)
 
         self.title_text.SetInput(title)
 
@@ -174,8 +192,16 @@ class MeshImagePipeline:
         self.axes.SetCamera(self.renderer.GetActiveCamera())
         self.axes.SetXTitle(xLabel)
         self.axes.SetYTitle(yLabel)
-        self.axes.SetBounds(self.mesh_actor.GetBounds())
-
+        x0, x1, y0, y1, z0, z1 = self.mesh_actor.GetBounds()
+        mesh_bounds = details.get("x_range", None)
+        if mesh_bounds is None:
+            mesh_bounds = [x0, x1]
+        mesh_bounds.extend(details.get("y_range", [y0, y1]))
+        mesh_bounds = [*mesh_bounds, z0, z1]
+        if plot_type == PlotFormat.colormap:
+            xscale, _, _ = self.mesh_actor.GetScale()
+            mesh_bounds[1] = (mesh_bounds[1] * xscale) + xscale * 0.1
+        self.axes.SetBounds(*mesh_bounds)
         # Needed to ensure grid axes is updated
         if plot_type == PlotFormat.mesh:
             self.axes.DrawXGridlinesOn()
@@ -186,16 +212,15 @@ class MeshImagePipeline:
         self.renderer.RemoveActor(self.axes)
         self.renderer.AddActor(self.axes)
 
-        bounds = list(self.mesh_actor.GetBounds())
         if plot_type == PlotFormat.mesh:
             # TODO: Remove this when we have more functionality in VTK charts
             # Hack to manipulate the camera bounds
             # This ensures axes labels and title are not cut off
-            bounds[2] -= 0.1
+            mesh_bounds[2] -= 0.1
         elif plot_type == PlotFormat.colormap:
             xscale, _, _ = self.mesh_actor.GetScale()
-            bounds[1] += xscale * 0.1
-        self.renderer.ResetCamera(bounds)
+            mesh_bounds[1] += xscale * 0.1
+        self.renderer.ResetCamera(mesh_bounds)
         self.renderer.SetBackground([1, 1, 1])
 
         # Set the zoom if needed

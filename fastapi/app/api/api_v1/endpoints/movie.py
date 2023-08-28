@@ -1,3 +1,4 @@
+import copy
 import glob
 import io
 import json
@@ -45,10 +46,11 @@ async def _create_movie(
 
     with tempfile.TemporaryDirectory(prefix="esimmon") as tmpdir:
         for step in selectedTimeSteps:
+            details2 = copy.deepcopy(details)
             if step in timeSteps:
                 # call generate plot response and get plot
                 plot = await get_timestep_plot(id, step, girder_token, as_image=True)
-                image = await get_timestep_image_data(plot, "png", details)
+                image = await get_timestep_image_data(plot, "png", details2)
                 im = Image.open(io.BytesIO(image), "r", ["PNG"])
                 f = tempfile.NamedTemporaryFile(
                     dir=tmpdir, prefix=f"{step}_", suffix=".png", delete=False
@@ -122,21 +124,35 @@ async def save_movie(
     # Get item information
     gc = get_girder_client(girder_token)
     item = gc.getItem(id)
-    movie_id = gc.getItem(id)["meta"].get("movieItemId", None)
+    movie_id = item["meta"].get("movieItemId", None)
+    x_range = item["meta"].get("x_range", None)
+    y_range = item["meta"].get("y_range", None)
+    color_range = item["meta"].get("color_range", None)
     files = list(gc.listFile(movie_id)) if movie_id else []
 
     # Get all timesteps
     timeSteps = item["meta"]["timesteps"]
 
-    found_exts = [os.path.splitext(f["name"])[-1] for f in files]
-    if f".{format}" not in found_exts:
-        # We don't have the default movie(s) saved yet, generate it now
-        output_file = await _create_movie(
-            id, format, {"legend": False}, timeSteps, None, 10.0, girder_token
-        )
-        gc.uploadFileToItem(
-            itemId=movie_id,
-            filepath=output_file.name,
-            mimeType=f"video/{format}",
-            filename=f"{item['name']}.{format}",
-        )
+    [os.path.splitext(f["name"])[-1] for f in files]
+    # if f".{format}" not in found_exts or format == "mpg":
+    # We don't have the default movie(s) saved yet, generate it now
+    output_file = await _create_movie(
+        id,
+        format,
+        {
+            "legend": False,
+            "x_range": x_range,
+            "y_range": y_range,
+            "color_range": color_range,
+        },
+        timeSteps,
+        None,
+        10.0,
+        girder_token,
+    )
+    gc.uploadFileToItem(
+        itemId=movie_id,
+        filepath=output_file.name,
+        mimeType=f"video/{format}",
+        filename=f"{item['name']}.{format}",
+    )

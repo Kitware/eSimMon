@@ -52,7 +52,9 @@ def get_timestep_item(gc, group_folder_id, timestep):
 
     timestep_item = list(gc.listItem(timesteps_folder_id, name=f"{timestep:04}"))
     if len(timestep_item) != 1:
-        raise HTTPException(status_code=404, detail="Timestep not found.")
+        raise HTTPException(
+            status_code=404, detail=f"Timestep {timestep:04} not found."
+        )
 
     return timestep_item[0]
 
