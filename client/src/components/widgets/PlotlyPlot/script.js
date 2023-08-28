@@ -469,7 +469,7 @@ export default {
       });
       this.timeIndex = this.times.findIndex((time) => time === closestVal);
     },
-    setAnnotations(data) {
+    setAnnotations() {
       if (!this.zoom) {
         this.rangeText = "";
         return;
