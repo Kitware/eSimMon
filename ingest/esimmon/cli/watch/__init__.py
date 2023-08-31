@@ -553,7 +553,7 @@ async def create_movies(folder, gc):
             await gc.create_movie(item, ext)
 
 
-async def upload_timestep_bp_archive(
+async def upload_timestep_bp_archive_or_image(
     gc,
     folder,
     shot_name,
@@ -641,7 +641,9 @@ async def fetch_images(
         buffer = BytesIO(image_archive)
 
         with tarfile.open(fileobj=buffer) as images_tgz:
-            bp_files_to_upload = set([v["file_name"] for v in variables])
+            files = set([v["file_name"] for v in variables])
+            bp_files_to_upload = [f for f in files if f.endswith(".bp")]
+            image_files_to_upload = [f for f in files if not f.endswith(".bp")]
 
             # First ensure will be all variable items created
             for v in variables:
@@ -662,7 +664,7 @@ async def fetch_images(
                     )
                     return
 
-                # Ensure we have the variable item created
+                # Ensure we have the variable item
                 item_id = await create_variable_item(
                     gc,
                     folder,
@@ -676,6 +678,35 @@ async def fetch_images(
                 variable_items[variable_name] = item_id
 
             tasks = []
+            # Upload the image files
+            for fp in image_files_to_upload:
+                # Remove the prefix
+                file_path = "/".join(fp.split("/")[2:])
+                try:
+                    m = images_tgz.getmember(file_path)
+                except KeyError:
+                    log.warning(f"Unable to extract image for '{file_path}', skipping.")
+                    continue
+
+                f = images_tgz.extractfile(m)
+                bits = f.read()
+
+                tasks.append(
+                    asyncio.create_task(
+                        upload_timestep_bp_archive_or_image(
+                            gc,
+                            folder,
+                            shot_name,
+                            run_name,
+                            f"{timestep:04}",
+                            Path(file_path).name,
+                            bits,
+                            m.size,
+                            check_exists=False,
+                        )
+                    )
+                )
+
             # Now upload the BP files
             for bp in bp_files_to_upload:
                 timestep_bp_bytes = BytesIO()
@@ -707,7 +738,7 @@ async def fetch_images(
                 bytes = timestep_bp_bytes.getvalue()
                 tasks.append(
                     asyncio.create_task(
-                        upload_timestep_bp_archive(
+                        upload_timestep_bp_archive_or_image(
                             gc,
                             folder,
                             shot_name,
@@ -720,6 +751,7 @@ async def fetch_images(
                         )
                     )
                 )
+
             # Gather, so we fetch all images for this timestep before moving on to the
             # next one!
             await asyncio.gather(*tasks)
