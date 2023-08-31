@@ -5,6 +5,7 @@ from pathlib import Path
 
 import adios2
 from app.schemas.format import PlotFormat
+from starlette.responses import StreamingResponse
 
 from fastapi import APIRouter
 from fastapi import Header
@@ -153,12 +154,25 @@ async def get_timestep_plot(
 ):
     gc = get_girder_client(girder_token)
     group_folder_id = get_group_folder_id(gc, variable_id)
-    get_timestep_item(gc, group_folder_id, timestep)
+    time_step_item = get_timestep_item(gc, group_folder_id, timestep)
     # Get the variable name (the item name)
     variable_item = gc.getItem(variable_id)
     variable = variable_item["name"]
 
-    # Get the BP file for the timestep
+    # Check for a static image
+    time_step_files = gc.listFile(time_step_item["_id"])
+    for tsf in time_step_files:
+        # Try to accomodate as many variations of naming as possible.
+        # File name is expected to contain the variable (attribute).
+        file_name = Path(tsf["name"]).stem
+        vars = [variable, variable.lower(), variable.upper()]
+        if any([file_name.find(v) != -1 for v in vars]):
+            format = Path(tsf["name"]).suffix.strip(".")
+            return StreamingResponse(
+                gc.downloadFileAsIterator(tsf["_id"]), media_type=f"image/{format}"
+            )
+
+    # If no image found get the BP file for the timestep
     group_folder = gc.getFolder(group_folder_id)
     group_name = group_folder["name"]
     f"{group_name}.bp.tgz"
