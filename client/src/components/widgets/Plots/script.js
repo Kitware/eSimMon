@@ -3,6 +3,7 @@ import { mapGetters, mapActions, mapMutations } from "vuex";
 import { decode } from "@msgpack/msgpack";
 import PlotlyPlot from "../PlotlyPlot";
 import VtkPlot from "../VTKPlot";
+import StaticImage from "../StaticImage";
 import { PlotType } from "../../../utils/constants";
 import { PlotFetcher } from "../../../utils/plotFetcher";
 
@@ -19,6 +20,7 @@ export default {
   components: {
     PlotlyPlot,
     VtkPlot,
+    StaticImage,
   },
 
   props: {
@@ -193,7 +195,10 @@ export default {
      */
     resolveTimeStepData: function (response, timeStep) {
       const reader = new FileReader();
-      if (response.type === "application/msgpack") {
+      if (response.type.includes("image/")) {
+        reader.readAsDataURL(response);
+        this.plotType = PlotType.Image;
+      } else if (response.type === "application/msgpack") {
         reader.readAsArrayBuffer(response);
         this.plotType = PlotType.VTK;
       } else {
@@ -208,7 +213,16 @@ export default {
         reader.onload = () => {
           let img;
           const ltsd = this.loadedTimeStepData;
-          if (this.plotType === PlotType.VTK) {
+          if (this.plotType === PlotType.Image) {
+            this.setLoadedTimeStepData([
+              ...ltsd,
+              {
+                timestep: timeStep,
+                url: reader.result,
+                type: PlotType.Image,
+              },
+            ]);
+          } else if (this.plotType === PlotType.VTK) {
             img = decode(reader.result);
             this.$refs[`${this.row}-${this.col}`].addRenderer(img);
             if (!this.isTimeStepLoaded(timeStep)) {

@@ -19,6 +19,11 @@
       :itemId="itemId"
       :plotXAxis="plotXAxis"
     />
+    <static-image
+      :ref="row+'-'+col"
+      v-if="plotType === 'image'"
+      :itemId="itemId"
+    />
     <div class="plot">
       <v-icon v-if="!plotType" large> input </v-icon>
     </div>
