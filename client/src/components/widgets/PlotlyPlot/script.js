@@ -375,7 +375,7 @@ export default {
       }
       return nextImage;
     },
-    react: function () {
+    react() {
       if (!this.itemId) {
         return;
       }

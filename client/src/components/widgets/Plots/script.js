@@ -142,7 +142,7 @@ export default {
       setShouldAutoSave: "VIEWS_AUTO_SAVE_RUN_SET",
       updateNumReady: "VIEW_NUM_READY_SET",
     }),
-    setMetaData: function (meta) {
+    setMetaData(meta) {
       if (!this.itemId) {
         return;
       }
