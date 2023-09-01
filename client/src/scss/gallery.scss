@@ -126,15 +126,8 @@
 // Make sure toolbar doesn't cover plot title
 // when visible
 .show-toolbar {
-  .modebar-container {
-    display: flex;
-    height: auto;
-    div {
-      height: auto;
-    }
-  }
   .modebar {
-    top: 20px !important;
+    display: none;
   }
 }
 
@@ -153,6 +146,7 @@
   min-width: 3px;
   width: 10px;
   background: linear-gradient(90deg, #ccc, #a5a4a4);
+  z-index: 1;
 }
 
 // Resize plot labels when plots resize

@@ -20,9 +20,11 @@ import vtkPolyData from "@kitware/vtk.js/Common/DataModel/PolyData";
 import vtkRenderer from "@kitware/vtk.js/Rendering/Core/Renderer";
 import vtkScalarBarActor from "@kitware/vtk.js/Rendering/Core/ScalarBarActor";
 import vtkCustomCubeAxesActor from "../../../utils/vtkCustomCubeAxesActor";
+import { extractRange } from "../../../utils/helpers";
 
-const X_AXES_LABEL_BOUNDS_ADJUSTMENT = 0.3;
 const Y_AXES_LABEL_BOUNDS_ADJUSTMENT = 0.001;
+const MESH_XAXIS_SCALE_OFFSET = 0.1;
+const RECTANGULAR_VIEWPORT_SCALING = 1.5;
 
 export default {
   name: "VTKPlot",
@@ -56,11 +58,17 @@ export default {
       rangeText: "",
       plotType: null,
       lastLoadedTimeStep: -1,
+      currentRange: null,
     };
   },
 
   computed: {
     ...mapGetters({
+      runGlobals: "UI_USE_RUN_GLOBALS",
+      enableRangeTooltip: "UI_SHOW_RANGE_TOOLTIP",
+      xaxisVisible: "UI_SHOW_X_AXIS",
+      yaxisVisible: "UI_SHOW_Y_AXIS",
+      showScalarBar: "UI_SHOW_SCALAR_BAR",
       renderWindow: "UI_RENDER_WINDOW",
       syncZoom: "UI_ZOOM_SYNC",
       interactor: "UI_INTERACTOR",
@@ -83,8 +91,26 @@ export default {
     xAxis() {
       return this.$store.getters[`${this.itemId}/PLOT_X_AXIS`] || null;
     },
+    scalarRange() {
+      return this.$store.getters[`${this.itemId}/PLOT_COLOR_RANGE`] || null;
+    },
+    xRange() {
+      return this.$store.getters[`${this.itemId}/PLOT_X_RANGE`] || null;
+    },
+    yRange() {
+      return this.$store.getters[`${this.itemId}/PLOT_Y_RANGE`] || null;
+    },
     zoom() {
       return this.$store.getters[`${this.itemId}/PLOT_ZOOM`] || null;
+    },
+    localTimeStep() {
+      const ts = this.currentTimeStep;
+      if (this.availableTimeSteps.includes(ts)) {
+        return ts;
+      }
+      let idx = this.availableTimeSteps.findIndex((step) => step >= ts);
+      idx = Math.max((idx -= 1), 0);
+      return this.availableTimeSteps[idx];
     },
   },
 
@@ -124,6 +150,41 @@ export default {
         }
       },
     },
+    xaxisVisible: {
+      immediate: true,
+      handler(newVal, oldVal) {
+        if (!isEqual(newVal, oldVal)) {
+          this.react();
+          this.resetCameraBounds();
+        }
+      },
+    },
+    yaxisVisible: {
+      immediate: true,
+      handler(newVal, oldVal) {
+        if (!isEqual(newVal, oldVal)) {
+          this.react();
+          this.resetCameraBounds();
+        }
+      },
+    },
+    showScalarBar: {
+      immediate: true,
+      handler(newVal, oldVal) {
+        if (!isEqual(newVal, oldVal)) {
+          this.react();
+        }
+      },
+    },
+    runGlobals: {
+      immediate: true,
+      handler(newVal, oldVal) {
+        if (!isEqual(newVal, oldVal)) {
+          this.react();
+          this.resetCameraBounds();
+        }
+      },
+    },
   },
 
   methods: {
@@ -144,25 +205,12 @@ export default {
     },
     react: function () {
       let nextImage = this.loadedTimeStepData.find(
-        (img) => img.timestep == this.currentTimeStep,
+        (img) => img.timestep == this.localTimeStep,
       );
-      if (isNil(nextImage) && this.loadedTimeStepData.length >= 1) {
-        let idx = this.availableTimeSteps.findIndex(
-          (step) => step >= this.currentTimeStep,
-        );
-        idx = Math.max((idx -= 1), 0);
-        let prevTimeStep = this.availableTimeSteps[idx];
-        nextImage = this.loadedTimeStepData.find(
-          (img) => img.timestep === prevTimeStep,
-        );
-      }
       // Plots can be added faster than the data can update. Make sure that the
       // nextImage is the correct plot type.
-
       const readyForUpdate =
-        !isNil(nextImage) &&
-        !Array.isArray(nextImage.data) &&
-        this.lastLoadedTimeStep != nextImage?.timestep;
+        !isNil(nextImage) && !Array.isArray(nextImage.data);
       if (readyForUpdate) {
         if (!this.xaxis) {
           let xAxis = nextImage.data.xLabel;
@@ -195,22 +243,25 @@ export default {
           (x - parent.x + width) / parent.width,
           1 - y / parent.height,
         ];
+        const h = viewport[3] - viewport[1];
+        const w = viewport[2] - viewport[0];
+        const midx = w / 2 + viewport[0];
+        const midy = h / 2 + viewport[1];
+        // Keep the viewport square for square plots
+        let size = h > w ? w / 2 : h / 2;
         if (this.plotType === PlotType.Mesh) {
-          this.renderer.setViewport(...viewport);
-        } else {
-          // Keep the viewport square for square plots
-          const h = viewport[3] - viewport[1];
-          const w = viewport[2] - viewport[0];
-          const midx = w / 2 + viewport[0];
-          const midy = h / 2 + viewport[1];
-          let size = h > w ? w / 2 : h / 2;
-          this.renderer.setViewport(
-            midx - size,
-            midy - size,
-            midx + size,
-            midy + size,
-          );
+          if (h > w && this.numrows !== this.numcols) {
+            // Keep the viewport rectangular for Mesh plots
+            size *= RECTANGULAR_VIEWPORT_SCALING;
+          }
         }
+        this.renderer.setViewport(
+          Math.max(viewport[0], midx - size),
+          Math.max(viewport[1], midy - size),
+          Math.min(viewport[2], midx + size),
+          Math.min(viewport[3], midy + size),
+        );
+        this.resetCameraBounds();
       });
     },
     addRenderer(data) {
@@ -253,20 +304,20 @@ export default {
       this.axes.setAxisLabels(data.xLabel, data.yLabel, "");
       this.axes.getProperty().setColor("black");
       this.axes.getProperty().setLineWidth(0.1);
-      if (this.plotType === PlotType.ColorMap) {
-        this.axes.setGridLines(false);
-      }
+      this.axes.setGridLines(false);
+      this.axes.setVisibleLabels([this.xaxisVisible, this.yaxisVisible]);
       this.renderer.addActor(this.axes);
 
       // Build color bar
       this.scalarBar = vtkScalarBarActor.newInstance();
-      this.scalarBar.setGenerateTicks(customGenerateTicks(6));
+      this.scalarBar.setGenerateTicks(customGenerateTicks(1));
       this.scalarBar.setScalarsToColors(lut);
       this.scalarBar.setAxisLabel(data.colorLabel);
       this.scalarBar.setAxisTextStyle({ fontColor: "black" });
       this.scalarBar.setTickTextStyle({ fontColor: "black" });
       this.scalarBar.setDrawNanAnnotation(false);
       this.scalarBar.setAutoLayout(scalarBarAutoLayout(this.scalarBar));
+      this.scalarBar.setVisibility(this.showScalarBar);
       this.renderer.addActor2D(this.scalarBar);
 
       if (this.plotType === PlotType.Scatter) {
@@ -331,7 +382,10 @@ export default {
 
         // Build the polydata
         this.mesh.getPointData().setScalars(scalars);
-        this.mapper.setScalarRange(...scalars.getRange());
+        const scalarRange = this.runGlobals
+          ? this.scalarRange
+          : scalars.getRange();
+        this.mapper.setScalarRange(...scalarRange);
 
         // Setup colormap
         const lut = this.mapper.getLookupTable();
@@ -350,25 +404,18 @@ export default {
       // TODO: Remove this when we have more functionality in VTK charts
       // Use the original data from the mesh rather than the potentially scaled
       // actor data
-      this.axes.setDataBounds(this.actor.getBounds());
+      this.axes.setDataBounds(...this.axesDataBounds());
       const [scale] = this.actor.getScale();
       this.axes.setTicksScale(scale);
+      this.axes.setVisibleLabels([this.xaxisVisible, this.yaxisVisible]);
 
-      // TODO: Remove this when we have more functionality in VTK charts
-      // Hack to adjust the bounds to include the x label
-      const bounds = [...this.actor.getBounds()];
+      // Update scalar bar
+      this.scalarBar.setVisibility(this.showScalarBar);
 
       // Update camera
       if (!this.zoom) {
         // TODO: Remove this when we have more functionality in VTK charts
-        if (this.plotType === PlotType.Mesh) {
-          // Hack to adjust the bounds to include the x label
-          bounds[2] -= X_AXES_LABEL_BOUNDS_ADJUSTMENT;
-        } else if (this.plotType === PlotType.Scatter) {
-          // Hack to adjust the bounds to include the y label
-          bounds[1] -= Y_AXES_LABEL_BOUNDS_ADJUSTMENT;
-        }
-        this.renderer.resetCamera(bounds);
+        this.resetCameraBounds();
         if (!this.position) {
           this.position = this.camera.getPosition();
         }
@@ -417,13 +464,11 @@ export default {
       }
       this.mesh.getPoints().setData(points, 3);
       this.mesh.getPolys().setData(cells);
-      // FIXME: This is a hack to attempt to keep
-      // the plot ratio relatively square
-      const yRange = Math.max(...y) - Math.min(...y);
-      const xRange = Math.max(...x) - Math.min(...x);
-      const actorScale = yRange / xRange;
       if (!this.zoom) {
-        this.actor.setScale(actorScale, 1, 1);
+        // FIXME: This is a hack to attempt to keep
+        // the plot ratio relatively square
+        const scale = this.actorScale(x, y);
+        this.actor.setScale(scale, 1, 1);
       }
     },
     updateMeshRenderer(data) {
@@ -478,13 +523,11 @@ export default {
       this.actor.getProperty().setColor(0, 0, 1);
 
       this.mesh.getPoints().setData(points, 3);
-      // FIXME: This is a hack to attempt to keep
-      // the plot ratio relatively square
-      const yRange = Math.max(...y) - Math.min(...y);
-      const xRange = Math.max(...x) - Math.min(...x);
-      const actorScale = yRange / xRange;
       if (!this.zoom) {
-        this.actor.setScale(actorScale, 1, 1);
+        // FIXME: This is a hack to attempt to keep
+        // the plot ratio relatively square
+        const scale = this.actorScale(x, y);
+        this.actor.setScale(scale, 1, 1);
       }
     },
     removeRenderer() {
@@ -578,19 +621,11 @@ export default {
         return;
       }
       if (!this.zoom) {
-        const bounds = [...this.actor.getBounds()];
+        // TODO: Remove this when we have more functionality in VTK charts
         if (this.plotType !== PlotType.ColorMap) {
           this.camera.setPosition(...this.position);
-          // Hack to adjust the bounds to include the x label
-          if (this.plotType === PlotType.Mesh) {
-            // This can be removed when vtk.js include the text labels in its bounds.
-            bounds[2] -= X_AXES_LABEL_BOUNDS_ADJUSTMENT;
-          } else if (this.plotType === PlotType.Scatter) {
-            // This can be removed when vtk.js include the text labels in its bounds.
-            bounds[1] -= Y_AXES_LABEL_BOUNDS_ADJUSTMENT;
-          }
         }
-        this.renderer.resetCamera(bounds);
+        this.resetCameraBounds();
         this.rangeText = "";
       } else if (!isEqual(this.zoom.focalPoint, this.camera.getFocalPoint())) {
         if (this.zoom.scale) {
@@ -598,6 +633,76 @@ export default {
           this.camera.setParallelScale(this.zoom.scale);
         }
       }
+    },
+    tooltipText() {
+      let [x0, x1] = this.xRange;
+      let [y0, y1] = this.yRange;
+      let [s0, s1] = this.scalarRange;
+      if (!this.runGlobals && this.currentRange) {
+        [x0, x1, y0, y1] = this.currentRange;
+        [s0, s1] = this.mapper.getScalarRange();
+      }
+      return {
+        x: `[${x0.toExponential(3)}, ${x1.toExponential(3)}]`,
+        y: `[${y0.toExponential(3)}, ${y1.toExponential(3)}]`,
+        scalar: `[${s0.toExponential(3)}, ${s1.toExponential(3)}]`,
+      };
+    },
+    axesDataBounds() {
+      if (!this.runGlobals) {
+        return [...this.actor.getBounds()];
+      }
+      const [x0, x1, y0, y1] = this.actor.getBounds();
+      let xBounds = this.runGlobals ? [...this.xRange] : [x0, x1];
+      let yBounds = this.runGlobals ? [...this.yRange] : [y0, y1];
+      const meshBounds = [...xBounds, ...yBounds, 0, 0];
+      if (this.plotType === PlotType.ColorMap) {
+        const [xscale] = this.actor.getScale();
+        meshBounds[1] =
+          meshBounds[1] * xscale + xscale * MESH_XAXIS_SCALE_OFFSET;
+      }
+      return meshBounds;
+    },
+    cameraBoundsOffset() {
+      const parent = document
+        .getElementById("mainContent")
+        .getBoundingClientRect();
+      const { width, height } = this.$el.getBoundingClientRect();
+      let w = Math.abs(Math.log(width / parent.width));
+      let h = Math.abs(Math.log(height / parent.height));
+      return height > width ? w / 2 : h / 2;
+    },
+    resetCameraBounds() {
+      if (!this.renderer) {
+        return;
+      }
+      // TODO: Remove this when we have more functionality in VTK charts
+      const bounds = this.axesDataBounds();
+      if (this.plotType === PlotType.Mesh) {
+        if (this.xaxisVisible) {
+          // Hack to adjust the bounds to include the x label
+          bounds[2] -= this.cameraBoundsOffset();
+        }
+        if (this.yaxisVisible) {
+          // Hack to adjust the bounds to include the y label
+          bounds[0] -= this.cameraBoundsOffset();
+        }
+      } else if (this.plotType === PlotType.Scatter) {
+        // Hack to adjust the bounds to include the y label
+        bounds[1] -= Y_AXES_LABEL_BOUNDS_ADJUSTMENT;
+      } else if (this.plotType === PlotType.ColorMap) {
+        if (this.yaxisVisible) {
+          bounds[0] -=
+            this.cameraBoundsOffset() * (Y_AXES_LABEL_BOUNDS_ADJUSTMENT / 2);
+        }
+      }
+      this.renderer.resetCamera(bounds);
+    },
+    actorScale(xVals, yVals) {
+      const [x0, x1] = this.runGlobals ? this.xRange : extractRange(xVals);
+      const [y0, y1] = this.runGlobals ? this.yRange : extractRange(yVals);
+      this.currentRange = [x0, x1, y0, y1];
+      return (y1 - y0) / (x1 - x0);
     },
   },
 

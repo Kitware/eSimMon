@@ -12,6 +12,11 @@
         <v-list-item dense @click="showRangeDialog=true">
           <v-list-item-title> Set global range </v-list-item-title>
         </v-list-item>
+        <v-list-item dense @click="toggleLogScale">
+          <v-list-item-title>
+            {{logScaling ? "Clear" : "Apply"}} log scaling
+          </v-list-item-title>
+        </v-list-item>
       </v-list>
       <v-divider v-if="itemInfo && itemInfo.isPlotly" />
       <v-list>

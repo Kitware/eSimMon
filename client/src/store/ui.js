@@ -25,6 +25,13 @@ export default {
     boxSelector: null,
     showSettings: false,
     autoSavedViewDialogEnabled: true,
+    useRunGlobals: true,
+    showXAxis: false,
+    showYAxis: false,
+    showScalarBar: false,
+    showTitle: true,
+    showLegend: false,
+    rangeTooltip: true,
   },
   getters: {
     UI_AUTO_SAVE_DIALOG(state) {
@@ -75,6 +82,27 @@ export default {
     UI_AUTO_SAVE_DIALOG_ENABLED(state) {
       return state.autoSavedViewDialogEnabled;
     },
+    UI_USE_RUN_GLOBALS(state) {
+      return state.useRunGlobals;
+    },
+    UI_SHOW_X_AXIS(state) {
+      return state.showXAxis;
+    },
+    UI_SHOW_Y_AXIS(state) {
+      return state.showYAxis;
+    },
+    UI_SHOW_SCALAR_BAR(state) {
+      return state.showScalarBar;
+    },
+    UI_SHOW_TITLE(state) {
+      return state.showTitle;
+    },
+    UI_SHOW_LEGEND(state) {
+      return state.showLegend;
+    },
+    UI_SHOW_RANGE_TOOLTIP(state) {
+      return state.rangeTooltip;
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {
@@ -122,6 +150,27 @@ export default {
     UI_AUTO_SAVE_DIALOG_ENABLED_SET(state, val) {
       state.autoSavedViewDialogEnabled = val;
     },
+    UI_USE_RUN_GLOBALS_SET(state, val) {
+      state.useRunGlobals = val;
+    },
+    UI_SHOW_X_AXIS_SET(state, val) {
+      state.showXAxis = val;
+    },
+    UI_SHOW_Y_AXIS_SET(state, val) {
+      state.showYAxis = val;
+    },
+    UI_SHOW_SCALAR_BAR_SET(state, val) {
+      state.showScalarBar = val;
+    },
+    UI_SHOW_TITLE_SET(state, val) {
+      state.showTitle = val;
+    },
+    UI_SHOW_LEGEND_SET(state, val) {
+      state.showLegend = val;
+    },
+    UI_SHOW_RANGE_TOOLTIP_SET(state, val) {
+      state.rangeTooltip = val;
+    },
   },
   actions: {
     UI_TOGGLE_PLAY_PAUSE({ state }) {
@@ -135,6 +184,24 @@ export default {
     },
     UI_TOGGLE_SHOW_SETTINGS({ state }) {
       state.showSettings = !state.showSettings;
+    },
+    UI_TOGGLE_RUN_GLOBALS({ state }) {
+      state.useRunGlobals = !state.useRunGlobals;
+    },
+    UI_TOGGLE_X_AXIS({ state }) {
+      state.showXAxis = !state.showXAxis;
+    },
+    UI_TOGGLE_Y_AXIS({ state }) {
+      state.showYAxis = !state.showYAxis;
+    },
+    UI_TOGGLE_SCALAR_BAR({ state }) {
+      state.showScalarBar = !state.showScalarBar;
+    },
+    UI_TOGGLE_TITLE({ state }) {
+      state.showTitle = !state.showTitle;
+    },
+    UI_TOGGLE_LEGEND({ state }) {
+      state.showLegend = !state.showLegend;
     },
   },
 };

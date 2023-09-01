@@ -126,14 +126,21 @@ async def generate_plot_data(bp, variable: str):
     raise HTTPException(status_code=400, detail="Unsupported plot type.")
 
 
-@router.get("/{variable_id}/timesteps")
+@router.get("/{variable_id}/timesteps/meta")
 async def get_timesteps(variable_id: str, girder_token: str = Header(None)):
     gc = get_girder_client(girder_token)
 
     item = gc.getItem(variable_id)
-    meta = item["meta"]
+    meta = {"steps": item["meta"]["timesteps"], "time": item["meta"]["time"]}
 
-    return {"steps": meta["timesteps"], "time": meta["time"]}
+    if x_range := item["meta"].get("x_range", None):
+        meta["x_range"] = x_range
+    if y_range := item["meta"].get("y_range", None):
+        meta["y_range"] = y_range
+    if color_range := item["meta"].get("color_range", None):
+        meta["color_range"] = color_range
+
+    return meta
 
 
 # variable_id => Girder item id for item used to represent the variable.

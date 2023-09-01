@@ -168,15 +168,13 @@ export default {
       layout.forEach((item) => {
         const { row, col, itemId } = item;
         if (itemId) {
-          const { legend, log, range, xAxis, zoom } =
-            getters[`${itemId}/PLOT_DATA_COMPLETE`];
+          const plotData = getters[`${itemId}/PLOT_DATA_COMPLETE`];
           items[`${row}::${col}`] = {
             id: itemId,
-            legend,
-            log,
-            range,
-            xAxis,
-            zoom,
+            log: plotData?.log || false,
+            range: plotData?.range || null,
+            xAxis: plotData?.xAxis || "",
+            zoom: plotData?.zoom || null,
           };
         }
       });
@@ -202,8 +200,8 @@ export default {
       });
       commit("VIEWS_INFO_SET", info);
     },
-    async VIEW_FETCH_AUTO_SAVE({ state, commit, getters }) {
-      commit("VIEW_AUTO_SAVE_RUN_SET", false);
+    async VIEWS_FETCH_AUTO_SAVE({ state, commit, getters }) {
+      commit("VIEWS_AUTO_SAVE_RUN_SET", false);
       const userId = this.$girderRest.user._id;
       const viewName = `${state.simulation}_${state.runId}_${userId}`;
       commit("VIEWS_AUTO_SAVE_NAME_SET", viewName);
@@ -212,7 +210,7 @@ export default {
       );
       const view = data[0];
       if (view) {
-        commit("VIEW_AUTO_SAVED_SET", view);
+        commit("VIEWS_AUTO_SAVED_SET", view);
         // Show the auto-save dialog if it hasn't been disabled in the settings
         commit("UI_AUTO_SAVE_DIALOG_SET", getters.UI_AUTO_SAVE_DIALOG_ENABLED);
       }

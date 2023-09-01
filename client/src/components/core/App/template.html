@@ -14,23 +14,9 @@
         <v-col v-bind:style="{padding: '0 10px'}">
           <!-- Girder data table browser. -->
           <div class="girder-placeholder" v-if="!location" />
-          <div>
-            <v-tooltip
-              right
-              light
-              v-if="range"
-              :value="range"
-              :position-x="pos[0]"
-              :position-y="pos[1]"
-            >
-              <span v-if="range">{{range}}</span>
-            </v-tooltip>
-          </div>
           <girder-file-manager
             ref="girderFileManager"
             v-if="location && !showSettings"
-            v-on:mouseover.native="hoverIn($event)"
-            v-on:mouseout.native="hoverOut"
             :location.sync="location"
             :selectable="false"
             :drag-enabled="true"
@@ -42,9 +28,8 @@
             v-if="!showSettings"
             :fluid="true"
             class="playback-controls"
-            v-on:mouseover="hoverOut"
           >
-            <v-row class="ma-0 pa-0" :style="{height: '25px'}">
+            <v-row class="mx-0 my-1 pa-0" style="height: 25px">
               <v-slider
                 dense
                 hide-details
@@ -72,7 +57,7 @@
                 </template>
               </v-slider>
             </v-row>
-            <v-row class="ma-0 pa-0" :style="{height: '25px'}">
+            <v-row class="mx-0 my-1 pa-0" style="height: 25px">
               <v-col :sm="4">
                 <v-text-field
                   dense
@@ -83,7 +68,8 @@
                   :max="maxTimeStep"
                   :disabled="!dataLoaded"
                   :value="currentTimeStep"
-                  @change="(e) => {updateTimeStep(e.target.value)}"
+                  @change="updateTimeStep"
+                  style="min-width: 110px"
                 >
                   <template>
                     <v-icon
@@ -106,7 +92,7 @@
                 </v-text-field>
               </v-col>
             </v-row>
-            <v-row class="ma-0 pa-0" :style="{height: '25px'}">
+            <v-row class="mx-0 mt-4 mb-0 pa-0" style="height: 25px">
               <v-col :sm="6">
                 <v-row class="align-center justify-space-evenly">
                   <v-icon v-on:click="removeRow()" :disabled="numrows < 2">
@@ -130,7 +116,7 @@
                 </v-row>
               </v-col>
             </v-row>
-            <v-row class="ma-0 pa-0" :style="{height: '25px'}">
+            <v-row class="mx-0 my-1 pa-0" style="height: 25px">
               <v-col class="align-center">
                 <v-tooltip top>
                   <template v-slot:activator="{on, attrs}">
@@ -149,7 +135,8 @@
             </v-row>
             <v-row
               v-show="lastSaved"
-              :style="{height: '5px', alignContent: 'start'}"
+              class="mx-0 my-1 pa-0"
+              style="height: 25px"
             >
               <span v-bind:style="{fontSize: 'small', opacity: '0.5'}">
                 View Autosaved: {{ new Date(lastSaved).toLocaleTimeString() }}
@@ -160,13 +147,7 @@
       </v-row>
     </pane>
     <!-- Scientific data on the right. -->
-    <pane
-      id="mainContent"
-      min-size="50"
-      :size="85"
-      class="main-content"
-      v-on:mouseover.native="hoverOut"
-    >
+    <pane id="mainContent" min-size="50" :size="85" class="main-content">
       <!-- image gallery grid. -->
       <render-window ref="renderWindow" id="renderWindow" class="plots" />
       <v-container v-bind:style="{padding: '0', maxWidth: '100%'}">

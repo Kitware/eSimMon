@@ -7,6 +7,7 @@ import { PlotType } from "../../../utils/constants";
 import { PlotFetcher } from "../../../utils/plotFetcher";
 
 import plot from "../../../store/plot";
+import { extractRange } from "../../../utils/helpers";
 
 // // Number of timesteps to prefetch data for.
 // const TIMESTEPS_TO_PREFETCH = 3;
@@ -97,7 +98,8 @@ export default {
         if (this.itemId) {
           this.plotFetcher = new PlotFetcher(
             this.itemId,
-            (itemId) => this.callFastEndpoint(`variables/${itemId}/timesteps`),
+            (itemId) =>
+              this.callFastEndpoint(`variables/${itemId}/timesteps/meta`),
             (itemId, timestep) =>
               this.callFastEndpoint(
                 `variables/${itemId}/timesteps/${timestep}/plot`,
@@ -141,15 +143,12 @@ export default {
       setShouldAutoSave: "VIEWS_AUTO_SAVE_RUN_SET",
       updateNumReady: "VIEW_NUM_READY_SET",
     }),
-    setAvailableTimeSteps: function (steps) {
+    setMetaData(meta) {
       if (!this.itemId) {
         return;
       }
 
-      this.$store.dispatch(
-        `${this.itemId}/PLOT_AVAILABLE_TIME_STEPS_CHANGED`,
-        steps,
-      );
+      this.$store.dispatch(`${this.itemId}/PLOT_META_DATA_CHANGED`, meta);
     },
     setLoadedTimeStepData: function (loaded) {
       this.$store.commit(`${this.itemId}/PLOT_LOADED_TIME_STEPS_SET`, loaded);
@@ -160,9 +159,6 @@ export default {
       }
 
       this.$store.commit(`${this.itemId}/PLOT_TIMES_SET`, times);
-    },
-    updatePlotLegendVisibility: function (legend) {
-      this.$store.commit(`${this.itemId}/PLOT_LEGEND_VISIBILITY_SET`, legend);
     },
     updatePlotLogScaling: function (log) {
       this.$store.commit(`${this.itemId}/PLOT_LOG_SCALING_SET`, log);
@@ -261,8 +257,8 @@ export default {
       const firstAvailableStep = await this.plotFetcher
         .initialize()
         .then((response) => {
+          this.setMetaData(response);
           ats = response.steps.sort((a, b) => a - b);
-          this.setAvailableTimeSteps(ats);
           this.updateTimes(response.time);
           // Make sure there is an image associated with this time step
           let step = ats.find((step) => step === this.currentTimeStep);
@@ -281,7 +277,8 @@ export default {
       );
       await this.plotFetcher.fetchTimeStepFn(response, firstAvailableStep);
 
-      this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
+      let [, max] = extractRange(ats);
+      this.setMaxTimeStep(Math.max(this.maxTimeStep, max));
       this.setItemId(this.itemId);
       this.setInitialLoad(false);
       this.$refs[`${this.row}-${this.col}`].react();
@@ -319,7 +316,6 @@ export default {
       this.itemId = item.id || "";
       this.updateRegisteredModules(oldId);
       this.updateVisiblePlots({ newId: this.itemId, oldId });
-      this.updatePlotLegendVisibility(item.legend);
       this.updatePlotLogScaling(item.log);
       this.updatePlotXAxis(item.xAxis);
       this.updatePlotZoom(item.zoom);
@@ -421,9 +417,10 @@ export default {
     },
     clearGallery() {
       this.updateVisiblePlots({ newId: null, oldId: this.itemId });
-      this.setAvailableTimeSteps([]);
+      this.setMetaData({});
       this.itemId = "";
       this.setInitialLoad(true);
+      this.plotType = PlotType.None;
     },
     async setRun() {
       const { data } = await this.girderRest.get(
@@ -453,13 +450,8 @@ export default {
     },
   },
 
-  mounted() {
-    this.setGridSize(this.numcols * this.numrows);
-  },
-
   destroyed() {
     this.updateVisiblePlots({ newId: null, oldId: this.itemId });
-    this.setGridSize(this.gridSize - 1);
   },
 
   beforeDestroyed() {

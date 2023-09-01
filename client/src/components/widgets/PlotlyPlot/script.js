@@ -3,6 +3,7 @@ import { isEmpty, isEqual, isNil } from "lodash";
 import { mapActions, mapGetters, mapMutations } from "vuex";
 import { PlotType } from "../../../utils/constants";
 import Annotations from "../Annotations";
+import { extractRange } from "../../../utils/helpers";
 
 //-----------------------------------------------------------------------------
 // Utility Functions
@@ -55,11 +56,19 @@ export default {
       averagingValues: [],
       avgAnnotation: "",
       computingTimeAverage: false,
+      plotLabels: {},
+      currentRange: null,
     };
   },
 
   computed: {
     ...mapGetters({
+      enableRangeTooltip: "UI_SHOW_RANGE_TOOLTIP",
+      xaxisVisible: "UI_SHOW_X_AXIS",
+      yaxisVisible: "UI_SHOW_Y_AXIS",
+      showTitle: "UI_SHOW_TITLE",
+      legendVisibility: "UI_SHOW_LEGEND",
+      runGlobals: "UI_USE_RUN_GLOBALS",
       syncZoom: "UI_ZOOM_SYNC",
       timeStepSelectorMode: "UI_TIME_STEP_SELECTOR",
       currentTimeStep: "VIEW_TIME_STEP",
@@ -70,11 +79,6 @@ export default {
     availableTimeSteps() {
       return (
         this.$store.getters[`${this.itemId}/PLOT_AVAILABLE_TIME_STEPS`] || []
-      );
-    },
-    legendVisibility() {
-      return (
-        this.$store.getters[`${this.itemId}/PLOT_LEGEND_VISIBILITY`] || false
       );
     },
     loadedTimeStepData() {
@@ -92,8 +96,23 @@ export default {
     xAxis() {
       return this.$store.getters[`${this.itemId}/PLOT_X_AXIS`] || null;
     },
+    xRange() {
+      return this.$store.getters[`${this.itemId}/PLOT_X_RANGE`] || null;
+    },
+    yRange() {
+      return this.$store.getters[`${this.itemId}/PLOT_Y_RANGE`] || null;
+    },
     zoom() {
       return this.$store.getters[`${this.itemId}/PLOT_ZOOM`] || null;
+    },
+    localTimeStep() {
+      const ts = this.currentTimeStep;
+      if (this.availableTimeSteps.includes(ts)) {
+        return ts;
+      }
+      let idx = this.availableTimeSteps.findIndex((step) => step >= ts);
+      idx = Math.max((idx -= 1), 0);
+      return this.availableTimeSteps[idx];
     },
   },
 
@@ -113,29 +132,37 @@ export default {
     legendVisibility: {
       immediate: true,
       handler(newVal, oldVal) {
-        let needRerender = !isEqual(newVal, oldVal);
-        this.react(needRerender);
+        if (isEqual(newVal, oldVal)) {
+          return;
+        }
+        this.react();
       },
     },
     logScaling: {
       immediate: true,
       handler(newVal, oldVal) {
-        let needRerender = !isEqual(newVal, oldVal);
-        this.react(needRerender);
+        if (isEqual(newVal, oldVal)) {
+          return;
+        }
+        this.react();
       },
     },
     range: {
       immediate: true,
       handler(newVal, oldVal) {
-        let needRerender = !isEqual(newVal, oldVal);
-        this.react(needRerender);
+        if (isEqual(newVal, oldVal)) {
+          return;
+        }
+        this.react();
       },
     },
     zoom: {
       immediate: true,
       handler(newVal, oldVal) {
-        let needRerender = !isEqual(newVal, oldVal);
-        this.react(needRerender);
+        if (isEqual(newVal, oldVal)) {
+          return;
+        }
+        this.react();
       },
     },
     itemId: {
@@ -161,6 +188,42 @@ export default {
         if (this.plotDataLoaded) {
           this.react();
         }
+      },
+    },
+    xaxisVisible: {
+      immediate: true,
+      handler(newVal, oldVal) {
+        if (isEqual(newVal, oldVal)) {
+          return;
+        }
+        this.react();
+      },
+    },
+    yaxisVisible: {
+      immediate: true,
+      handler(newVal, oldVal) {
+        if (isEqual(newVal, oldVal)) {
+          return;
+        }
+        this.react();
+      },
+    },
+    showTitle: {
+      immediate: true,
+      handler(newVal, oldVal) {
+        if (isEqual(newVal, oldVal)) {
+          return;
+        }
+        this.react();
+      },
+    },
+    runGlobals: {
+      immediate: true,
+      handler(newVal, oldVal) {
+        if (isEqual(newVal, oldVal)) {
+          return;
+        }
+        this.react();
       },
     },
   },
@@ -199,67 +262,78 @@ export default {
       let xAxis = image.layout.xaxis.title.text;
       this.$store.commit(`${this.itemId}/PLOT_X_AXIS_SET`, xAxis);
     },
+    setPlotLabels(image) {
+      this.plotLabels = {
+        title: image.layout.title.text,
+        xaxis: image.layout.xaxis.title.text,
+        yaxis: image.layout.yaxis.title.text,
+      };
+    },
     applyLogScaling(image) {
       image.layout.xaxis.type = this.logScaling ? "log" : "linear";
       image.layout.yaxis.type = this.logScaling ? "log" : "linear";
     },
     applyZoom(image) {
-      image.layout.xaxis.range = this.zoom.xAxis;
-      image.layout.yaxis.range = this.zoom.yAxis;
+      image.layout.xaxis.range = this.zoom.xaxis;
+      image.layout.yaxis.range = this.zoom.yaxis;
       image.layout.yaxis.autorange = false;
     },
     useGlobalRange(image) {
       image.layout.yaxis.range = [...this.range];
       image.layout.yaxis.autorange = false;
     },
+    useRunGlobals(image) {
+      if (this.logScaling || this.zoom) {
+        return;
+      }
+
+      image.layout.xaxis.range = [...this.xRange];
+      image.layout.xaxis.autorange = false;
+      image.layout.yaxis.range = [...this.yRange];
+      image.layout.yaxis.autorange = false;
+    },
+    updatePlotDetails(image) {
+      ["xaxis", "yaxis"].forEach((axis) => {
+        image.layout[`${axis}`].title.text = this[`${axis}Visible`]
+          ? this.plotLabels[`${axis}`]
+          : "";
+        image.layout[`${axis}`].showticklabels = this[`${axis}Visible`];
+      });
+      image.layout.title.text = this.showTitle ? this.plotLabels.title : "";
+      image.layout.margin.b = this.xaxisVisible ? 30 : 10;
+      image.layout.margin.l = this.yaxisVisible ? 60 : 10;
+      image.layout.margin.t = this.showTitle ? 30 : 10;
+    },
     plotPreProcessing(image) {
       if (!this.xAxis) this.setXAxis(image);
+      if (!this.plotLabels.title) this.setPlotLabels(image);
       this.applyLogScaling(image);
       image.layout.yaxis.autorange = true;
       image.layout.showlegend = this.legendVisibility;
-      if (this.zoom) this.applyZoom(image);
       if (this.range) this.useGlobalRange(image);
+      if (this.runGlobals) this.useRunGlobals(image);
+      if (this.zoom) this.applyZoom(image);
+      const data = image.data[0];
+      const xRange = extractRange(data.x);
+      let yRange = this.range;
+      if (!yRange) yRange = extractRange(data.y);
+      this.currentRange = [...xRange, ...yRange];
       this.setAnnotations(image.data[0]);
-    },
-    getNextImage(timeStep) {
-      // Grab the data for the current time step
-      let nextImage = this.loadedTimeStepData.find(
-        (img) => img.timestep == timeStep,
-      );
-
-      // If no data is available for the current time step, find the most
-      // recent previous time step that does have data and display that instead
-      const ats = this.availableTimeSteps;
-      if (
-        !this.timeAverage &&
-        isNil(nextImage) &&
-        this.loadedTimeStepData.length >= 1
-      ) {
-        let idx = ats.findIndex((step) => step >= timeStep);
-        // Use the data for the first time step available if the current time
-        // step is before the first available for this variable
-        idx = Math.max((idx -= 1), 0);
-        let prevTimeStep = ats[idx];
-        nextImage = this.loadedTimeStepData.find(
-          (img) => img.timestep === prevTimeStep,
-        );
-      }
-      return nextImage;
+      this.updatePlotDetails(image);
     },
     findImage() {
-      let nextImage = this.getNextImage(this.currentTimeStep);
+      let nextImage = this.loadedTimeStepData.find(
+        (img) => img.timestep == this.localTimeStep,
+      );
       if (!this.timeAverage) {
         this.avgAnnotation = "";
         if (!isEmpty(this.averagingValues)) {
           this.averagingValues = [];
         }
       } else {
-        let end = Math.min(
-          this.currentTimeStep + this.timeAverage,
-          Math.max(...this.availableTimeSteps),
-        );
+        let [, max] = extractRange(this.availableTimeSteps);
+        let end = Math.min(this.currentTimeStep + this.timeAverage, max);
         this.avgAnnotation = `Averaging Over Time Steps ${this.currentTimeStep} - ${end}`;
-        // call getNextImage for each time step in range
         this.averagingValues = [];
         for (
           let i = this.currentTimeStep;
@@ -267,7 +341,9 @@ export default {
           i++
         ) {
           if (this.availableTimeSteps.includes(i)) {
-            nextImage = this.getNextImage(i);
+            nextImage = this.loadedTimeStepData.find(
+              (img) => img.timestep == i,
+            );
             if (!isNil(nextImage)) {
               nextImage.data.forEach((data, idx) => {
                 // append y data to 2d array
@@ -298,7 +374,7 @@ export default {
       }
       return nextImage;
     },
-    react: function (needRerender = false) {
+    react() {
       if (!this.itemId) {
         return;
       }
@@ -309,8 +385,7 @@ export default {
       const plotReadyForUpdate =
         !isNil(nextImage) &&
         !isNil(this.$refs.plotly) &&
-        nextImage.type === PlotType.Plotly &&
-        (this.lastLoadedTimeStep !== nextImage.timestep || needRerender);
+        nextImage.type === PlotType.Plotly;
       if (plotReadyForUpdate) {
         this.lastLoadedTimeStep = nextImage.timestep;
         this.plotPreProcessing(nextImage);
@@ -322,19 +397,6 @@ export default {
         };
         Plotly.react(this.$refs.plotly, nextImage.data, layout, {
           autosize: true,
-          modeBarButtonsToAdd: [
-            {
-              name: "toggle log scaling",
-              icon: Plotly.Icons["3d_rotate"],
-              click: this.toggleLogScale,
-            },
-            {
-              name: "toggle legend visibility",
-              icon: Plotly.Icons["tooltip_basic"],
-              click: this.toggleLegendVisibility,
-            },
-          ],
-          modeBarButtonsToRemove: ["toImage"],
         });
         if (!this.eventHandlersSet) this.setEventHandlers();
         this.updateNumReady(this.numReady + 1);
@@ -342,7 +404,11 @@ export default {
     },
     setEventHandlers() {
       this.$refs.plotly.on("plotly_relayout", (eventdata) => {
-        if (!eventdata["xaxis.range[0]"] || !eventdata["yaxis.range[0]"]) {
+        if (
+          this.runGlobals ||
+          !eventdata["xaxis.range[0]"] ||
+          !eventdata["yaxis.range[0]"]
+        ) {
           return;
         }
         let zoomRange = parseZoomValues(eventdata, this.range);
@@ -402,29 +468,24 @@ export default {
       });
       this.timeIndex = this.times.findIndex((time) => time === closestVal);
     },
-    setAnnotations(data) {
+    setAnnotations() {
       if (!this.zoom) {
         this.rangeText = "";
         return;
       }
-      const xRange = [data.x[0], data.x[data.x.length - 1]];
-      let yRange = this.range;
-      if (!yRange) yRange = [Math.min(...data.y), Math.max(...data.y)];
-      const range = [...xRange, ...yRange];
-      const [x0, x1, y0, y1] = range.map((r) => r.toPrecision(4));
+      const [x0, x1, y0, y1] = this.currentRange.map((r) => r.toPrecision(4));
       this.rangeText = `xRange: [${x0}, ${x1}] yRange: [${y0}, ${y1}]`;
     },
-    toggleLogScale() {
-      this.$store.commit(
-        `${this.itemId}/PLOT_LOG_SCALING_SET`,
-        !this.logScaling,
-      );
-    },
-    toggleLegendVisibility() {
-      this.$store.commit(
-        `${this.itemId}/PLOT_LEGEND_VISIBILITY_SET`,
-        !this.legendVisibility,
-      );
+    tooltipText() {
+      let [x0, x1] = this.xRange;
+      let [y0, y1] = this.yRange;
+      if (!this.runGlobals && this.currentRange) {
+        [x0, x1, y0, y1] = this.currentRange;
+      }
+      return {
+        x: `[${x0.toExponential(3)}, ${x1.toExponential(3)}]`,
+        y: `[${y0.toExponential(3)}, ${y1.toExponential(3)}]`,
+      };
     },
   },
 

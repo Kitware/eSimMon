@@ -1,5 +1,6 @@
 import _ from "lodash";
 import { mapGetters, mapMutations } from "vuex";
+import { extractRange } from "../../../utils/helpers";
 
 export default {
   inject: ["girderRest"],
@@ -61,17 +62,17 @@ export default {
     },
     minStep() {
       if (this.id) {
-        return Math.min(
-          ...this.$store.getters[`${this.id}/PLOT_AVAILABLE_TIME_STEPS`],
-        );
+        let ats = this.$store.getters[`${this.id}/PLOT_AVAILABLE_TIME_STEPS`];
+        let [min] = extractRange(ats);
+        return min;
       }
       return 0;
     },
     maxStep() {
       if (this.id) {
-        return Math.max(
-          ...this.$store.getters[`${this.id}/PLOT_AVAILABLE_TIME_STEPS`],
-        );
+        let ats = this.$store.getters[`${this.id}/PLOT_AVAILABLE_TIME_STEPS`];
+        let [, max] = extractRange(ats);
+        return max;
       }
       return 0;
     },

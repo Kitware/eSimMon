@@ -27,7 +27,7 @@
       <v-divider />
       <v-row>
         <v-col sm="6">
-          <v-tooltip left>
+          <v-tooltip left bottom>
             <template v-slot:activator="{on, attrs}">
               <div v-on="on" v-bind="attrs">
                 <v-switch v-model="zoomSync" label="Sync zoom" hide-details />
@@ -38,7 +38,7 @@
           </v-tooltip>
         </v-col>
         <v-col sm="6">
-          <v-tooltip right>
+          <v-tooltip left bottom>
             <template v-slot:activator="{on, attrs}">
               <div v-on="on" v-bind="attrs">
                 <v-switch
@@ -57,7 +57,7 @@
       <v-divider />
       <v-row>
         <v-col sm="12">
-          <v-tooltip left>
+          <v-tooltip left bottom>
             <template v-slot:activator="{on, attrs}">
               <div v-on="on" v-bind="attrs">
                 <v-switch label="View completed runs" hide-details disabled />
@@ -71,7 +71,7 @@
       <v-divider />
       <v-row>
         <v-col sm="12">
-          <v-tooltip left>
+          <v-tooltip left bottom>
             <template v-slot:activator="{on, attrs}">
               <div v-on="on" v-bind="attrs">
                 <v-switch
@@ -82,10 +82,111 @@
               </div>
             </template>
             <p class="mb-0">
-              {{autoSavePrompt ? "Do not show" : "Show"}} the prompt asking if
-              you would
+              {{autoSavePrompt ? "Hiding" : "Showing"}} the prompt asking if you
+              would
             </p>
             <p class="mb-0">like to load the last auto-saved layout.</p>
+          </v-tooltip>
+        </v-col>
+      </v-row>
+      <v-subheader> Plots </v-subheader>
+      <v-divider />
+      <v-row>
+        <v-col>
+          <v-tooltip left bottom>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch dense v-model="xAxis" label="x-axis" hide-details />
+              </div>
+            </template>
+            <p class="mb-0">{{xAxis ? "Showing" : "Hiding"}} the x axis.</p>
+          </v-tooltip>
+        </v-col>
+        <v-col>
+          <v-tooltip left bottom>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch dense v-model="yAxis" label="y-axis" hide-details />
+              </div>
+            </template>
+            <p class="mb-0">{{yAxis ? "Showing" : "Hiding"}} the y axis.</p>
+          </v-tooltip>
+        </v-col>
+        <v-col>
+          <v-tooltip left bottom>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch
+                  dense
+                  v-model="scalarBar"
+                  label="scalar bar"
+                  hide-details
+                />
+              </div>
+            </template>
+            <p class="mb-0">
+              {{scalarBar ? "Showing" : "Hiding"}} the scalar bar.
+            </p>
+          </v-tooltip>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          <v-tooltip left bottom>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch dense v-model="title" label="title" hide-details />
+              </div>
+            </template>
+            <p class="mb-0">{{title ? "Showing" : "Hiding"}} the plot title.</p>
+          </v-tooltip>
+        </v-col>
+        <v-col>
+          <v-tooltip left bottom>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch dense v-model="legend" label="legend" hide-details />
+              </div>
+            </template>
+            <p class="mb-0">
+              {{legend ? "Showing" : "Hiding"}} the plot legend.
+            </p>
+          </v-tooltip>
+        </v-col>
+        <v-col>
+          <v-tooltip left bottom>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch
+                  dense
+                  v-model="runGlobals"
+                  label="global values"
+                  hide-details
+                />
+              </div>
+            </template>
+            <p class="mb-0">
+              Using {{runGlobals ? "global" : "time step"}} ranges.
+            </p>
+          </v-tooltip>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          <v-tooltip left bottom>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch
+                  dense
+                  v-model="rangeInfo"
+                  label="range info"
+                  hide-details
+                />
+              </div>
+            </template>
+            <p class="mb-0">
+              Range info on hover {{rangeInfo ? "enabled" : "disabled"}}.
+            </p>
           </v-tooltip>
         </v-col>
       </v-row>

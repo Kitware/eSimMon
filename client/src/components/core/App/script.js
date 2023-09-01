@@ -32,10 +32,7 @@ export default {
       dataLoaded: false,
       forgotPasswordUrl: "/#?dialog=resetpassword",
       runId: null,
-      range: "",
-      pos: [],
       parameter: "",
-      cancel: false,
       showMenu: false,
       paramIsJson: false,
     };
@@ -82,37 +79,6 @@ export default {
         this.setCurrentTimeStep(this.currentTimeStep - 1);
       }
       this.setPaused(should_pause);
-    },
-
-    hoverOut() {
-      this.range = "";
-      this.cancel = true;
-    },
-
-    hoverIn: _.debounce(function (event) {
-      if (this.showMenu) return;
-
-      const node = event.target;
-      const parent = node ? node.parentNode : null;
-      if (
-        (parent && parent.classList.value.includes("pl-3")) ||
-        (node.classList.value.includes("pl-3") &&
-          node.textContent != parent.textContent)
-      ) {
-        this.parameter = node.textContent.trim();
-        this.cancel = false;
-        // this.getRangeData(event);
-      }
-    }, 100),
-
-    updateRange(yVals, event) {
-      this.pos = event ? [event.clientX, event.clientY] : this.pos;
-      this.range =
-        "[" +
-        Math.min(...yVals).toExponential(3) +
-        ", " +
-        Math.max(...yVals).toExponential(3) +
-        "]";
     },
 
     updateTimeStep(val) {
@@ -206,6 +172,7 @@ export default {
     },
 
     applyView() {
+      this.updateNumReady(0);
       this.$refs.plots.forEach((cell) => {
         const { row, col } = cell;
         const item = this.items[`${row}::${col}`];
@@ -271,7 +238,7 @@ export default {
       viewTimeStep: "VIEW_SAVED_TIME_STEP",
       numReady: "VIEW_NUM_READY",
       loadedFromSaved: "VIEW_LOADING_FROM_SAVED",
-      lastSaved: "VIEW_LAST_SAVED",
+      lastSaved: "VIEWS_LAST_SAVED",
       creator: "VIEWS_CREATOR",
       gridSize: "VIEWS_GRID_SIZE",
       items: "VIEWS_ITEMS",

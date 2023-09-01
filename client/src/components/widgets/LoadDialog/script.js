@@ -107,7 +107,6 @@ export default {
             log: data ? value.log : false,
             xAxis: data ? value.xAxis : "",
             range: data ? value.range : null,
-            legend: data ? value.legend : false,
           };
         }
       }
