@@ -1,3 +1,5 @@
+import { extractRange } from "../utils/helpers";
+
 export default {
   namespaced: true,
   state: () => ({
@@ -111,9 +113,7 @@ export default {
       let newMax = -Infinity;
       rootGetters.VIEW_SELECTIONS.forEach((id) => {
         let steps = rootGetters[`${id}/PLOT_AVAILABLE_TIME_STEPS`] || [];
-        let tsMin = Math.min(...steps);
-        let tsMax = Math.max(...steps);
-
+        let [tsMin, tsMax] = extractRange(steps);
         newMin = Math.min(newMin, tsMin);
         newMax = Math.max(newMax, tsMax);
       });

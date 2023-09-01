@@ -20,6 +20,7 @@ import vtkPolyData from "@kitware/vtk.js/Common/DataModel/PolyData";
 import vtkRenderer from "@kitware/vtk.js/Rendering/Core/Renderer";
 import vtkScalarBarActor from "@kitware/vtk.js/Rendering/Core/ScalarBarActor";
 import vtkCustomCubeAxesActor from "../../../utils/vtkCustomCubeAxesActor";
+import { extractRange } from "../../../utils/helpers";
 
 const Y_AXES_LABEL_BOUNDS_ADJUSTMENT = 0.001;
 const MESH_XAXIS_SCALE_OFFSET = 0.1;
@@ -698,12 +699,8 @@ export default {
       this.renderer.resetCamera(bounds);
     },
     actorScale(xVals, yVals) {
-      const [x0, x1] = this.runGlobals
-        ? this.xRange
-        : [Math.min(...xVals), Math.max(...xVals)];
-      const [y0, y1] = this.runGlobals
-        ? this.yRange
-        : [Math.min(...yVals), Math.max(...yVals)];
+      const [x0, x1] = this.runGlobals ? this.xRange : extractRange(xVals);
+      const [y0, y1] = this.runGlobals ? this.yRange : extractRange(yVals);
       this.currentRange = [x0, x1, y0, y1];
       return (y1 - y0) / (x1 - x0);
     },

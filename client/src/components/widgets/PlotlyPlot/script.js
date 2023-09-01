@@ -3,6 +3,7 @@ import { isEmpty, isEqual, isNil } from "lodash";
 import { mapActions, mapGetters, mapMutations } from "vuex";
 import { PlotType } from "../../../utils/constants";
 import Annotations from "../Annotations";
+import { extractRange } from "../../../utils/helpers";
 
 //-----------------------------------------------------------------------------
 // Utility Functions
@@ -313,9 +314,9 @@ export default {
       if (this.runGlobals) this.useRunGlobals(image);
       if (this.zoom) this.applyZoom(image);
       const data = image.data[0];
-      const xRange = [Math.min(...data.x), Math.max(...data.y)];
+      const xRange = extractRange(data.x);
       let yRange = this.range;
-      if (!yRange) yRange = [Math.min(...data.y), Math.max(...data.y)];
+      if (!yRange) yRange = extractRange(data.y);
       this.currentRange = [...xRange, ...yRange];
       this.setAnnotations(image.data[0]);
       this.updatePlotDetails(image);
@@ -330,10 +331,8 @@ export default {
           this.averagingValues = [];
         }
       } else {
-        let end = Math.min(
-          this.currentTimeStep + this.timeAverage,
-          Math.max(...this.availableTimeSteps),
-        );
+        let [, max] = extractRange(this.availableTimeSteps);
+        let end = Math.min(this.currentTimeStep + this.timeAverage, max);
         this.avgAnnotation = `Averaging Over Time Steps ${this.currentTimeStep} - ${end}`;
         this.averagingValues = [];
         for (

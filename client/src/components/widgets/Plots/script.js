@@ -7,6 +7,7 @@ import { PlotType } from "../../../utils/constants";
 import { PlotFetcher } from "../../../utils/plotFetcher";
 
 import plot from "../../../store/plot";
+import { extractRange } from "../../../utils/helpers";
 
 // // Number of timesteps to prefetch data for.
 // const TIMESTEPS_TO_PREFETCH = 3;
@@ -276,7 +277,8 @@ export default {
       );
       await this.plotFetcher.fetchTimeStepFn(response, firstAvailableStep);
 
-      this.setMaxTimeStep(Math.max(this.maxTimeStep, Math.max(...ats)));
+      let [, max] = extractRange(ats);
+      this.setMaxTimeStep(Math.max(this.maxTimeStep, max));
       this.setItemId(this.itemId);
       this.setInitialLoad(false);
       this.$refs[`${this.row}-${this.col}`].react();
