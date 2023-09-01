@@ -108,7 +108,7 @@ export default {
           return this.girderRest.get(`/folder/${response.data.folderId}`);
         })
         .then((response) => {
-          this.runId = response.data.parentId;
+          this.setRunId(response.data.parentId);
           return this.poll();
         });
     },
@@ -192,7 +192,7 @@ export default {
       this.setRows(1);
       this.setGridSize(1);
       this.dataLoaded = false;
-      this.runId = null;
+      this.setRunId(null);
       this.location = null;
     },
 
