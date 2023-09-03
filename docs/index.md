@@ -16,3 +16,10 @@ and the in situ library [ParaView Catalyst](https://paraview.org). A Python libr
 generate/convert data extracts is also in progress. Once generated, these extracts are
 then uploaded to the eSimMon database and can then be immediately displayed making eSimMon
 a convenient tool for monitoring the results of simulations in progress.
+
+Each eSimMon dashboard offers limited access control where all authorized users are able
+to access all of the data extracts. Therefore, we recommend that a separate instance
+is deployed for each simulation community that would like to share the results from their
+simulations runs.
+
+NEED EXAMPLE DASHBOARDS HERE. DOCKER IMAGES?
