@@ -1,4 +1,4 @@
-# Directory Structure
+# Data Schema for Uploading Data to the Dashboard
 
 In order for the ingest script to properly identify new runs and ingest the available data the following directory structure and json files are expected in the order and format described below.
 

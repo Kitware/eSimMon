@@ -1,4 +1,4 @@
-# Viewing Data
+# Using the Dashboard
 
 ## Directory Navigation
 ### Moving up and down the tree
