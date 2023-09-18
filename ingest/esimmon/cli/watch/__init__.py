@@ -493,8 +493,7 @@ async def upload_image(
 
     if create:
         log.info(
-            'Uploading "%s/%s/%s".'
-            % ("/".join([str(i) for i in image_folders]), name, image_name)
+            f"Uploading {'/'.join([str(i) for i in image_folders])}/{name}/{image_name}."
         )
         await gc.upload_file(variable_item, image_name, bits, size)
 
@@ -579,8 +578,7 @@ async def upload_timestep_bp_archive(
 
     if create:
         log.info(
-            'Uploading "%s/%s/%s".'
-            % ("/".join([str(i) for i in folders]), timestep, bp_filename)
+            f"Uploading {'/'.join([str(i) for i in folders])}/{timestep}/{bp_filename}."
         )
         await gc.upload_file(timesteps_item, bp_filename, bits, size)
 
@@ -613,26 +611,30 @@ async def fetch_images(
     check_exists=False,
 ):
     log = logging.getLogger("esimmon")
-    log.info('Fetching variables.json for timestep: "%d".' % timestep)
+    log.info(
+        f"Fetching {shot_name}/{run_name} variables.json for timestep: {timestep}."
+    )
 
     # Fetch variables.json
     variables = await fetch_variables(source, upload_url, shot_name, run_name, timestep)
 
     if not variables:
-        log.info('No variables for timestep "%d".' % timestep)
+        log.info(f"No {shot_name}/{run_name} variables for timestep {timestep}.")
         return
 
     if variables is None:
         log.warning(
-            'Unable to fetch variables.json. Timestep "%d" is missing.' % timestep
+            f"Unable to fetch  {shot_name}/{run_name} variables.json. Timestep {timestep} is missing."
         )
     else:
-        log.info('Fetching images.tar.gz for timestep: "%d".' % timestep)
+        log.info(
+            f"Fetching {shot_name}/{run_name} images.tar.gz for timestep: {timestep}."
+        )
         image_archive = await fetch_images_archive(
             source, upload_url, shot_name, run_name, timestep
         )
         if image_archive is None:
-            log.warning("Data archive not found")
+            log.warning(f"Data archive not found for {shot_name}/{run_name}")
             return
 
         variable_items = {}
@@ -648,7 +650,7 @@ async def fetch_images(
                     group_name = v["group_name"]
                 except KeyError:
                     log.warning(
-                        f"Unable to extract groups_name for '{variable_name}' in {shot_name}, skipping."
+                        f"Unable to extract groups_name for '{variable_name}' in {shot_name}/{run_name}, skipping."
                     )
                     return
 
@@ -656,7 +658,7 @@ async def fetch_images(
                     time = v["time"]
                 except KeyError:
                     log.warning(
-                        f"Unable to extract time for '{variable_name}' in {shot_name}, skipping."
+                        f"Unable to extract time for '{variable_name}' in {shot_name}/{run_name}, skipping."
                     )
                     return
 
@@ -761,7 +763,7 @@ async def watch_run(
     run_poll_interval,
 ):
     log = logging.getLogger("esimmon")
-    log.info('Starting to watch run "%s" shot "%s".' % (run_name, shot_name))
+    log.info(f"Starting to watch run {run_name} shot {shot_name}.")
     fetch_images_queue = asyncio.Queue()
     metadata_semaphore = asyncio.Semaphore()
     scheduler = asyncio.create_task(fetch_images_scheduler(fetch_images_queue))
@@ -775,9 +777,13 @@ async def watch_run(
         if last_timestep is None:
             last_timestep = metadata.get("currentTimestep")
             if last_timestep is not None:
-                log.info('Last timestep processed: "%d"' % last_timestep)
+                log.info(
+                    f"Last timestep processed for {shot_name}/{run_name}: {last_timestep}"
+                )
             else:
-                log.info("No previous timestep have been processed.")
+                log.info(
+                    f"No previous timestep have been processed for {shot_name}/{run_name}."
+                )
                 last_timestep = 0
 
         # Now see where the simulation upload has got to
@@ -785,7 +791,7 @@ async def watch_run(
         time = await fetch_run_time(source, upload_url, shot_name, run_name)
         # Wait for time.json to appear
         if time is None:
-            log.warn('Unable to fetch "%s", waiting for 1 sec.' % run_path)
+            log.warn(f"Unable to fetch {run_path}, waiting for 1 sec.")
             await asyncio.sleep(1)
             continue
 
@@ -794,7 +800,7 @@ async def watch_run(
         # Are we done. The run is marked as complete and we have ingested all the
         # timesteps.
         if complete and last_timestep == new_timestep:
-            log.info('Run "%s" is complete.' % run_name)
+            log.info(f"Run {run_name} is complete.")
             await fetch_images_queue.join()
             scheduler.cancel()
             # # Create movies for all run params
@@ -1023,7 +1029,7 @@ def main(
         raise click.ClickException(f"'{url.scheme}' is not a supported URL scheme")
 
     log = logging.getLogger("esimmon")
-    log.info("Watching: %s" % upload_url)
+    log.info(f"Watching: {upload_url}")
 
     if fastapi_url is None:
         fastapi_url = api_url
