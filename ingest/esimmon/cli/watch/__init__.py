@@ -797,10 +797,10 @@ async def watch_run(
             log.info('Run "%s" is complete.' % run_name)
             await fetch_images_queue.join()
             scheduler.cancel()
-            # Create movies for all run params
-            log.info('Generating movies for run "%s".' % run_name)
-            await create_movies(run_folder, gc)
-            log.info('Movies for run "%s" have been generated.' % run_name)
+            # # Create movies for all run params
+            # log.info('Generating movies for run "%s".' % run_name)
+            # await create_movies(run_folder, gc)
+            # log.info('Movies for run "%s" have been generated.' % run_name)
             break
 
         # Did we miss any timesteps?
