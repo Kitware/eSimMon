@@ -42,7 +42,7 @@ def get_timesteps_folder_id(gc, group_folder_id):
 
     timesteps_folder = list(gc.listFolder(run_folder_id, name="timesteps"))
     if len(timesteps_folder) != 1:
-        raise HTTPException(status_code=404, details="Timesteps folder not found.")
+        raise HTTPException(status_code=404, detail="Timesteps folder not found.")
 
     return timesteps_folder[0]["_id"]
 
