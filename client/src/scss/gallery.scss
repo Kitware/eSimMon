@@ -199,8 +199,9 @@
 .annotations {
   position: absolute;
   z-index: 1;
-  background-color: white;
   font-size: smaller;
+  width: auto;
+  text-align: center;
 }
 .right {
   right: 0;

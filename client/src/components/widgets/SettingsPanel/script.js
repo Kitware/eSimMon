@@ -43,7 +43,7 @@ export default {
       setSaveDialogVisible: "UI_SHOW_SAVE_DIALOG_SET",
       toggleSettingsVisibility: "UI_SHOW_SETTINGS_SET",
       setAutoSaveDialogEnabled: "UI_AUTO_SAVE_DIALOG_ENABLED_SET",
-      setRangeTooltipEnabled: "UI_SHOW_RANGE_TOOLTIP_SET",
+      setRangeAnnotationsEnabled: "UI_SHOW_RANGE_ANNOTATION_SET",
     }),
     async saveView() {
       await this.fetchAllViews();
@@ -58,7 +58,7 @@ export default {
 
   computed: {
     ...mapGetters({
-      enableRangeTooltip: "UI_SHOW_RANGE_TOOLTIP",
+      enableRangeAnnotations: "UI_SHOW_RANGE_ANNOTATION",
       showLegend: "UI_SHOW_LEGEND",
       showScalarBar: "UI_SHOW_SCALAR_BAR",
       showYAxis: "UI_SHOW_Y_AXIS",
@@ -150,10 +150,10 @@ export default {
     },
     rangeInfo: {
       get() {
-        return this.enableRangeTooltip;
+        return this.enableRangeAnnotations;
       },
       set(val) {
-        this.setRangeTooltipEnabled(val);
+        this.setRangeAnnotationsEnabled(val);
       },
     },
   },

@@ -55,7 +55,6 @@ export default {
       focalPoint: null,
       scale: 0,
       position: null,
-      rangeText: "",
       plotType: null,
       lastLoadedTimeStep: -1,
       currentRange: null,
@@ -65,7 +64,7 @@ export default {
   computed: {
     ...mapGetters({
       runGlobals: "UI_USE_RUN_GLOBALS",
-      enableRangeTooltip: "UI_SHOW_RANGE_TOOLTIP",
+      enableRangeAnnotations: "UI_SHOW_RANGE_ANNOTATION",
       xaxisVisible: "UI_SHOW_X_AXIS",
       yaxisVisible: "UI_SHOW_Y_AXIS",
       showScalarBar: "UI_SHOW_SCALAR_BAR",
@@ -539,7 +538,6 @@ export default {
         this.updateRendererCount(this.renderWindow.getRenderers().length);
         this.position = null;
         this.renderWindow.render();
-        this.rangeText = "";
       }
     },
     enterCurrentRenderer() {
@@ -607,9 +605,6 @@ export default {
           const focalPoint = [xMid, yMid, 0.0];
           let zoomData = { focalPoint: focalPoint, scale: scale, serverScale };
           this.updatePlotZoom(zoomData);
-          const range = this.actor.getBounds();
-          const [x0, x1, y0, y1] = range.map((r) => r.toPrecision(4));
-          this.rangeText = `xRange: [${x0}, ${x1}] yRange: [${y0}, ${y1}]`;
         }
       });
     },
@@ -626,7 +621,6 @@ export default {
           this.camera.setPosition(...this.position);
         }
         this.resetCameraBounds();
-        this.rangeText = "";
       } else if (!isEqual(this.zoom.focalPoint, this.camera.getFocalPoint())) {
         if (this.zoom.scale) {
           this.camera.setFocalPoint(...this.zoom.focalPoint);
@@ -634,19 +628,37 @@ export default {
         }
       }
     },
-    tooltipText() {
-      let [x0, x1] = this.xRange;
-      let [y0, y1] = this.yRange;
-      let [s0, s1] = this.scalarRange;
-      if (!this.runGlobals && this.currentRange) {
-        [x0, x1, y0, y1] = this.currentRange;
-        [s0, s1] = this.mapper.getScalarRange();
+    annotationText() {
+      const inputs = [];
+      if (!this.xaxisVisible || !this.yaxisVisible || !this.showScalarBar) {
+        let ranges = [];
+        const mapRange = this.scalarBar
+          ?.getScalarsToColors()
+          .getMappingRange() || [-1, 1];
+        if (this.zoom) {
+          ranges.push(...this.zoom.bounds, ...mapRange);
+        } else {
+          const [scale] = this.actor?.getScale() || [1];
+          if (this.runGlobals) {
+            let yRange = this.yRange;
+            if (this.plotType === PlotType.ColorMap) {
+              // Reflect the scaled axes labels
+              yRange = [yRange[0] / scale, yRange[1] / scale];
+            }
+            ranges.push(...this.xRange, ...yRange, ...this.scalarRange);
+          } else {
+            ranges = [...this.currentRange, ...mapRange];
+          }
+        }
+        let [x0, x1, y0, y1, s0, s1] = ranges.map((r) => r.toPrecision(2));
+        let xText = this.xaxisVisible ? "" : `X: [${x0},${x1}]`;
+        let yText = this.yaxisVisible ? "" : `Y: [${y0},${y1}]`;
+        let scalarText = this.showScalarBar ? "" : `C: [${s0},${s1}]`;
+        xText = xText && (yText || scalarText) ? `${xText}, ` : xText;
+        yText = yText && scalarText ? `${yText}, ` : yText;
+        inputs.push(`${xText}${yText}${scalarText}`);
       }
-      return {
-        x: `[${x0.toExponential(3)}, ${x1.toExponential(3)}]`,
-        y: `[${y0.toExponential(3)}, ${y1.toExponential(3)}]`,
-        scalar: `[${s0.toExponential(3)}, ${s1.toExponential(3)}]`,
-      };
+      return inputs;
     },
     axesDataBounds() {
       if (!this.runGlobals) {
