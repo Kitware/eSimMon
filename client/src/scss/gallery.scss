@@ -275,3 +275,29 @@ html {
     max-height: 50px;
   }
 }
+
+.plot-title {
+  display: flex;
+  justify-content: center;
+  font-size: initial !important;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.plot-xaxis {
+  display: flex;
+  justify-content: center;
+  font-size: initial !important;
+  position: absolute;
+  bottom: 1%;
+}
+
+.plot-yaxis {
+  display: flex;
+  justify-content: center;
+  font-size: initial !important;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transform: rotate(270deg);
+  transform-origin: (0 0);
+}

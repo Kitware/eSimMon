@@ -6,6 +6,7 @@ import {
 } from "../../../utils/vtkPlotStyling";
 import { PlotType } from "../../../utils/constants";
 import Annotations from "../Annotations";
+import PlotLabel from "../PlotLabel";
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import "@kitware/vtk.js/Rendering/Profiles/Geometry";
@@ -32,6 +33,7 @@ export default {
 
   components: {
     Annotations,
+    PlotLabel,
   },
 
   props: {
@@ -58,11 +60,13 @@ export default {
       plotType: null,
       lastLoadedTimeStep: -1,
       currentRange: null,
+      title: "",
     };
   },
 
   computed: {
     ...mapGetters({
+      showTitle: "UI_SHOW_TITLE",
       runGlobals: "UI_USE_RUN_GLOBALS",
       enableRangeAnnotations: "UI_SHOW_RANGE_ANNOTATION",
       xaxisVisible: "UI_SHOW_X_AXIS",
@@ -353,6 +357,7 @@ export default {
       this.mesh.getPolys().setData(cells);
     },
     updateRenderer(data) {
+      this.title = data.title;
       if (this.plotType === PlotType.Mesh) {
         this.updateMeshRenderer(data);
       } else if (this.plotType === PlotType.ColorMap) {
