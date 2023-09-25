@@ -1,4 +1,5 @@
 <div ref="vtk" class="plot">
+  <plot-label v-if="showTitle" :text="title" position="title" />
   <annotations v-if="enableRangeAnnotations" :text="annotationText()" top />
   <v-icon v-if="!itemId" large> input </v-icon>
 </div>
