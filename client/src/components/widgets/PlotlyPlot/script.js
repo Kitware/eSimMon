@@ -51,7 +51,6 @@ export default {
       eventHandlersSet: false,
       timeIndex: -1,
       selectedTime: -1,
-      rangeText: "",
       lastLoadedTimeStep: -1,
       averagingValues: [],
       avgAnnotation: "",
@@ -63,7 +62,7 @@ export default {
 
   computed: {
     ...mapGetters({
-      enableRangeTooltip: "UI_SHOW_RANGE_TOOLTIP",
+      enableRangeAnnotations: "UI_SHOW_RANGE_ANNOTATION",
       xaxisVisible: "UI_SHOW_X_AXIS",
       yaxisVisible: "UI_SHOW_Y_AXIS",
       showTitle: "UI_SHOW_TITLE",
@@ -318,7 +317,6 @@ export default {
       let yRange = this.range;
       if (!yRange) yRange = extractRange(data.y);
       this.currentRange = [...xRange, ...yRange];
-      this.setAnnotations(image.data[0]);
       this.updatePlotDetails(image);
     },
     findImage() {
@@ -431,7 +429,6 @@ export default {
         if (this.timeStepSelectorMode && xAxis === "time") {
           return false;
         } else {
-          this.rangeText = "";
           this.updatePlotZoom(null);
         }
       });
@@ -443,7 +440,6 @@ export default {
       const elems = node?.getElementsByClassName("plot-container");
       if (node !== undefined && elems.length > 0) {
         Plotly.purge(this.$refs.plotly);
-        this.rangeText = "";
       }
     },
     selectTimeStepFromPlot() {
@@ -468,24 +464,29 @@ export default {
       });
       this.timeIndex = this.times.findIndex((time) => time === closestVal);
     },
-    setAnnotations() {
-      if (!this.zoom) {
-        this.rangeText = "";
-        return;
+    annotationText() {
+      const inputs = [];
+      if (!this.xaxisVisible || !this.yaxisVisible) {
+        // Display the currently used range for the hidden axes
+        let ranges = [];
+        if (this.zoom) {
+          ranges.push(...this.zoom.bounds);
+        } else if (this.runGlobals) {
+          ranges.push(...this.xRange, ...this.yRange);
+        } else {
+          ranges.push(...this.currentRange);
+        }
+        let [x0, x1, y0, y1] = ranges.map((r) => r.toPrecision(2));
+        let xText = this.xaxisVisible ? "" : `X: [${x0},${x1}]`;
+        let yText = this.yaxisVisible ? "" : `Y: [${y0},${y1}]`;
+        xText = xText && yText ? `${xText}, ` : xText;
+        inputs.push(`${xText}${yText}`);
       }
-      const [x0, x1, y0, y1] = this.currentRange.map((r) => r.toPrecision(4));
-      this.rangeText = `xRange: [${x0}, ${x1}] yRange: [${y0}, ${y1}]`;
-    },
-    tooltipText() {
-      let [x0, x1] = this.xRange;
-      let [y0, y1] = this.yRange;
-      if (!this.runGlobals && this.currentRange) {
-        [x0, x1, y0, y1] = this.currentRange;
+      if (this.avgAnnotation) {
+        // We're averaging over time steps, indicate this in annotation
+        inputs.push(this.avgAnnotation);
       }
-      return {
-        x: `[${x0.toExponential(3)}, ${x1.toExponential(3)}]`,
-        y: `[${y0.toExponential(3)}, ${y1.toExponential(3)}]`,
-      };
+      return inputs;
     },
   },
 
