@@ -13,14 +13,17 @@ function parseZoomValues(data, globalY) {
     return;
   }
 
-  const zoomLevel = {
-    xAxis: [data["xaxis.range[0]"], data["xaxis.range[1]"]],
-    yAxis: [data["yaxis.range[0]"], data["yaxis.range[1]"]],
-  };
+  const bounds = [
+    data["xaxis.range[0]"],
+    data["xaxis.range[1]"],
+    data["yaxis.range[0]"],
+    data["yaxis.range[1]"],
+  ];
   if (globalY) {
-    zoomLevel.yAxis = globalY;
+    bounds[2] = globalY[0];
+    bounds[3] = globalY[1];
   }
-  return zoomLevel;
+  return bounds;
 }
 
 export default {
@@ -43,6 +46,10 @@ export default {
     plotDataLoaded: {
       type: Boolean,
       default: false,
+    },
+    plotXAxis: {
+      type: String,
+      required: true,
     },
   },
 
@@ -273,8 +280,9 @@ export default {
       image.layout.yaxis.type = this.logScaling ? "log" : "linear";
     },
     applyZoom(image) {
-      image.layout.xaxis.range = this.zoom.xaxis;
-      image.layout.yaxis.range = this.zoom.yaxis;
+      let [x0, x1, y0, y1] = this.zoom.bounds;
+      image.layout.xaxis.range = [x0, x1];
+      image.layout.yaxis.range = [y0, y1];
       image.layout.yaxis.autorange = false;
     },
     useGlobalRange(image) {
@@ -402,15 +410,11 @@ export default {
     },
     setEventHandlers() {
       this.$refs.plotly.on("plotly_relayout", (eventdata) => {
-        if (
-          this.runGlobals ||
-          !eventdata["xaxis.range[0]"] ||
-          !eventdata["yaxis.range[0]"]
-        ) {
+        if (!eventdata["xaxis.range[0]"] || !eventdata["yaxis.range[0]"]) {
           return;
         }
         let zoomRange = parseZoomValues(eventdata, this.range);
-        this.updatePlotZoom(zoomRange);
+        this.updatePlotZoom({ bounds: zoomRange });
         this.react();
       });
       this.$refs.plotly.on("plotly_click", (data) => {
@@ -487,6 +491,9 @@ export default {
         inputs.push(this.avgAnnotation);
       }
       return inputs;
+    },
+    resetZoom() {
+      this.updatePlotZoom(null);
     },
   },
 

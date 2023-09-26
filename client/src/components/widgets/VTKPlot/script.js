@@ -26,6 +26,7 @@ import { extractRange } from "../../../utils/helpers";
 const Y_AXES_LABEL_BOUNDS_ADJUSTMENT = 0.001;
 const MESH_XAXIS_SCALE_OFFSET = 0.1;
 const RECTANGULAR_VIEWPORT_SCALING = 1.5;
+const PROJ_DIR = [0, 0, -1];
 
 export default {
   name: "VTKPlot",
@@ -38,6 +39,10 @@ export default {
 
   props: {
     itemId: {
+      type: String,
+      required: true,
+    },
+    plotXAxis: {
       type: String,
       required: true,
     },
@@ -55,7 +60,6 @@ export default {
       startPoints: null,
       camera: null,
       focalPoint: null,
-      scale: 0,
       position: null,
       plotType: null,
       lastLoadedTimeStep: -1,
@@ -597,18 +601,19 @@ export default {
           const regionHeight = Math.abs(finalY - startY);
 
           let serverScale = 1;
-          let scale = 0;
-          if (r >= regionWidth / regionHeight) {
-            scale = regionHeight / 2;
-          } else {
-            scale = regionWidth / r / 2;
+          if (r < regionWidth / regionHeight) {
             serverScale = regionWidth / 2;
           }
 
           const xMid = (finalX - startX) / 2 + startX;
           const yMid = (finalY - startY) / 2 + startY;
           const focalPoint = [xMid, yMid, 0.0];
-          let zoomData = { focalPoint: focalPoint, scale: scale, serverScale };
+          const zoomBounds = [startX, finalX, startY, finalY];
+          let zoomData = {
+            focalPoint: focalPoint,
+            bounds: zoomBounds,
+            serverScale,
+          };
           this.updatePlotZoom(zoomData);
         }
       });
@@ -625,11 +630,12 @@ export default {
         if (this.plotType !== PlotType.ColorMap) {
           this.camera.setPosition(...this.position);
         }
+        this.camera.setDirectionOfProjection(...PROJ_DIR);
         this.resetCameraBounds();
       } else if (!isEqual(this.zoom.focalPoint, this.camera.getFocalPoint())) {
-        if (this.zoom.scale) {
+        if (this.zoom.bounds) {
+          this.renderer.resetCamera([...this.zoom.bounds, 0, 0]);
           this.camera.setFocalPoint(...this.zoom.focalPoint);
-          this.camera.setParallelScale(this.zoom.scale);
         }
       }
     },

@@ -64,7 +64,7 @@ export default {
       return this.$store.getters[`${this.itemId}/PLOT_TIME_AVERAGE`] || 0;
     },
     plotXAxis() {
-      return this.$store.getters[`${this.itemId}/PLOT_X_AXIS`] || 0;
+      return this.$store.getters[`${this.itemId}/PLOT_X_AXIS`] || "";
     },
     loadedTimeStepData() {
       return this.$store.getters[`${this.itemId}/PLOT_LOADED_TIME_STEPS`] || [];
