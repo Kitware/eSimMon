@@ -11,8 +11,14 @@
       :itemId="itemId"
       :timeAverage="timeAverage"
       :plotDataLoaded="plotDataLoaded"
+      :plotXAxis="plotXAxis"
     />
-    <vtk-plot :ref="row+'-'+col" v-if="plotType === 'vtk'" :itemId="itemId" />
+    <vtk-plot
+      :ref="row+'-'+col"
+      v-if="plotType === 'vtk'"
+      :itemId="itemId"
+      :plotXAxis="plotXAxis"
+    />
     <div class="plot">
       <v-icon v-if="!plotType" large> input </v-icon>
     </div>

@@ -37,12 +37,20 @@ export default {
       this.renderWindow.render();
       window.requestAnimationFrame(this.animate);
     },
-    resetAllZoom() {
+    clickedElement(e) {
+      let el = document
+        .elementsFromPoint(e.clientX, e.clientY)
+        .find((el) => el.classList[0] === "plot");
+      return el.__vue__;
+    },
+    resetAllZoom(e) {
+      let el = this.clickedElement(e);
+      let plotXAxis = el.plotXAxis;
       if (this.syncZoom && !this.selectTimeStep) {
         const allRenderers = this.$root.$children[0].$refs.plots;
         allRenderers.forEach((plotCell) => {
           const { col, row } = plotCell.$options.propsData;
-          if (plotCell.$refs[`${row}-${col}`]?.renderer) {
+          if (plotCell.$refs[`${row}-${col}`].plotXAxis === plotXAxis) {
             plotCell.$refs[`${row}-${col}`].resetZoom();
           }
         });
@@ -50,11 +58,8 @@ export default {
     },
     resetZoom(e) {
       if (!this.syncZoom && !this.selectTimeStep) {
-        document.elementsFromPoint(e.clientX, e.clientY).forEach((elem) => {
-          if (elem.classList[0] === "plot") {
-            elem.__vue__.resetZoom();
-          }
-        });
+        let elem = this.clickedElement(e);
+        elem.__vue__.resetZoom();
       }
     },
     contextMenu(e) {
