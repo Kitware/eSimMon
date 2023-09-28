@@ -8,7 +8,7 @@
     :style="{minWidth: '150px'}"
   >
     <v-card style="padding: 5px">
-      <v-list v-if="itemInfo && itemInfo.isPlotly">
+      <v-list v-if="itemInfo && isPlotly">
         <v-list-item dense @click="showRangeDialog=true">
           <v-list-item-title> Set global range </v-list-item-title>
         </v-list-item>
@@ -18,7 +18,7 @@
           </v-list-item-title>
         </v-list-item>
       </v-list>
-      <v-divider v-if="itemInfo && itemInfo.isPlotly" />
+      <v-divider v-if="itemInfo && isPlotly" />
       <v-list>
         <v-list-item dense @click="clearGallery()">
           <v-list-item-title> Clear Plot </v-list-item-title>
@@ -80,6 +80,7 @@
     :visible="showRangeDialog"
     :param="parameter"
     :id="itemInfo ? itemInfo.id : ''"
+    :plotType="itemInfo?.plotType"
     @close="showRangeDialog=false"
   />
   <download-options

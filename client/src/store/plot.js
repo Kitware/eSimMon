@@ -4,7 +4,7 @@ export default {
   namespaced: true,
   state: () => ({
     log: false,
-    range: null,
+    userRange: null,
     timeAverage: 0,
     xAxis: "",
     zoom: null,
@@ -19,8 +19,8 @@ export default {
     PLOT_LOG_SCALING(state) {
       return state.log;
     },
-    PLOT_GLOBAL_RANGE(state) {
-      return state.range;
+    PLOT_USER_GLOBAL_RANGE(state) {
+      return state.userRange;
     },
     PLOT_TIME_AVERAGE(state) {
       return state.timeAverage;
@@ -57,8 +57,8 @@ export default {
     PLOT_LOG_SCALING_SET(state, val) {
       state.log = val;
     },
-    PLOT_GLOBAL_RANGE_SET(state, val) {
-      state.range = val;
+    PLOT_USER_GLOBAL_RANGE_SET(state, val) {
+      state.userRange = val;
     },
     PLOT_TIME_AVERAGE_SET(state, val) {
       state.timeAverage = val;
@@ -91,7 +91,7 @@ export default {
   actions: {
     PLOT_DATA_RESET({ commit }) {
       commit("PLOT_LOG_SCALING_SET", false);
-      commit("PLOT_GLOBAL_RANGE_SET", null);
+      commit("PLOT_USER_GLOBAL_RANGE_SET", null);
       commit("PLOT_TIME_AVERAGE_SET", 0);
       commit("PLOT_X_AXIS_SET", "");
       commit("PLOT_ZOOM_SET", null);
