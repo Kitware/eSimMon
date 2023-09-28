@@ -406,7 +406,7 @@ export default {
         name: response.name,
         event: e,
         step: this.currentTimeStep,
-        isPlotly: this.plotType === PlotType.Plotly,
+        plotType: this.plotType,
         xAxis: this.plotXAxis,
         clearGallery: this.clearGallery,
         averaging: this.timeAverage,

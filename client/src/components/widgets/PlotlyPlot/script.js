@@ -8,7 +8,7 @@ import { extractRange } from "../../../utils/helpers";
 //-----------------------------------------------------------------------------
 // Utility Functions
 //-----------------------------------------------------------------------------
-function parseZoomValues(data, globalY) {
+function parseZoomValues(data) {
   if (data["xaxis.autorange"] || data["yaxis.autorange"]) {
     return;
   }
@@ -19,10 +19,7 @@ function parseZoomValues(data, globalY) {
     data["yaxis.range[0]"],
     data["yaxis.range[1]"],
   ];
-  if (globalY) {
-    bounds[2] = globalY[0];
-    bounds[3] = globalY[1];
-  }
+
   return bounds;
 }
 
@@ -93,8 +90,10 @@ export default {
     logScaling() {
       return this.$store.getters[`${this.itemId}/PLOT_LOG_SCALING`] || null;
     },
-    range() {
-      return this.$store.getters[`${this.itemId}/PLOT_GLOBAL_RANGE`] || null;
+    userDefinedRange() {
+      return (
+        this.$store.getters[`${this.itemId}/PLOT_USER_GLOBAL_RANGE`] || null
+      );
     },
     times() {
       return this.$store.getters[`${this.itemId}/PLOT_TIMES`] || [];
@@ -153,7 +152,7 @@ export default {
         this.react();
       },
     },
-    range: {
+    userDefinedRange: {
       immediate: true,
       handler(newVal, oldVal) {
         if (isEqual(newVal, oldVal)) {
@@ -286,8 +285,12 @@ export default {
       image.layout.yaxis.autorange = false;
     },
     useGlobalRange(image) {
-      image.layout.yaxis.range = [...this.range];
-      image.layout.yaxis.autorange = false;
+      Object.entries(this.userDefinedRange).forEach(([key, value]) => {
+        if (value) {
+          image.layout[`${key}axis`].range = [...value];
+          image.layout[`${key}axis`].autorange = false;
+        }
+      });
     },
     useRunGlobals(image) {
       if (this.logScaling || this.zoom) {
@@ -317,12 +320,12 @@ export default {
       this.applyLogScaling(image);
       image.layout.yaxis.autorange = true;
       image.layout.showlegend = this.legendVisibility;
-      if (this.range) this.useGlobalRange(image);
       if (this.runGlobals) this.useRunGlobals(image);
+      if (this.userDefinedRange) this.useGlobalRange(image);
       if (this.zoom) this.applyZoom(image);
       const data = image.data[0];
       const xRange = extractRange(data.x);
-      let yRange = this.range;
+      let yRange = this.userDefinedRange?.y;
       if (!yRange) yRange = extractRange(data.y);
       this.currentRange = [...xRange, ...yRange];
       this.updatePlotDetails(image);
@@ -413,7 +416,7 @@ export default {
         if (!eventdata["xaxis.range[0]"] || !eventdata["yaxis.range[0]"]) {
           return;
         }
-        let zoomRange = parseZoomValues(eventdata, this.range);
+        let zoomRange = parseZoomValues(eventdata);
         this.updatePlotZoom({ bounds: zoomRange });
         this.react();
       });
