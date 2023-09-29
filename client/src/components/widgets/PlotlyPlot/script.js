@@ -8,19 +8,19 @@ import { extractRange } from "../../../utils/helpers";
 //-----------------------------------------------------------------------------
 // Utility Functions
 //-----------------------------------------------------------------------------
-function parseZoomValues(data, globalY) {
+function parseZoomValues(data) {
   if (data["xaxis.autorange"] || data["yaxis.autorange"]) {
     return;
   }
 
-  const zoomLevel = {
-    xAxis: [data["xaxis.range[0]"], data["xaxis.range[1]"]],
-    yAxis: [data["yaxis.range[0]"], data["yaxis.range[1]"]],
-  };
-  if (globalY) {
-    zoomLevel.yAxis = globalY;
-  }
-  return zoomLevel;
+  const bounds = [
+    data["xaxis.range[0]"],
+    data["xaxis.range[1]"],
+    data["yaxis.range[0]"],
+    data["yaxis.range[1]"],
+  ];
+
+  return bounds;
 }
 
 export default {
@@ -44,6 +44,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    plotXAxis: {
+      type: String,
+      required: true,
+    },
   },
 
   data() {
@@ -51,7 +55,6 @@ export default {
       eventHandlersSet: false,
       timeIndex: -1,
       selectedTime: -1,
-      rangeText: "",
       lastLoadedTimeStep: -1,
       averagingValues: [],
       avgAnnotation: "",
@@ -63,7 +66,7 @@ export default {
 
   computed: {
     ...mapGetters({
-      enableRangeTooltip: "UI_SHOW_RANGE_TOOLTIP",
+      enableRangeAnnotations: "UI_SHOW_RANGE_ANNOTATION",
       xaxisVisible: "UI_SHOW_X_AXIS",
       yaxisVisible: "UI_SHOW_Y_AXIS",
       showTitle: "UI_SHOW_TITLE",
@@ -87,8 +90,10 @@ export default {
     logScaling() {
       return this.$store.getters[`${this.itemId}/PLOT_LOG_SCALING`] || null;
     },
-    range() {
-      return this.$store.getters[`${this.itemId}/PLOT_GLOBAL_RANGE`] || null;
+    userDefinedRange() {
+      return (
+        this.$store.getters[`${this.itemId}/PLOT_USER_GLOBAL_RANGE`] || null
+      );
     },
     times() {
       return this.$store.getters[`${this.itemId}/PLOT_TIMES`] || [];
@@ -147,7 +152,7 @@ export default {
         this.react();
       },
     },
-    range: {
+    userDefinedRange: {
       immediate: true,
       handler(newVal, oldVal) {
         if (isEqual(newVal, oldVal)) {
@@ -274,13 +279,18 @@ export default {
       image.layout.yaxis.type = this.logScaling ? "log" : "linear";
     },
     applyZoom(image) {
-      image.layout.xaxis.range = this.zoom.xaxis;
-      image.layout.yaxis.range = this.zoom.yaxis;
+      let [x0, x1, y0, y1] = this.zoom.bounds;
+      image.layout.xaxis.range = [x0, x1];
+      image.layout.yaxis.range = [y0, y1];
       image.layout.yaxis.autorange = false;
     },
     useGlobalRange(image) {
-      image.layout.yaxis.range = [...this.range];
-      image.layout.yaxis.autorange = false;
+      Object.entries(this.userDefinedRange).forEach(([key, value]) => {
+        if (value) {
+          image.layout[`${key}axis`].range = [...value];
+          image.layout[`${key}axis`].autorange = false;
+        }
+      });
     },
     useRunGlobals(image) {
       if (this.logScaling || this.zoom) {
@@ -310,15 +320,14 @@ export default {
       this.applyLogScaling(image);
       image.layout.yaxis.autorange = true;
       image.layout.showlegend = this.legendVisibility;
-      if (this.range) this.useGlobalRange(image);
       if (this.runGlobals) this.useRunGlobals(image);
+      if (this.userDefinedRange) this.useGlobalRange(image);
       if (this.zoom) this.applyZoom(image);
       const data = image.data[0];
       const xRange = extractRange(data.x);
-      let yRange = this.range;
+      let yRange = this.userDefinedRange?.y;
       if (!yRange) yRange = extractRange(data.y);
       this.currentRange = [...xRange, ...yRange];
-      this.setAnnotations(image.data[0]);
       this.updatePlotDetails(image);
     },
     findImage() {
@@ -404,15 +413,11 @@ export default {
     },
     setEventHandlers() {
       this.$refs.plotly.on("plotly_relayout", (eventdata) => {
-        if (
-          this.runGlobals ||
-          !eventdata["xaxis.range[0]"] ||
-          !eventdata["yaxis.range[0]"]
-        ) {
+        if (!eventdata["xaxis.range[0]"] || !eventdata["yaxis.range[0]"]) {
           return;
         }
-        let zoomRange = parseZoomValues(eventdata, this.range);
-        this.updatePlotZoom(zoomRange);
+        let zoomRange = parseZoomValues(eventdata);
+        this.updatePlotZoom({ bounds: zoomRange });
         this.react();
       });
       this.$refs.plotly.on("plotly_click", (data) => {
@@ -431,7 +436,6 @@ export default {
         if (this.timeStepSelectorMode && xAxis === "time") {
           return false;
         } else {
-          this.rangeText = "";
           this.updatePlotZoom(null);
         }
       });
@@ -443,7 +447,6 @@ export default {
       const elems = node?.getElementsByClassName("plot-container");
       if (node !== undefined && elems.length > 0) {
         Plotly.purge(this.$refs.plotly);
-        this.rangeText = "";
       }
     },
     selectTimeStepFromPlot() {
@@ -468,24 +471,32 @@ export default {
       });
       this.timeIndex = this.times.findIndex((time) => time === closestVal);
     },
-    setAnnotations() {
-      if (!this.zoom) {
-        this.rangeText = "";
-        return;
+    annotationText() {
+      const inputs = [];
+      if (!this.xaxisVisible || !this.yaxisVisible) {
+        // Display the currently used range for the hidden axes
+        let ranges = [];
+        if (this.zoom) {
+          ranges.push(...this.zoom.bounds);
+        } else if (this.runGlobals) {
+          ranges.push(...this.xRange, ...this.yRange);
+        } else {
+          ranges.push(...this.currentRange);
+        }
+        let [x0, x1, y0, y1] = ranges.map((r) => r.toPrecision(2));
+        let xText = this.xaxisVisible ? "" : `X: [${x0},${x1}]`;
+        let yText = this.yaxisVisible ? "" : `Y: [${y0},${y1}]`;
+        xText = xText && yText ? `${xText}, ` : xText;
+        inputs.push(`${xText}${yText}`);
       }
-      const [x0, x1, y0, y1] = this.currentRange.map((r) => r.toPrecision(4));
-      this.rangeText = `xRange: [${x0}, ${x1}] yRange: [${y0}, ${y1}]`;
+      if (this.avgAnnotation) {
+        // We're averaging over time steps, indicate this in annotation
+        inputs.push(this.avgAnnotation);
+      }
+      return inputs;
     },
-    tooltipText() {
-      let [x0, x1] = this.xRange;
-      let [y0, y1] = this.yRange;
-      if (!this.runGlobals && this.currentRange) {
-        [x0, x1, y0, y1] = this.currentRange;
-      }
-      return {
-        x: `[${x0.toExponential(3)}, ${x1.toExponential(3)}]`,
-        y: `[${y0.toExponential(3)}, ${y1.toExponential(3)}]`,
-      };
+    resetZoom() {
+      this.updatePlotZoom(null);
     },
   },
 

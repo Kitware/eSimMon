@@ -1,6 +1,9 @@
-<span
+<v-container
+  v-if="text.length"
   class="annotations"
   :class="{top:top, bottom:bottom, right:right, left:left}"
 >
-  {{text}}
-</span>
+  <p class="ma-0" v-for="t in text">
+    <vue-mathjax :formula="t" :options="mathJaxOptions" />
+  </p>
+</v-container>

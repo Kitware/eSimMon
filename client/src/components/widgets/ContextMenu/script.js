@@ -2,6 +2,7 @@ import RangeDialog from "../RangeDialog";
 import DownloadOptions from "../DownloadOptions";
 import { v4 as uuidv4 } from "uuid";
 import { mapGetters, mapMutations } from "vuex";
+import { PlotType } from "../../../utils/constants";
 
 // Enum values
 const REQUEST = "in progress";
@@ -62,7 +63,7 @@ export default {
       return [0, 0];
     },
     offsetPos() {
-      if (this.itemInfo?.isPlotly) {
+      if (this.isPlotly) {
         return [this.pos[0] + OFFSET_PLOTLY[0], this.pos[1] + OFFSET_PLOTLY[1]];
       }
       return [this.pos[0] + OFFSET_VTK[0], this.pos[1] + OFFSET_VTK[1]];
@@ -82,6 +83,9 @@ export default {
     },
     averaging() {
       return !this.itemInfo ? false : !!this.itemInfo?.averaging;
+    },
+    isPlotly() {
+      return this.itemInfo?.plotType === PlotType.Plotly;
     },
     plotDetails() {
       return (
@@ -196,7 +200,7 @@ export default {
     },
     canAverage() {
       const xAxis = this.itemInfo?.xAxis || "";
-      return !xAxis.toLowerCase().includes("time") && this.itemInfo?.isPlotly;
+      return !xAxis.toLowerCase().includes("time") && this.isPlotly;
     },
     toggleLogScale() {
       if (this.itemInfo?.id) {

@@ -1,39 +1,5 @@
 <div ref="plotly" class="plot">
-  <v-menu
-    v-if="enableRangeTooltip"
-    open-on-hover
-    offset-y
-    left
-    top
-    :close-on-content-click="false"
-    min-width="fit-content"
-    height="fit-content"
-  >
-    <template v-slot:activator="{ on }">
-      <v-icon v-on="on" style="position: absolute; right: 0; bottom: 0">
-        mdi-information-variant
-      </v-icon>
-    </template>
-    <v-list>
-      <v-list-item dense v-if="!xaxisVisible">
-        <v-list-item-title>X Range: {{tooltipText().x}}</v-list-item-title>
-      </v-list-item>
-      <v-list-item dense v-if="!yaxisVisible">
-        <v-list-item-title>Y Range: {{tooltipText().y}}</v-list-item-title>
-      </v-list-item>
-    </v-list>
-  </v-menu>
-  <annotations
-    v-if="rangeText.length"
-    :text="rangeText"
-    :top="true"
-    :left="true"
-  />
-  <annotations
-    v-if="avgAnnotation && itemId"
-    :text="avgAnnotation"
-    :top="true"
-  />
+  <annotations v-if="enableRangeAnnotations" :text="annotationText()" top />
   <v-icon v-if="!itemId" large> input </v-icon>
   <v-progress-circular
     v-show="computingTimeAverage"

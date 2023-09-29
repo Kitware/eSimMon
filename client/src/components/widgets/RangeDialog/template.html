@@ -1,56 +1,96 @@
-<v-dialog v-model="settingsDialog" max-width="700px">
+<v-dialog v-model="settingsDialog" max-width="500px">
   <v-card>
-    <v-card-title>
-      <span class="text-h5">Set Global Range for {{ param }}</span>
+    <v-card-title class="justify-center">
+      <p class="ma-0 text-h5">Set Global Range</p>
+      <p class="ma-0 text-h6">{{ param }}</p>
     </v-card-title>
     <v-card-text>
       <v-form>
         <v-container>
-          <v-row v-bind:style="{alignItems: 'center'}">
+          <v-row class="align-center">
+            <v-col cols="2">
+              <span>X Axis</span>
+            </v-col>
             <v-col cols="5">
               <v-text-field
-                v-model="newStart"
+                v-model="x0"
                 type="number"
                 step="0.001"
                 label="Start"
-                @input="checkValidity"
                 :hide-details="true"
                 dense
               />
             </v-col>
             <v-col cols="5">
               <v-text-field
-                v-model="newEnd"
+                v-model="x1"
                 type="number"
                 step="1"
                 label="End"
-                @input="checkValidity"
                 :hide-details="true"
                 dense
               />
             </v-col>
-            <v-col
-              cols="2"
-              v-bind:style="{display: 'flex', justifyContent: 'flex-end'}"
-            >
-              <v-btn small @click="clear()">Clear</v-btn>
+          </v-row>
+          <v-row class="align-center">
+            <v-col cols="2">
+              <span>Y Axis</span>
+            </v-col>
+            <v-col cols="5">
+              <v-text-field
+                v-model="y0"
+                type="number"
+                step="0.001"
+                label="Start"
+                :hide-details="true"
+                dense
+              />
+            </v-col>
+            <v-col cols="5">
+              <v-text-field
+                v-model="y1"
+                type="number"
+                step="1"
+                label="End"
+                :hide-details="true"
+                dense
+              />
+            </v-col>
+          </v-row>
+          <v-row v-if="showScalar" class="align-center">
+            <v-col cols="2">
+              <span>CMap Scalars</span>
+            </v-col>
+            <v-col cols="5">
+              <v-text-field
+                v-model="s0"
+                type="number"
+                step="0.001"
+                label="Start"
+                :hide-details="true"
+                dense
+              />
+            </v-col>
+            <v-col cols="5">
+              <v-text-field
+                v-model="s1"
+                type="number"
+                step="1"
+                label="End"
+                :hide-details="true"
+                dense
+              />
             </v-col>
           </v-row>
         </v-container>
-        <div>
-          <span
-            v-if="invalidInput"
-            v-bind:style="{color: 'red', fontWeight: '800'}"
-          >
-            Invalid Range
-          </span>
-        </div>
       </v-form>
     </v-card-text>
     <v-card-actions>
+      <v-btn text @click="auto()"> Auto </v-btn>
+      <v-btn text @click="clear()"> Reset </v-btn>
       <v-spacer />
       <v-btn text @click.stop="settingsDialog=false"> Cancel </v-btn>
-      <v-btn text :disabled="invalidInput" @click.stop="save()"> Save </v-btn>
+      <v-btn text @click.stop="save()"> Save </v-btn>
     </v-card-actions>
   </v-card>
 </v-dialog>

@@ -1,15 +1,12 @@
+import { mapGetters } from "vuex";
+
 export default {
   inject: ["girderRest"],
 
-  data() {
-    return {
-      baseClass: "annotations",
-    };
-  },
   props: {
     text: {
-      type: String,
-      default: "",
+      type: Array,
+      default: () => [],
     },
     top: {
       type: Boolean,
@@ -27,5 +24,10 @@ export default {
       type: Boolean,
       default: false,
     },
+  },
+  computed: {
+    ...mapGetters({
+      mathJaxOptions: "UI_MATH_JAX_OPTIONS",
+    }),
   },
 };
