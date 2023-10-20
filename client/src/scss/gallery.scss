@@ -60,7 +60,7 @@
 // and shows a scrollbar when necessary.
 .girder-data-browser-snippet {
   flex-grow: 1;
-  min-height: calc(100%-175);
+  min-height: calc(100%-175px);
   overflow: auto;
   padding-top: 12px;
 }

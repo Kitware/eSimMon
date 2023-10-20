@@ -6,7 +6,7 @@ search bar and to collect and filter parameter options.
 import _ from "lodash";
 import { GirderBreadcrumb, GirderFileManager } from "@girder/components/src";
 import GirderDataBrowser from "../GirderDataBrowser";
-import { mapGetters } from "vuex";
+import { mapGetters, mapMutations } from "vuex";
 export default {
   components: {
     GirderBreadcrumb,
@@ -31,6 +31,7 @@ export default {
   computed: {
     ...mapGetters({
       mathJaxOptions: "UI_MATH_JAX_OPTIONS",
+      drawerCollapsed: "UI_NAV_DRAWER_COLLAPSED",
     }),
     queryValues: {
       get() {
@@ -82,6 +83,9 @@ export default {
   },
 
   methods: {
+    ...mapMutations({
+      setDrawerCollapsed: "UI_NAV_DRAWER_COLLAPSED_SET",
+    }),
     async setCurrentPath() {
       var location = this.lazyLocation ? this.lazyLocation : this.location;
 
@@ -134,5 +138,8 @@ export default {
         return;
       }
     }, 500),
+    toggleDrawer() {
+      this.setDrawerCollapsed(!this.drawerCollapsed);
+    },
   },
 };

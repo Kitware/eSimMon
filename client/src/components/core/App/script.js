@@ -35,6 +35,7 @@ export default {
       parameter: "",
       showMenu: false,
       paramIsJson: false,
+      navPanelWidth: 25,
     };
   },
 
@@ -48,6 +49,7 @@ export default {
       loadAutoSave: "VIEWS_LOAD_AUTO_SAVE",
     }),
     ...mapMutations({
+      setDrawerCollapsed: "UI_NAV_DRAWER_COLLAPSED_SET",
       setAutoSavedViewDialog: "UI_AUTO_SAVE_DIALOG_SET",
       setPaused: "UI_PAUSE_GALLERY_SET",
       setMaxTimeStep: "VIEW_MAX_TIME_STEP_SET",
@@ -218,14 +220,22 @@ export default {
 
     adjustRenderWindowWidth(event) {
       const navPanel = event[0].size;
+      if (!this.drawerCollapsed) {
+        this.navPanelWidth = navPanel;
+      }
       const rw = document.getElementById("renderWindow");
       rw.style.width = `${100 - navPanel}%`;
       this.$refs.renderWindow.resize();
+    },
+
+    toggleDrawer() {
+      this.setDrawerCollapsed(!this.drawerCollapsed);
     },
   },
 
   asyncComputed: {
     ...mapGetters({
+      drawerCollapsed: "UI_NAV_DRAWER_COLLAPSED",
       autoSavedViewDialog: "UI_AUTO_SAVE_DIALOG",
       paused: "UI_PAUSE_GALLERY",
       showSettings: "UI_SHOW_SETTINGS",
@@ -381,6 +391,11 @@ export default {
         this.loadingFromSaved(false);
         this.setCurrentTimeStep(this.viewTimeStep);
       }
+    },
+
+    drawerCollapsed(collapsed) {
+      const size = collapsed ? 0 : this.navPanelWidth;
+      this.adjustRenderWindowWidth([{ size }]);
     },
   },
 };

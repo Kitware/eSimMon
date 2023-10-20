@@ -18,11 +18,24 @@
     @drop="$emit('drop', $event)"
   >
     <template #breadcrumb="props">
-      <girder-breadcrumb
-        :location="props.location"
-        :root-location-disabled="props.rootLocationDisabled"
-        @crumbclick="props.changeLocation($event)"
-      />
+      <v-row class="d-flex">
+        <v-col sm="2">
+          <v-btn
+            @click="toggleDrawer"
+            icon
+            class="d-flex justify-center ma-0 pa-0"
+          >
+            <v-icon>mdi-menu</v-icon>
+          </v-btn>
+        </v-col>
+        <v-col sm="10">
+          <girder-breadcrumb
+            :location="props.location"
+            :root-location-disabled="props.rootLocationDisabled"
+            @crumbclick="props.changeLocation($event)"
+          />
+        </v-col>
+      </v-row>
     </template>
     <template #headerwidget>
       <slot name="headerwidget" />

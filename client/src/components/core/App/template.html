@@ -24,11 +24,7 @@
           <!--- Settings Panel -->
           <settings-panel v-if="showSettings" :plots.sync="$refs.plots" />
           <!-- Playback controls. -->
-          <v-container
-            v-if="!showSettings"
-            :fluid="true"
-            class="playback-controls"
-          >
+          <v-card class="playback-controls" flat outlined tile>
             <v-row class="mx-0 my-1 pa-0" style="height: 25px">
               <v-slider
                 dense
@@ -142,7 +138,7 @@
                 View Autosaved: {{ new Date(lastSaved).toLocaleTimeString() }}
               </span>
             </v-row>
-          </v-container>
+          </v-card>
         </v-col>
       </v-row>
     </pane>
