@@ -1,6 +1,6 @@
-<v-card class="my-3 settings">
-  <v-row class="ma-0 pa-0" :style="{height: '25px'}">
-    <v-col>
+<v-card class="ma-0 settings">
+  <v-row class="ma-0 pa-0" :style="{maxHeight: '60px'}">
+    <v-col class="ma-0">
       <v-btn v-on:click="girderRest.logout()">
         Logout <v-icon right> $vuetify.icons.logout </v-icon>
       </v-btn>
@@ -192,23 +192,6 @@
       </v-row>
     </v-col>
   </div>
-  <v-row class="ma-0 pa-0" :style="{height: '25px'}">
-    <v-col class="align-center">
-      <v-tooltip top>
-        <template v-slot:activator="{on, attrs}">
-          <v-btn
-            small
-            elevation="0"
-            :style="{width: 'inherit'}"
-            v-on:click="toggleShowSettings()"
-          >
-            <v-icon v-on="on" v-bind="attrs"> mdi-arrow-left </v-icon>
-          </v-btn>
-        </template>
-        <span>Data Selection</span>
-      </v-tooltip>
-    </v-col>
-  </v-row>
   <save-dialog :layout="plots" @close="setSaveDialogVisible(false)" />
   <load-dialog @close="setLoadDialogVisible(false)" />
 </v-card>

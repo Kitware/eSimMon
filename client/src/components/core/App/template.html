@@ -7,11 +7,21 @@
     />
   </v-dialog>
   <context-menu />
-  <splitpanes @resize="adjustRenderWindowWidth">
-    <pane min-size="15" :size="25">
-      <v-row v-bind:style="{height: '100vh'}">
+  <v-btn
+    v-if="drawerCollapsed"
+    @click="toggleDrawer"
+    fab
+    small
+    class="d-flex justify-center ma-0 pa-0 grey--text text--darken-2 secondary lighten-5"
+    :style="{position: 'absolute', zIndex: 1}"
+  >
+    <v-icon>mdi-menu</v-icon>
+  </v-btn>
+  <splitpanes @resize="adjustRenderWindowWidth" :dbl-click-splitter="false">
+    <pane v-if="!drawerCollapsed" min-size="15" :size="25" id="navPanel">
+      <v-row v-bind:style="{height: '100vh'}" class="my-0">
         <!-- Navigation panel on the left. -->
-        <v-col v-bind:style="{padding: '0 10px'}">
+        <v-col class="py-0 px-3">
           <!-- Girder data table browser. -->
           <div class="girder-placeholder" v-if="!location" />
           <girder-file-manager
@@ -22,7 +32,10 @@
             :drag-enabled="true"
           />
           <!--- Settings Panel -->
-          <settings-panel v-if="showSettings" :plots.sync="$refs.plots" />
+          <settings-panel
+            v-if="location && showSettings"
+            :plots.sync="$refs.plots"
+          />
           <!-- Playback controls. -->
           <v-card class="playback-controls" flat outlined tile>
             <v-row class="mx-0 my-1 pa-0" style="height: 25px">
@@ -122,10 +135,12 @@
                       :style="{width: 'inherit'}"
                       v-on:click="toggleShowSettings()"
                     >
-                      <v-icon v-on="on" v-bind="attrs"> mdi-cog </v-icon>
+                      <v-icon v-on="on" v-bind="attrs">
+                        {{showSettings ? "mdi-arrow-left" : "mdi-cog"}}
+                      </v-icon>
                     </v-btn>
                   </template>
-                  <span>Settings</span>
+                  <span>{{showSettings ? "Data Selection" : "Settings"}}</span>
                 </v-tooltip>
               </v-col>
             </v-row>
@@ -156,8 +171,8 @@
               >
                 <plots
                   ref="plots"
-                  v-bind:style="{padding: '0 0 0 3px', height: 'inherit'}"
-                  v-bind:class="[paused ? 'show-toolbar' : 'hide-toolbar']"
+                  class="pa-0"
+                  v-bind:style="{height: 'inherit'}"
                   v-bind:row="i"
                   v-bind:col="j"
                 />
