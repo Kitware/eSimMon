@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3 AS build
+FROM continuumio/miniconda3:23.5.2-0 AS build
 
 RUN apt-get update && apt-get install -y \
   curl \
@@ -70,7 +70,7 @@ RUN cd / && \
     -DVTK_MODULE_ENABLE_VTK_RenderingMatplotlib:STRING=YES && \
  ninja install
 
-FROM continuumio/miniconda3
+FROM continuumio/miniconda3:23.5.2-0
 
 RUN apt-get update && apt-get install -y \
   libgl1 && \
