@@ -4,12 +4,18 @@
     <v-tab :key="1">Images</v-tab>
   </v-tabs>
   <v-card>
-    <v-card-title style="justify-content: center">
+    <v-card-title class="justify-center">
       <span class="text-h6">
         {{ choice }} Generation for
         <vue-mathjax :formula="param" :options="mathJaxOptions" />
       </span>
     </v-card-title>
+    <v-card-subtitle class="d-flex justify-center">
+      <span style="width: 75%; text-align: center">
+        <i>Please note:</i> Requests generated from this dialog may take a few
+        minutes to download depending on the number of time steps.
+      </span>
+    </v-card-subtitle>
     <v-card-text>
       <v-form>
         <v-container>

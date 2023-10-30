@@ -32,7 +32,11 @@ export default {
       return state.zoom;
     },
     PLOT_DATA_COMPLETE(state) {
-      return { ...state };
+      return {
+        log: state.log,
+        userRange: state.userRange,
+        zoom: state.zoom,
+      };
     },
     PLOT_TIMES(state) {
       return state.times;

@@ -123,13 +123,13 @@ export default {
       }
       this.downloadData(endpoint, "zip", "image");
     },
-    fetchMovie(format, timeSteps = null, fps = 10) {
+    fetchMovie(format, timeSteps = null, fps = 10, useDefault = false) {
       const { id } = this.itemInfo;
       let endpoint = `variables/${id}/timesteps/movie?format=${format}`;
       if (timeSteps) {
         endpoint = `${endpoint}&selectedTimeSteps=${JSON.stringify(timeSteps)}`;
       }
-      endpoint = `${endpoint}&fps=${fps}`;
+      endpoint = `${endpoint}&fps=${fps}&useDefault=${useDefault}`;
       this.downloadData(endpoint, format, "movie");
     },
     downloadData(endpoint, format, type) {
