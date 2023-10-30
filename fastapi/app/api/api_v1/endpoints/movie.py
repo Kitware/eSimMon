@@ -14,6 +14,7 @@ from PIL import Image
 from fastapi import APIRouter
 from fastapi import Header
 
+from .images import PlotDetails
 from .images import get_timestep_image_data
 from .utils import get_girder_client
 from .variables import get_timestep_plot
@@ -49,7 +50,8 @@ async def _create_movie(
             if step in timeSteps:
                 # call generate plot response and get plot
                 plot = await get_timestep_plot(id, step, girder_token, as_image=True)
-                image = await get_timestep_image_data(plot, "png", details)
+                plot_details = PlotDetails(details)
+                image = await get_timestep_image_data(plot, "png", plot_details)
                 im = Image.open(io.BytesIO(image), "r", ["PNG"])
                 f = tempfile.NamedTemporaryFile(
                     dir=tmpdir, prefix=f"{step}_", suffix=".png", delete=False

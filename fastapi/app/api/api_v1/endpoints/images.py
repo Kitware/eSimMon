@@ -17,6 +17,7 @@ import vtkmodules.vtkRenderingOpenGL2  # noqa
 from app.schemas.format import PlotFormat
 from fastapi.responses import FileResponse
 from PIL import Image
+from PIL import ImageDraw
 from starlette.responses import StreamingResponse
 from vtk.util import numpy_support
 from vtkmodules.vtkCommonCore import vtkIdList
@@ -46,7 +47,92 @@ from .variables import get_timestep_plot
 router = APIRouter()
 
 
-def create_plotly_image(plot_data: dict, format: str, details: dict):
+class PlotDetails:
+    def __init__(self, details=None) -> None:
+        self._details = details if details else {}
+        if isinstance(details, str):
+            self._details = json.loads(unquote(details))
+
+    @property
+    def log_scaling(self):
+        return self._details.get("log", False)
+
+    @property
+    def use_globals(self):
+        return self._details.get("useRunGlobals", False)
+
+    @property
+    def x_range(self):
+        return self._details.get("xRange", None)
+
+    @property
+    def y_range(self):
+        return self._details.get("yRange", None)
+
+    @property
+    def scalarRange(self):
+        return self._details.get("colorRange", None)
+
+    @property
+    def user_range(self):
+        return self._details.get("userRange", {})
+
+    @property
+    def zoom(self):
+        return self._details.get("zoom", {})
+
+    @property
+    def bounds(self):
+        x, y, scalar = None, None, None
+
+        if self.use_globals:
+            x = self.x_range
+            y = self.y_range
+            scalar = self.scalarRange
+        if self.user_range:
+            x = self.user_range.get("x")
+            y = self.user_range.get("y")
+            scalar = self.user_range.get("scalar")
+        if self.zoom:
+            x = self.zoom.get("xAxis")
+            y = self.zoom.get("yAxis")
+
+        return x, y, scalar
+
+    @property
+    def camera_settings(self):
+        fp, ss = None, None
+        if self.zoom:
+            fp = self.zoom.get("focalPoint", None)
+            ss = self.zoom.get("serverScale", None)
+        return fp, ss
+
+    @property
+    def show_legend(self):
+        return self._details.get("showLegend", True)
+
+    @property
+    def show_x_axis(self):
+        return self._details.get("showXAxis", True)
+
+    @property
+    def show_y_axis(self):
+        return self._details.get("showYAxis", True)
+
+    @property
+    def show_scalar_bar(self):
+        return self._details.get("showScalarBar", True)
+
+    @property
+    def show_title(self):
+        return self._details.get("showTitle", True)
+
+    @property
+    def show_annotations(self):
+        return self._details.get("rangeAnnotations", True)
+
+
+def create_plotly_image(plot_data: dict, format: str, plot_details: PlotDetails):
     # The json contains Javascript syntax. Update values for Python
     plot_type = plot_data["type"]
     if plot_type != "bar":
@@ -60,25 +146,41 @@ def create_plotly_image(plot_data: dict, format: str, details: dict):
     plot_data["layout"]["title"]["x"] = 0.5
     plot_data["layout"].pop("name", None)
     plot_data["layout"].pop("frames", None)
-    if details:
-        log_scaling = details.get("log", False)
-        if log_scaling:
-            plot_data["layout"]["xaxis"]["type"] = "log"
-            plot_data["layout"]["yaxis"]["type"] = "log"
-        zoom = details.get("zoom", False)
-        if zoom:
-            plot_data["layout"]["xaxis"]["range"] = details["zoom"]["xAxis"]
-            plot_data["layout"]["yaxis"]["range"] = details["zoom"]["yAxis"]
-        legend = details.get("legend", False)
-        plot_data["layout"]["showlegend"] = legend
+
+    x, y, _ = plot_details.bounds
+    if x:
+        plot_data["layout"]["xaxis"]["range"] = x
+    if y:
+        plot_data["layout"]["yaxis"]["range"] = y
+
+    if plot_details.log_scaling:
+        plot_data["layout"]["xaxis"]["type"] = "log"
+        plot_data["layout"]["yaxis"]["type"] = "log"
+
+    plot_data["layout"]["showlegend"] = plot_details.show_legend
+    plot_data["layout"]["xaxis"]["visible"] = plot_details.show_x_axis
+    plot_data["layout"]["yaxis"]["visible"] = plot_details.show_y_axis
+    if not plot_details.show_title:
+        plot_data["layout"]["title"]["text"] = ""
 
     # Get image as bytes
     fig = go.Figure(plot_data["data"], plot_data["layout"])
-    return fig.to_image(format, width=1000, height=1000)
+    output_file = tempfile.NamedTemporaryFile(suffix=f".{format}", delete=False)
+    fig.write_image(output_file.name, format="png")
+    return _convert_image(output_file, format, plot_details)
 
 
-def _convert_image(png_image, format: str):
+def _convert_image(png_image, format: str, plot_details: PlotDetails):
     img = Image.open(png_image)
+    if plot_details.show_annotations:
+        draw = ImageDraw.Draw(img)
+        x, y, scalar = plot_details.bounds
+        text = f"X: {x}" if x else ""
+        text = f"{text} Y: {y}" if y else text
+        text = f"{text} Scalars: {scalar}" if scalar else text
+        text_len = draw.textlength(text)
+        position = ((img.width - text_len) // 2, img.height * 0.035)
+        draw.text(position, text, fill=(0, 0, 0))
     img = img.convert("RGB")
     buf = io.BytesIO()
     img.save(buf, format.upper())
@@ -95,7 +197,9 @@ def _mkVtkIdList(it):
 
 
 class MeshImagePipeline:
-    def _retrieve_mesh_data(self, plot_type: str, plot_data: Dict):
+    def _retrieve_mesh_data(
+        self, plot_type: str, plot_data: Dict, plot_details: PlotDetails
+    ):
         if plot_type == PlotFormat.mesh:
             nodes = np.asarray(plot_data["nodes"])
             connectivity = np.asarray(plot_data["connectivity"])
@@ -122,13 +226,25 @@ class MeshImagePipeline:
             connectivity = np.array(connectivity)
             # TODO: Remove this when we have more functionality in VTK charts
             # Manipulate actor scale to ensure the plot remains square
-            scale = (max(ypoints) - min(ypoints)) / (max(xpoints) - min(xpoints))
+            x0, x1 = (
+                plot_details.x_range
+                if plot_details.use_globals
+                else [min(xpoints), max(xpoints)]
+            )
+            y0, y1 = (
+                plot_details.y_range
+                if plot_details.use_globals
+                else [min(ypoints), max(ypoints)]
+            )
+            scale = (y1 - y0) / (x1 - x0)
 
         return nodes, connectivity, scale
 
-    def render_image(self, plot_data: Dict, format: str, details: Dict):
+    def render_image(self, plot_data: Dict, format: str, plot_details: PlotDetails):
         plot_type = plot_data["type"]
-        nodes, connectivity, scale = self._retrieve_mesh_data(plot_type, plot_data)
+        nodes, connectivity, scale = self._retrieve_mesh_data(
+            plot_type, plot_data, plot_details
+        )
         color = np.asarray(plot_data["color"])
 
         if color.ndim > 1:
@@ -159,11 +275,15 @@ class MeshImagePipeline:
         # We now assign the pieces to the vtkPolyData.
         self.mesh.GetPointData().SetScalars(scalars)
 
+        x, y, scalar = plot_details.bounds
+
         # Setup mapper and actor
         self.mesh_mapper.SetInputData(self.mesh)
-        self.mesh_mapper.SetScalarRange(scalars.GetRange())
+        scalar_range = scalar if scalar else scalars.GetRange()
+        self.mesh_mapper.SetScalarRange(scalar_range)
 
         self.title_text.SetInput(title)
+        self.title_text.SetVisibility(plot_details.show_title)
 
         camera = vtkCamera()
         camera.SetParallelProjection(True)
@@ -172,15 +292,24 @@ class MeshImagePipeline:
         self.axes.SetCamera(self.renderer.GetActiveCamera())
         self.axes.SetXTitle(xLabel)
         self.axes.SetYTitle(yLabel)
-        self.axes.SetBounds(self.mesh_actor.GetBounds())
+        axes_bounds = self.mesh_actor.GetBounds()
+        if x is not None and y is not None:
+            axes_bounds = [*x, *y, 0, 0]
+        self.axes.SetBounds(axes_bounds)
 
         # Needed to ensure grid axes is updated
-        if plot_type == PlotFormat.mesh:
-            self.axes.DrawXGridlinesOn()
-            self.axes.DrawYGridlinesOn()
-        elif plot_type == PlotFormat.colormap:
-            self.axes.DrawXGridlinesOff()
-            self.axes.DrawYGridlinesOff()
+        self.axes.DrawXGridlinesOff()
+        self.axes.DrawYGridlinesOff()
+
+        if not plot_details.show_x_axis:
+            self.axes.XAxisVisibilityOff()
+            self.axes.XAxisLabelVisibilityOff()
+            self.axes.XAxisTickVisibilityOff()
+        if not plot_details.show_y_axis:
+            self.axes.YAxisVisibilityOff()
+            self.axes.YAxisLabelVisibilityOff()
+            self.axes.YAxisTickVisibilityOff()
+
         self.renderer.RemoveActor(self.axes)
         self.renderer.AddActor(self.axes)
 
@@ -191,19 +320,25 @@ class MeshImagePipeline:
             # This ensures axes labels and title are not cut off
             bounds[2] -= 0.1
         elif plot_type == PlotFormat.colormap:
-            xscale, _, _ = self.mesh_actor.GetScale()
-            bounds[1] += xscale * 0.1
+            if plot_details.use_globals:
+                bounds[2] = plot_details.y_range[0]
+                bounds[3] = plot_details.y_range[1]
+            else:
+                xscale, _, _ = self.mesh_actor.GetScale()
+                bounds[1] += xscale * 0.1
         self.renderer.ResetCamera(bounds)
         self.renderer.SetBackground([1, 1, 1])
 
         # Set the zoom if needed
-        if details and (zoom := details.get("zoom", False)):
+        focal_point, server_scale = plot_details.camera_settings
+        if focal_point:
             camera = self.renderer.GetActiveCamera()
-            fX, fY, fZ = zoom["focalPoint"]
+            fX, fY, fZ = focal_point
             camera.SetFocalPoint(fX, fY, fZ)
-            camera.SetParallelScale(zoom["serverScale"])
+            camera.SetParallelScale(server_scale)
 
         self.scalar_bar.SetTitle(colorLabel)
+        self.scalar_bar.SetVisibility(plot_details.show_scalar_bar)
 
         self.ren_win.Render()
 
@@ -221,7 +356,7 @@ class MeshImagePipeline:
 
         self.prev_plot_type = plot_type
 
-        return _convert_image(output_file, format)
+        return _convert_image(output_file, format, plot_details)
 
     def __init__(self):
         # Note previous plot type in order to take advantage of caching
@@ -323,17 +458,17 @@ class MeshImagePipeline:
 pipeline = MeshImagePipeline()
 
 
-def create_mesh_image(plot_data: dict, format: str, details: dict):
+def create_mesh_image(plot_data: dict, format: str, plot_details: PlotDetails):
     global pipeline
 
-    return pipeline.render_image(plot_data, format, details)
+    return pipeline.render_image(plot_data, format, plot_details)
 
 
-async def get_timestep_image_data(plot: dict, format: str, details: dict):
+async def get_timestep_image_data(plot: dict, format: str, plot_details: PlotDetails):
     if plot["type"] in PlotFormat.plotly:
-        image = create_plotly_image(plot, format, details)
+        image = create_plotly_image(plot, format, plot_details)
     elif plot["type"] == PlotFormat.mesh or plot["type"] == PlotFormat.colormap:
-        image = create_mesh_image(plot, format, details)
+        image = create_mesh_image(plot, format, plot_details)
     else:
         raise Exception("Unrecognized type")
 
@@ -355,10 +490,10 @@ async def get_timestep_image(
     if timestep not in timesteps:
         timestep = max([s for s in timesteps if s < timestep])
     # Check if there are additional settings to apply
-    details = json.loads(unquote(details)) if details else {}
+    plot_details = PlotDetails(details)
     # call generate plot response and get plot
     plot = await get_timestep_plot(variable_id, timestep, girder_token, as_image=True)
-    img_bytes = await get_timestep_image_data(plot, format, details)
+    img_bytes = await get_timestep_image_data(plot, format, plot_details)
     return StreamingResponse(io.BytesIO(img_bytes), media_type=f"image/{format}")
 
 
@@ -380,7 +515,7 @@ async def get_timestep_images(
     else:
         selectedTimeSteps = timesteps
     # Check if there are additional settings to apply
-    details = json.loads(unquote(details)) if details else {}
+    plot_details = PlotDetails(details)
 
     output_file = tempfile.NamedTemporaryFile(suffix=f".zip", delete=False)
     with zipfile.ZipFile(output_file, "w") as zip_obj:
@@ -391,7 +526,7 @@ async def get_timestep_images(
                     plot = await get_timestep_plot(
                         variable_id, step, girder_token, as_image=True
                     )
-                    image = await get_timestep_image_data(plot, "png", details)
+                    image = await get_timestep_image_data(plot, "png", plot_details)
                     im = Image.open(io.BytesIO(image), "r", ["PNG"]).convert("RGB")
                     f = tempfile.NamedTemporaryFile(
                         dir=tmpdir, prefix=f"{step}_", suffix=f".{format}", delete=False

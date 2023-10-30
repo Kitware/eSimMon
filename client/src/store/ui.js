@@ -107,6 +107,17 @@ export default {
     UI_NAV_DRAWER_COLLAPSED(state) {
       return state.drawerCollapsed;
     },
+    UI_PLOT_SETTINGS(state) {
+      return {
+        useRunGlobals: state.useRunGlobals,
+        showXAxis: state.showXAxis,
+        showYAxis: state.showYAxis,
+        showScalarBar: state.showScalarBar,
+        showTitle: state.showTitle,
+        showLegend: state.showLegend,
+        rangeAnnotations: state.rangeAnnotations,
+      };
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {

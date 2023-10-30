@@ -44,6 +44,7 @@ export default {
     ...mapGetters({
       visible: "UI_SHOW_CONTEXT_MENU",
       itemInfo: "UI_CONTEXT_MENU_ITEM_DATA",
+      plotSettings: "UI_PLOT_SETTINGS",
       mathJaxOptions: "UI_MATH_JAX_OPTIONS",
       minTimeStep: "VIEW_MIN_TIME_STEP",
       maxTimeStep: "VIEW_MAX_TIME_STEP",
@@ -144,7 +145,12 @@ export default {
       const { name } = this.itemInfo;
       this.downloads.push({ type, uuid, name, status: REQUEST });
       let details =
-        format !== "bp" ? `&details=${JSON.stringify(this.plotDetails)}` : "";
+        format !== "bp"
+          ? `&details=${JSON.stringify({
+              ...this.plotDetails,
+              ...this.plotSettings,
+            })}`
+          : "";
       this.girderRest
         .get(`${this.fastRestUrl}/${endpoint}${details}`, {
           responseType: "blob",

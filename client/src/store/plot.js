@@ -36,6 +36,9 @@ export default {
         log: state.log,
         userRange: state.userRange,
         zoom: state.zoom,
+        xRange: state.xRange,
+        yRange: state.yRange,
+        colorRange: state.colorRange,
       };
     },
     PLOT_TIMES(state) {
