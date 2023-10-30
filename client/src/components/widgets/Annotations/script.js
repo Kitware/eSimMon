@@ -24,6 +24,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    size: {
+      type: String,
+      default: "smaller",
+    },
   },
   computed: {
     ...mapGetters({
