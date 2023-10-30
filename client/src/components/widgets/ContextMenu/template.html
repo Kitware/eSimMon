@@ -50,6 +50,12 @@
         </template>
         <v-card style="padding: 5px">
           <v-list>
+            <v-list-item dense @click="fetchRaw('bp')">
+              <v-list-item-title> Download Raw Data </v-list-item-title>
+            </v-list-item>
+          </v-list>
+          <v-divider />
+          <v-list>
             <v-list-item dense @click="fetchImage('png')">
               <v-list-item-title> Save PNG Image </v-list-item-title>
             </v-list-item>

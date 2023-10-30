@@ -132,15 +132,19 @@ export default {
       endpoint = `${endpoint}&fps=${fps}&useDefault=${useDefault}`;
       this.downloadData(endpoint, format, "movie");
     },
+    fetchRaw(format) {
+      const { id } = this.itemInfo;
+      let endpoint = `variables/${id}/timesteps/raw`;
+      this.downloadData(endpoint, format, "raw");
+    },
     downloadData(endpoint, format, type) {
       this.showMenu = false;
       const uuid = uuidv4();
       this.updateItemInfo({ ...this.itemInfo, uuid });
       const { name } = this.itemInfo;
       this.downloads.push({ type, uuid, name, status: REQUEST });
-      let details = this.plotDetails
-        ? `&details=${JSON.stringify(this.plotDetails)}`
-        : "";
+      let details =
+        format !== "bp" ? `&details=${JSON.stringify(this.plotDetails)}` : "";
       this.girderRest
         .get(`${this.fastRestUrl}/${endpoint}${details}`, {
           responseType: "blob",
