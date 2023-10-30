@@ -10,8 +10,7 @@
   <v-btn
     v-if="drawerCollapsed"
     @click="toggleDrawer"
-    fab
-    small
+    icon
     class="d-flex justify-center ma-0 pa-0 grey--text text--darken-2 secondary lighten-5"
     :style="{position: 'absolute', zIndex: 1}"
   >
@@ -19,7 +18,7 @@
   </v-btn>
   <splitpanes @resize="adjustRenderWindowWidth" :dbl-click-splitter="false">
     <pane v-if="!drawerCollapsed" min-size="15" :size="25" id="navPanel">
-      <v-row v-bind:style="{height: '100vh'}" class="my-0">
+      <v-row :style="{height: '100vh'}" class="my-0">
         <!-- Navigation panel on the left. -->
         <v-col class="py-0 px-3">
           <!-- Girder data table browser. -->
@@ -149,7 +148,7 @@
               class="mx-0 my-1 pa-0"
               style="height: 25px"
             >
-              <span v-bind:style="{fontSize: 'small', opacity: '0.5'}">
+              <span :style="{fontSize: 'small', opacity: '0.5'}">
                 View Autosaved: {{ new Date(lastSaved).toLocaleTimeString() }}
               </span>
             </v-row>
@@ -161,20 +160,20 @@
     <pane id="mainContent" min-size="50" :size="85" class="main-content">
       <!-- image gallery grid. -->
       <render-window ref="renderWindow" id="renderWindow" class="plots" />
-      <v-container v-bind:style="{padding: '0', maxWidth: '100%'}">
+      <v-container :style="{padding: '0', maxWidth: '100%'}">
         <template v-for="i in numrows">
-          <v-row v-bind:key="i">
+          <v-row :key="i">
             <template v-for="j in numcols">
               <v-col
-                v-bind:key="j"
-                v-bind:style="{ width: cellWidth, height: cellHeight, padding: '0' }"
+                :key="j"
+                :style="{ width: cellWidth, height: cellHeight, padding: '0' }"
               >
                 <plots
                   ref="plots"
                   class="pa-0"
-                  v-bind:style="{height: 'inherit'}"
-                  v-bind:row="i"
-                  v-bind:col="j"
+                  :style="{height: 'inherit'}"
+                  :row="i"
+                  :col="j"
                 />
               </v-col>
             </template>
