@@ -44,6 +44,7 @@ export default {
     ...mapGetters({
       visible: "UI_SHOW_CONTEXT_MENU",
       itemInfo: "UI_CONTEXT_MENU_ITEM_DATA",
+      plotSettings: "UI_PLOT_SETTINGS",
       mathJaxOptions: "UI_MATH_JAX_OPTIONS",
       minTimeStep: "VIEW_MIN_TIME_STEP",
       maxTimeStep: "VIEW_MAX_TIME_STEP",
@@ -123,14 +124,19 @@ export default {
       }
       this.downloadData(endpoint, "zip", "image");
     },
-    fetchMovie(format, timeSteps = null, fps = 10) {
+    fetchMovie(format, timeSteps = null, fps = 10, useDefault = false) {
       const { id } = this.itemInfo;
       let endpoint = `variables/${id}/timesteps/movie?format=${format}`;
       if (timeSteps) {
         endpoint = `${endpoint}&selectedTimeSteps=${JSON.stringify(timeSteps)}`;
       }
-      endpoint = `${endpoint}&fps=${fps}`;
+      endpoint = `${endpoint}&fps=${fps}&useDefault=${useDefault}`;
       this.downloadData(endpoint, format, "movie");
+    },
+    fetchRaw(format) {
+      const { id } = this.itemInfo;
+      let endpoint = `variables/${id}/timesteps/raw`;
+      this.downloadData(endpoint, format, "raw");
     },
     downloadData(endpoint, format, type) {
       this.showMenu = false;
@@ -138,9 +144,15 @@ export default {
       this.updateItemInfo({ ...this.itemInfo, uuid });
       const { name } = this.itemInfo;
       this.downloads.push({ type, uuid, name, status: REQUEST });
-      let details = this.plotDetails
-        ? `&details=${JSON.stringify(this.plotDetails)}`
-        : "";
+      let details =
+        format !== "bp"
+          ? `&details=${encodeURI(
+              JSON.stringify({
+                ...this.plotDetails,
+                ...this.plotSettings,
+              }),
+            )}`
+          : "";
       this.girderRest
         .get(`${this.fastRestUrl}/${endpoint}${details}`, {
           responseType: "blob",

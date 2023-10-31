@@ -252,12 +252,12 @@ class AsyncGirderClient(object):
 
         return await self.get("folder", params=params)
 
-    async def create_movie(self, item, ext):
+    async def create_movie(self, item, exts):
         # We need this sempahore to prevent two movies for the same item form
         # being created.
         async with self._movie_create_semaphore:
             await self.put(
-                f"variables/{item['_id']}/timesteps/movie?format={ext}",
+                f"variables/{item['_id']}/timesteps/movie?formats={json.dumps(exts)}",
                 useFastApi=True,
             )
 
@@ -545,12 +545,15 @@ async def create_movies(folder, gc):
     for f in folders:
         items_list = await gc.list_item(f)
         items.extend(items_list)
+
     for item in items:
-        log.info(
-            f"Creating movies for item \"{item['name']}\" in run \"{folder['name']}\""
-        )
-        for ext in ["mp4", "mpg"]:
-            await gc.create_movie(item, ext)
+        current = f"item {item['name']} in run {folder['name']}"
+        log.info(f"Creating movies for {current}")
+        try:
+            await gc.create_movie(item, ["mp4", "mpg"])
+        except Exception as e:
+            log.warning(f"Unable to create movies for {current}: {e}")
+            continue
 
 
 async def upload_timestep_bp_archive(
@@ -641,24 +644,19 @@ async def fetch_images(
         buffer = BytesIO(image_archive)
 
         with tarfile.open(fileobj=buffer) as images_tgz:
-            bp_files_to_upload = set([v["file_name"] for v in variables])
+            bp_files_to_upload = set(
+                [v["file_name"] for v in variables if v.get("file_name")]
+            )
 
             # First ensure will be all variable items created
             for v in variables:
-                variable_name = v["attribute_name"]
-                try:
-                    group_name = v["group_name"]
-                except KeyError:
-                    log.warning(
-                        f"Unable to extract groups_name for '{variable_name}' in {shot_name}/{run_name}, skipping."
-                    )
-                    return
+                variable_name = v.get("attribute_name")
+                group_name = v.get("group_name")
+                time = v.get("time")
 
-                try:
-                    time = v["time"]
-                except KeyError:
+                if variable_name is None or group_name is None or time is None:
                     log.warning(
-                        f"Unable to extract time for '{variable_name}' in {shot_name}/{run_name}, skipping."
+                        f"Unable to extract attribute_name for '{variable_name}' in {shot_name}/{run_name}, skipping."
                     )
                     return
 
@@ -803,10 +801,10 @@ async def watch_run(
             log.info(f"Run {run_name} is complete.")
             await fetch_images_queue.join()
             scheduler.cancel()
-            # # Create movies for all run params
-            # log.info('Generating movies for run "%s".' % run_name)
-            # await create_movies(run_folder, gc)
-            # log.info('Movies for run "%s" have been generated.' % run_name)
+            # Create movies for all run params
+            log.info('Generating movies for run "%s".' % run_name)
+            await create_movies(run_folder, gc)
+            log.info('Movies for run "%s" have been generated.' % run_name)
             break
 
         # Did we miss any timesteps?
