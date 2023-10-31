@@ -66,6 +66,7 @@ export default {
 
   computed: {
     ...mapGetters({
+      enableStepAnnotations: "UI_SHOW_STEP_ANNOTATION",
       enableRangeAnnotations: "UI_SHOW_RANGE_ANNOTATION",
       xaxisVisible: "UI_SHOW_X_AXIS",
       yaxisVisible: "UI_SHOW_Y_AXIS",
