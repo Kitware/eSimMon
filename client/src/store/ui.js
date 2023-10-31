@@ -33,6 +33,7 @@ export default {
     showLegend: false,
     rangeAnnotations: true,
     drawerCollapsed: false,
+    stepAnnotations: true,
   },
   getters: {
     UI_AUTO_SAVE_DIALOG(state) {
@@ -118,6 +119,9 @@ export default {
         rangeAnnotations: state.rangeAnnotations,
       };
     },
+    UI_SHOW_STEP_ANNOTATION(state) {
+      return state.stepAnnotations;
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {
@@ -188,6 +192,9 @@ export default {
     },
     UI_NAV_DRAWER_COLLAPSED_SET(state, val) {
       state.drawerCollapsed = val;
+    },
+    UI_SHOW_STEP_ANNOTATION_SET(state, val) {
+      state.stepAnnotations = val;
     },
   },
   actions: {

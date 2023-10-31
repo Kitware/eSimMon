@@ -1,5 +1,12 @@
 <div ref="vtk" class="plot">
   <plot-label v-if="showTitle" :text="title" position="title" />
   <annotations v-if="enableRangeAnnotations" :text="annotationText()" top />
+  <annotations
+    v-if="enableStepAnnotations"
+    :text="[localTimeStep]"
+    bottom
+    right
+    size="large"
+  />
   <v-icon v-if="!itemId" large> input </v-icon>
 </div>

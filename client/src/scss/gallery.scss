@@ -198,7 +198,6 @@
 .annotations {
   position: absolute;
   z-index: 1;
-  font-size: smaller;
   width: auto;
   text-align: center;
 }
@@ -214,7 +213,7 @@
   top: 25px;
 }
 .bottom {
-  bottom: 25px;
+  bottom: 0px;
 }
 
 .notificiations {

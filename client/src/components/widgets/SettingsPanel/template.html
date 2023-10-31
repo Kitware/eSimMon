@@ -185,7 +185,24 @@
               </div>
             </template>
             <p class="mb-0">
-              Range info on hover {{rangeInfo ? "enabled" : "disabled"}}.
+              Range info annotations {{rangeInfo ? "enabled" : "disabled"}}.
+            </p>
+          </v-tooltip>
+        </v-col>
+        <v-col>
+          <v-tooltip left bottom>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
+                <v-switch
+                  dense
+                  v-model="stepInfo"
+                  label="step text"
+                  hide-details
+                />
+              </div>
+            </template>
+            <p class="mb-0">
+              Step annotations {{stepInfo ? "enabled" : "disabled"}}.
             </p>
           </v-tooltip>
         </v-col>

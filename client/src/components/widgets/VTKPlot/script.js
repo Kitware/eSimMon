@@ -70,6 +70,7 @@ export default {
 
   computed: {
     ...mapGetters({
+      enableStepAnnotations: "UI_SHOW_STEP_ANNOTATION",
       showTitle: "UI_SHOW_TITLE",
       runGlobals: "UI_USE_RUN_GLOBALS",
       enableRangeAnnotations: "UI_SHOW_RANGE_ANNOTATION",

@@ -44,6 +44,7 @@ export default {
       toggleSettingsVisibility: "UI_SHOW_SETTINGS_SET",
       setAutoSaveDialogEnabled: "UI_AUTO_SAVE_DIALOG_ENABLED_SET",
       setRangeAnnotationsEnabled: "UI_SHOW_RANGE_ANNOTATION_SET",
+      setStepAnnotationsEnabled: "UI_SHOW_STEP_ANNOTATION_SET",
     }),
     async saveView() {
       await this.fetchAllViews();
@@ -58,6 +59,7 @@ export default {
 
   computed: {
     ...mapGetters({
+      enableStepAnnotations: "UI_SHOW_STEP_ANNOTATION",
       enableRangeAnnotations: "UI_SHOW_RANGE_ANNOTATION",
       showLegend: "UI_SHOW_LEGEND",
       showScalarBar: "UI_SHOW_SCALAR_BAR",
@@ -154,6 +156,14 @@ export default {
       },
       set(val) {
         this.setRangeAnnotationsEnabled(val);
+      },
+    },
+    stepInfo: {
+      get() {
+        return this.enableStepAnnotations;
+      },
+      set(val) {
+        this.setStepAnnotationsEnabled(val);
       },
     },
   },
