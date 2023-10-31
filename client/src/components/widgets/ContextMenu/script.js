@@ -146,10 +146,12 @@ export default {
       this.downloads.push({ type, uuid, name, status: REQUEST });
       let details =
         format !== "bp"
-          ? `&details=${JSON.stringify({
-              ...this.plotDetails,
-              ...this.plotSettings,
-            })}`
+          ? `&details=${encodeURI(
+              JSON.stringify({
+                ...this.plotDetails,
+                ...this.plotSettings,
+              }),
+            )}`
           : "";
       this.girderRest
         .get(`${this.fastRestUrl}/${endpoint}${details}`, {
