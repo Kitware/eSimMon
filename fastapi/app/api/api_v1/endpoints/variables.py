@@ -144,6 +144,18 @@ async def get_timesteps(variable_id: str, girder_token: str = Header(None)):
     return meta
 
 
+def _check_for_static_image(gc, item_id: str, variable: str) -> FileResponse | bool:
+    for f in gc.listFile(item_id):
+        # FIXME: Temporary fix with badly named static image examples.
+        # Images should be named {attribute_name}.{ext} going forward
+        options = [Path(f["name"]).stem, Path(f["name"]).stem.replace(".", "_")]
+        if any([variable in o for o in options]):
+            ext = Path(f["name"]).suffix.strip(".")
+            out = tempfile.NamedTemporaryFile(suffix=ext, delete=False)
+            gc.downloadFile(f["_id"], out.name)
+            return FileResponse(path=out.name, media_type=f"image/{ext}")
+
+
 # variable_id => Girder item id for item used to represent the variable.
 @router.get("/{variable_id}/timesteps/{timestep}/plot")
 async def get_timestep_plot(
@@ -165,9 +177,19 @@ async def get_timestep_plot(
     f"{group_name}.bp.tgz"
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        bp_file_path = await download_bp_file(
-            gc, tmpdir, group_folder["_id"], group_name, timestep
-        )
+        try:
+            bp_file_path = await download_bp_file(
+                gc, tmpdir, group_folder["_id"], group_name, timestep
+            )
+        except HTTPException:
+            resp = _check_for_static_image(gc, time_step_item["_id"], variable)
+            if resp:
+                return resp
+            else:
+                raise HTTPException(
+                    status_code=404, detail="Unable to locate BP file or static image."
+                )
+
         try:
             # Extract data from the BP file
             with adios2.open(str(bp_file_path), "r") as bp:
@@ -175,14 +197,9 @@ async def get_timestep_plot(
                 if not plot_config or as_image:
                     # Variable does not exist in BP file
                     # Look for static image instead
-                    for f in gc.listFile(time_step_item["_id"]):
-                        if Path(f["name"]).stem == variable:
-                            ext = Path(f["name"]).suffix.strip(".")
-                            out = tempfile.NamedTemporaryFile(suffix=ext, delete=False)
-                            gc.downloadFile(f["_id"], out.name)
-                            return FileResponse(
-                                path=out.name, media_type=f"image/{ext}"
-                            )
+                    resp = _check_for_static_image(gc, time_step_item["_id"], variable)
+                    if resp:
+                        return resp
                 if as_image:
                     return await generate_plot_data(bp, variable)
                 else:
