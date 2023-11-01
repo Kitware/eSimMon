@@ -5,6 +5,7 @@ from pathlib import Path
 
 import adios2
 from app.schemas.format import PlotFormat
+from fastapi.responses import FileResponse
 
 from fastapi import APIRouter
 from fastapi import Header
@@ -153,7 +154,7 @@ async def get_timestep_plot(
 ):
     gc = get_girder_client(girder_token)
     group_folder_id = get_group_folder_id(gc, variable_id)
-    get_timestep_item(gc, group_folder_id, timestep)
+    time_step_item = get_timestep_item(gc, group_folder_id, timestep)
     # Get the variable name (the item name)
     variable_item = gc.getItem(variable_id)
     variable = variable_item["name"]
@@ -167,9 +168,26 @@ async def get_timestep_plot(
         bp_file_path = await download_bp_file(
             gc, tmpdir, group_folder["_id"], group_name, timestep
         )
-        # Extract data from the BP file
-        with adios2.open(str(bp_file_path), "r") as bp:
-            if as_image:
-                return await generate_plot_data(bp, variable)
-            else:
-                return await generate_plot_response(bp, variable)
+        try:
+            # Extract data from the BP file
+            with adios2.open(str(bp_file_path), "r") as bp:
+                plot_config = bp.read_attribute_string(variable)
+                if not plot_config or as_image:
+                    # Variable does not exist in BP file
+                    # Look for static image instead
+                    for f in gc.listFile(time_step_item["_id"]):
+                        if Path(f["name"]).stem == variable:
+                            ext = Path(f["name"]).suffix.strip(".")
+                            out = tempfile.NamedTemporaryFile(suffix=ext, delete=False)
+                            gc.downloadFile(f["_id"], out.name)
+                            return FileResponse(
+                                path=out.name, media_type=f"image/{ext}"
+                            )
+                if as_image:
+                    return await generate_plot_data(bp, variable)
+                else:
+                    return await generate_plot_response(bp, variable)
+        except:
+            raise HTTPException(
+                status_code=404, detail="Unable to locate BP file or static image."
+            )
