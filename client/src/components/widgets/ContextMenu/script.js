@@ -88,6 +88,9 @@ export default {
     isPlotly() {
       return this.itemInfo?.plotType === PlotType.Plotly;
     },
+    isStaticImage() {
+      return this.itemInfo?.plotType === PlotType.Image;
+    },
     plotDetails() {
       return (
         this.$store.getters[`${this.itemInfo?.id}/PLOT_DATA_COMPLETE`] || {}

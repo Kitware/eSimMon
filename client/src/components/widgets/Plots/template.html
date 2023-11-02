@@ -12,12 +12,20 @@
       :timeAverage="timeAverage"
       :plotDataLoaded="plotDataLoaded"
       :plotXAxis="plotXAxis"
+      :plotFetcher="plotFetcher"
     />
     <vtk-plot
       :ref="row+'-'+col"
       v-if="plotType === 'vtk'"
       :itemId="itemId"
       :plotXAxis="plotXAxis"
+      :plotFetcher="plotFetcher"
+    />
+    <static-image
+      :ref="row+'-'+col"
+      v-if="plotType === 'image'"
+      :itemId="itemId"
+      :plotFetcher="plotFetcher"
     />
     <div class="plot">
       <v-icon v-if="!plotType" large> input </v-icon>

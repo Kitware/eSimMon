@@ -38,6 +38,7 @@ export default {
       toggleLegend: "UI_TOGGLE_LEGEND",
     }),
     ...mapMutations({
+      setSyncSteps: "UI_SYNC_ANIMATION_SET",
       setPaused: "UI_PAUSE_GALLERY_SET",
       setLoadDialogVisible: "UI_SHOW_LOAD_DIALOG_SET",
       setSaveDialogVisible: "UI_SHOW_SAVE_DIALOG_SET",
@@ -59,6 +60,7 @@ export default {
 
   computed: {
     ...mapGetters({
+      syncSteps: "UI_SYNC_ANIMATION",
       enableStepAnnotations: "UI_SHOW_STEP_ANNOTATION",
       enableRangeAnnotations: "UI_SHOW_RANGE_ANNOTATION",
       showLegend: "UI_SHOW_LEGEND",
@@ -164,6 +166,14 @@ export default {
       },
       set(val) {
         this.setStepAnnotationsEnabled(val);
+      },
+    },
+    stepSync: {
+      get() {
+        return this.syncSteps;
+      },
+      set(val) {
+        this.setSyncSteps(val);
       },
     },
   },

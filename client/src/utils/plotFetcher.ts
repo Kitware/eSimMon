@@ -144,19 +144,21 @@ export class PlotFetcher {
   private currentTimestep?: number;
   private tasks: Record<string, FetcherTask<any>>;
   private endpointFn: (itemId: string) => Promise<any>;
-  private fastEndpointFn: (itemId: string, timestep: number) => Promise<any>;
+  private fastEndpointFn: (itemId: string, timestep: number, asImage: boolean) => Promise<any>;
   private fetchTimeStepFn: (response: any, timeStep: number) => Promise<any>;
   private metaPromise?: Promise<any>;
   private initialized: boolean;
   private availableTimesteps: number[];
   private lookAhead = 3;
   private seed: number;
+  private syncAnimation: boolean;
   
   constructor(
     itemId: string,
     endpointFn: (itemId: string) => Promise<any>,
-    fastEndpointFn: (itemId: string, timestep: number) => Promise<any>,
+    fastEndpointFn: (itemId: string, timestep: number, asImage: boolean) => Promise<any>,
     fetchTimeStepFn: (response: any, timeStep: number) => Promise<any>,
+    sync: boolean,
   ) {
     this.itemId = itemId;
     this.endpointFn = endpointFn;
@@ -167,6 +169,7 @@ export class PlotFetcher {
     this.initialized = false;
     this.availableTimesteps = [];
     this.seed = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+    this.syncAnimation = sync;
   }
 
   initialize() : Promise<any> {
@@ -180,6 +183,11 @@ export class PlotFetcher {
     }
 
     return this.metaPromise;
+  }
+
+  setSyncAnimation(sync: boolean) {
+    this.syncAnimation = sync;
+    this.lookAhead = sync ? 3 : 100;
   }
 
   setCurrentTimestep(timestep: number, preFetch = true) {
@@ -259,7 +267,7 @@ export class PlotFetcher {
 
   private createFetchTask<T>(timestep: number, priority: number): FetcherTask<T> {
     const id = `${this.seed}_${this.itemId}_${timestep}`;
-    const result = registry.addTask(id, () => this.fastEndpointFn(this.itemId, timestep), priority);
+    const result = registry.addTask(id, () => this.fastEndpointFn(this.itemId, timestep, !this.syncAnimation), priority);
 
     const task: FetcherTask<T> = {
       id,

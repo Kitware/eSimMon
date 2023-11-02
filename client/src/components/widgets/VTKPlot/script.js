@@ -21,7 +21,8 @@ import vtkPolyData from "@kitware/vtk.js/Common/DataModel/PolyData";
 import vtkRenderer from "@kitware/vtk.js/Rendering/Core/Renderer";
 import vtkScalarBarActor from "@kitware/vtk.js/Rendering/Core/ScalarBarActor";
 import vtkCustomCubeAxesActor from "../../../utils/vtkCustomCubeAxesActor";
-import { extractRange } from "../../../utils/helpers";
+import { extractRange, nextAvailableTimeStep } from "../../../utils/helpers";
+import { PlotFetcher } from "../../../utils/plotFetcher";
 
 const Y_AXES_LABEL_BOUNDS_ADJUSTMENT = 0.001;
 const MESH_XAXIS_SCALE_OFFSET = 0.1;
@@ -46,6 +47,10 @@ export default {
       type: String,
       required: true,
     },
+    plotFetcher: {
+      type: PlotFetcher,
+      required: true,
+    },
   },
 
   data() {
@@ -65,6 +70,7 @@ export default {
       lastLoadedTimeStep: -1,
       currentRange: null,
       title: "",
+      localTimeStep: 1,
     };
   },
 
@@ -110,15 +116,6 @@ export default {
     },
     zoom() {
       return this.$store.getters[`${this.itemId}/PLOT_ZOOM`] || null;
-    },
-    localTimeStep() {
-      const ts = this.currentTimeStep;
-      if (this.availableTimeSteps.includes(ts)) {
-        return ts;
-      }
-      let idx = this.availableTimeSteps.findIndex((step) => step >= ts);
-      idx = Math.max((idx -= 1), 0);
-      return this.availableTimeSteps[idx];
     },
   },
 
@@ -191,6 +188,16 @@ export default {
           this.react();
           this.resetCameraBounds();
         }
+      },
+    },
+    currentTimeStep: {
+      immediate: true,
+      handler(step) {
+        this.localTimeStep = nextAvailableTimeStep(
+          step,
+          this.availableTimeSteps,
+        );
+        this.plotFetcher.setCurrentTimestep(this.localTimeStep, true);
       },
     },
   },
