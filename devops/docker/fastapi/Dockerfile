@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN conda install -c \
   conda-forge \
-  python=3.9 \
+  python=3.10 \
   cmake=3.26.4 \
   ninja \
   mako
@@ -78,7 +78,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN conda install -c \
   conda-forge \
-  python=3.9 \
+  python=3.10 \
   adios2 \
   gunicorn \
   ffmpeg \
@@ -92,7 +92,7 @@ COPY fastapi/requirements.txt /app/requirements.txt
 
 RUN pip install -r /app/requirements.txt
 
-ENV PYTHONPATH=/vtk/lib/python3.9/site-packages
+ENV PYTHONPATH=/vtk/lib/python3.10/site-packages
 
 ENV LD_LIBRARY_PATH=/vtk/lib:/mesa/lib/x86_64-linux-gnu/
 
