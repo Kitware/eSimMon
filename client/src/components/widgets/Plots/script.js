@@ -128,6 +128,22 @@ export default {
         }
       },
     },
+    // syncSteps: {
+    //   immediate: true,
+    //   handler(newVal, oldVal) {
+    //     if (newVal === oldVal) {
+    //       return;
+    //     }
+    //     if (this.plotFetcher && this.plotFetcher.initialized) {
+    //       this.plotFetcher.setSyncAnimation(newVal);
+    //       this.plotFetcher.setCurrentTimestep(this.localTimeStep, true);
+    //     }
+    //     this.setInitialLoad(true);
+    //     this.plotType = PlotType.None;
+    //     this.fetchTimeStepData(this.currentTimeStep);
+    //     // this.displayCurrentTimeStep();
+    //   },
+    // },
   },
 
   methods: {

@@ -1,8 +1,11 @@
+type PlotType = 'static' | 'dynamic';
+
 type RequestTask<T> = {
   id: string;
   action: () => Promise<T>;
   priority: number;
   status: 'idle' | 'running' | 'resolved' | 'rejected' | 'cancelled';
+  type: PlotType;
   resolve?: (val: T) => void;
   reject?: (error?: any) => void;
 }
@@ -19,13 +22,14 @@ class PlotFetcherRegistry {
     this.runningTasks = 0;
   }
 
-  addTask<T>(taskId: string, action: () => Promise<T>, priority: number): Promise<T> {
+  addTask<T>(taskId: string, action: () => Promise<T>, priority: number, type: PlotType): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       this.tasks[taskId] = {
         id: taskId,
         action,
         priority,
         status: 'idle',
+        type,
         resolve,
         reject,
       }
@@ -137,6 +141,7 @@ type FetcherTask<T> = {
   id: string;
   status: 'pending' | 'resolved' | 'rejected' | 'cancelled';
   result: Promise<T>;
+  type: PlotType;
 }
 
 export class PlotFetcher {
@@ -151,7 +156,7 @@ export class PlotFetcher {
   private availableTimesteps: number[];
   private lookAhead = 3;
   private seed: number;
-  private syncAnimation: boolean;
+  private plotType: PlotType;
   
   constructor(
     itemId: string,
@@ -169,7 +174,7 @@ export class PlotFetcher {
     this.initialized = false;
     this.availableTimesteps = [];
     this.seed = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-    this.syncAnimation = sync;
+    this.plotType = sync ? 'dynamic' : 'static';
   }
 
   initialize() : Promise<any> {
@@ -186,7 +191,7 @@ export class PlotFetcher {
   }
 
   setSyncAnimation(sync: boolean) {
-    this.syncAnimation = sync;
+    this.plotType = sync ? 'dynamic' : 'static';
     this.lookAhead = sync ? 3 : 100;
   }
 
@@ -202,8 +207,12 @@ export class PlotFetcher {
       if (task.status === 'pending') {
         const ts = parseInt(key);
 
-        const priority = ts < timestep ? Number.MAX_SAFE_INTEGER : ts - timestep;
-        registry.updateTaskPriority(task.id, priority);
+        if (task.type !== this.plotType) {
+          registry.cancelTask(task.id);
+        } else {
+          const priority = ts < timestep ? Number.MAX_SAFE_INTEGER : ts - timestep;
+          registry.updateTaskPriority(task.id, priority);
+        }
       }
     });
     
@@ -219,7 +228,7 @@ export class PlotFetcher {
 
     let task = this.tasks[timestep];
 
-    if (!task) {
+    if (!task || task.type !== this.plotType) {
       const refTimestep = this.currentTimestep || timestep;
       const priority = timestep < refTimestep ? Number.MAX_SAFE_INTEGER : timestep - refTimestep;
       task = this.createFetchTask(timestep, priority);
@@ -267,16 +276,20 @@ export class PlotFetcher {
 
   private createFetchTask<T>(timestep: number, priority: number): FetcherTask<T> {
     const id = `${this.seed}_${this.itemId}_${timestep}`;
-    const result = registry.addTask(id, () => this.fastEndpointFn(this.itemId, timestep, !this.syncAnimation), priority);
+    const asImage = this.plotType === 'static';
+    const result = registry.addTask(id, () => this.fastEndpointFn(this.itemId, timestep, asImage), priority, this.plotType);
 
     const task: FetcherTask<T> = {
       id,
       result,
       status: 'pending',
+      type: this.plotType,
     }
 
     result.then((response) => {
-      if (task.status === 'pending') {
+      if (task.type !== this.plotType) {
+        task.status = 'rejected';
+      } else if (task.status === 'pending') {
         task.status = 'resolved';
         this.fetchTimeStepFn(response, timestep);
       }

@@ -33,6 +33,7 @@
                 <v-switch
                   v-model="stepSync"
                   label="Sync animation"
+                  :disabled="!initialDataLoaded"
                   hide-details
                 />
               </div>
