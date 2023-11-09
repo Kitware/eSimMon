@@ -8,9 +8,9 @@ markdown_extensions:
   - pymdownx.snippets
 nav:
   - 'index.md'
-  - 'local.md'
-  - 'deployed.md'
-  - 'ingest.md'
   - 'data.md'
   - 'views.md'
   - 'schema.md'
+  - 'local.md'
+  - 'deployed.md'
+  - 'ingest.md'
