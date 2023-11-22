@@ -1,16 +1,14 @@
-site_name: eSimMon Dashboard Documentation
-theme:
-  name: material
-  logo: img/chart-multiline.png
-  favicon: img/chart-multiline.png
+site_name: eSimMon
+site_url: https://esimmon.readthedocs.io
+theme: readthedocs
 markdown_extensions:
   - attr_list
   - pymdownx.snippets
+  - md_in_html
 nav:
   - 'index.md'
-  - 'data.md'
-  - 'views.md'
-  - 'schema.md'
-  - 'local.md'
-  - 'deployed.md'
-  - 'ingest.md'
+  - User Guide:
+    - Ingesting Data: 'user-guide/ingest.md'
+    - Accessing the Dashboard: 'user-guide/access.md'
+    - Navigating the Dashboard: 'user-guide/navigation.md'
+    - Demo: 'user-guide/demo.md'
