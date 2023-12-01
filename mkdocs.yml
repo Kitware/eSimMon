@@ -12,3 +12,11 @@ nav:
     - Accessing the Dashboard: 'user-guide/access.md'
     - Navigating the Dashboard: 'user-guide/navigation.md'
     - Demo: 'user-guide/demo.md'
+  - Developer Guide:
+    - Getting Started: 'developer-guide/dev_start.md'
+    - Ansible: 'developer-guide/ansible.md'
+    - Girder: 'developer-guide/girder.md'
+    - FastAPI: 'developer-guide/fastapi.md'
+    - Ingest/Watch: 'developer-guide/watch.md'
+    - Client: 'developer-guide/client.md'
+    - Ingest Schema: 'developer-guide/schema.md'
