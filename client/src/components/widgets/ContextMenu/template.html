@@ -30,14 +30,14 @@
           <v-list-item-title> Average Over Time </v-list-item-title>
         </v-list-item>
       </v-list>
-      <v-divider v-if="!averaging" />
+      <v-divider v-if="!averaging && !isStaticImage" />
       <v-menu
         open-on-hover
         offset-y
         :position-x="offsetPos[0]"
         :position-y="offsetPos[1]"
         absolute
-        v-if="!averaging"
+        v-if="!averaging && !isStaticImage"
       >
         <template v-slot:activator="{ on, attrs }">
           <div v-bind="attrs" v-on="on">

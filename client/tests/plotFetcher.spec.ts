@@ -49,9 +49,10 @@ const logResponse = (promise?: Promise<any>) => {
 test('multi-fetcher', () => {
   return new Promise<void>((resolve) => {
     const N_FETCHERS = 10;
+    const sync = false;
     const fetchers: PlotFetcher[] = [];
     for (let i = 0; i < N_FETCHERS; ++i) {
-      fetchers.push(new PlotFetcher(i.toString(), endpointFn, fastEndpointFn, fetchTimeStepFn));
+      fetchers.push(new PlotFetcher(i.toString(), endpointFn, fastEndpointFn, fetchTimeStepFn, sync));
     }
 
     Promise.all(fetchers.map(fetcher => fetcher.initialize())).then(() => {

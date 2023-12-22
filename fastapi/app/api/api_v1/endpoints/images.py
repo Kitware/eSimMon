@@ -166,7 +166,7 @@ def create_plotly_image(plot_data: dict, format: str, plot_details: PlotDetails)
     # Get image as bytes
     fig = go.Figure(plot_data["data"], plot_data["layout"])
     output_file = tempfile.NamedTemporaryFile(suffix=f".{format}", delete=False)
-    fig.write_image(output_file.name, format="png")
+    fig.write_image(output_file.name, format=format)
     return _convert_image(output_file, format, plot_details)
 
 

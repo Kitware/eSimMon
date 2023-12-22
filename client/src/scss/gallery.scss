@@ -300,3 +300,12 @@ html {
   transform: rotate(270deg);
   transform-origin: (0 0);
 }
+
+.static {
+  height: inherit;
+  max-width: inherit;
+  img {
+    box-sizing: content-box;
+    max-width: 100%;
+  }
+}

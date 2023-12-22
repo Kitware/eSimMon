@@ -3,7 +3,8 @@ import { isEmpty, isEqual, isNil } from "lodash";
 import { mapActions, mapGetters, mapMutations } from "vuex";
 import { PlotType } from "../../../utils/constants";
 import Annotations from "../Annotations";
-import { extractRange } from "../../../utils/helpers";
+import { extractRange, nextAvailableTimeStep } from "../../../utils/helpers";
+import { PlotFetcher } from "../../../utils/plotFetcher";
 
 //-----------------------------------------------------------------------------
 // Utility Functions
@@ -48,6 +49,10 @@ export default {
       type: String,
       required: true,
     },
+    plotFetcher: {
+      type: PlotFetcher,
+      required: true,
+    },
   },
 
   data() {
@@ -61,6 +66,7 @@ export default {
       computingTimeAverage: false,
       plotLabels: {},
       currentRange: null,
+      localTimeStep: 1,
     };
   },
 
@@ -110,15 +116,6 @@ export default {
     },
     zoom() {
       return this.$store.getters[`${this.itemId}/PLOT_ZOOM`] || null;
-    },
-    localTimeStep() {
-      const ts = this.currentTimeStep;
-      if (this.availableTimeSteps.includes(ts)) {
-        return ts;
-      }
-      let idx = this.availableTimeSteps.findIndex((step) => step >= ts);
-      idx = Math.max((idx -= 1), 0);
-      return this.availableTimeSteps[idx];
     },
   },
 
@@ -230,6 +227,16 @@ export default {
           return;
         }
         this.react();
+      },
+    },
+    currentTimeStep: {
+      immediate: true,
+      handler(step) {
+        this.localTimeStep = nextAvailableTimeStep(
+          step,
+          this.availableTimeSteps,
+        );
+        this.plotFetcher.setCurrentTimestep(this.localTimeStep, true);
       },
     },
   },

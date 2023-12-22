@@ -34,6 +34,7 @@ export default {
     rangeAnnotations: true,
     drawerCollapsed: false,
     stepAnnotations: true,
+    syncAnimation: false,
   },
   getters: {
     UI_AUTO_SAVE_DIALOG(state) {
@@ -122,6 +123,9 @@ export default {
     UI_SHOW_STEP_ANNOTATION(state) {
       return state.stepAnnotations;
     },
+    UI_SYNC_ANIMATION(state) {
+      return state.syncAnimation;
+    },
   },
   mutations: {
     UI_AUTO_SAVE_DIALOG_SET(state, val) {
@@ -195,6 +199,9 @@ export default {
     },
     UI_SHOW_STEP_ANNOTATION_SET(state, val) {
       state.stepAnnotations = val;
+    },
+    UI_SYNC_ANIMATION_SET(state, val) {
+      state.syncAnimation = val;
     },
   },
   actions: {

@@ -3,6 +3,7 @@ import { mapGetters, mapActions, mapMutations } from "vuex";
 import { decode } from "@msgpack/msgpack";
 import PlotlyPlot from "../PlotlyPlot";
 import VtkPlot from "../VTKPlot";
+import StaticImage from "../StaticImage";
 import { PlotType } from "../../../utils/constants";
 import { PlotFetcher } from "../../../utils/plotFetcher";
 
@@ -19,6 +20,7 @@ export default {
   components: {
     PlotlyPlot,
     VtkPlot,
+    StaticImage,
   },
 
   props: {
@@ -42,6 +44,9 @@ export default {
 
   computed: {
     ...mapGetters({
+      syncSteps: "UI_SYNC_ANIMATION",
+      loadingFromSaved: "VIEW_LOADING_FROM_SAVED",
+      viewTimeStep: "VIEW_SAVED_TIME_STEP",
       currentTimeStep: "VIEW_TIME_STEP",
       minTimeStep: "VIEW_MIN_TIME_STEP",
       maxTimeStep: "VIEW_MAX_TIME_STEP",
@@ -80,10 +85,6 @@ export default {
     currentTimeStep: {
       immediate: true,
       handler() {
-        // First display the updated timestep
-        if (this.plotFetcher && this.plotFetcher.initialized) {
-          this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
-        }
         if (!this.initialDataLoaded) {
           this.displayCurrentTimeStep();
         }
@@ -100,16 +101,20 @@ export default {
             this.itemId,
             (itemId) =>
               this.callFastEndpoint(`variables/${itemId}/timesteps/meta`),
-            (itemId, timestep) =>
+            (itemId, timestep, asImage) =>
               this.callFastEndpoint(
-                `variables/${itemId}/timesteps/${timestep}/plot`,
+                `variables/${itemId}/timesteps/${timestep}/plot?as_image=${asImage}`,
                 { responseType: "blob" },
               ),
-            (response, timeStep, itemId) =>
-              this.resolveTimeStepData(response, timeStep, itemId),
+            (response, timeStep) =>
+              this.resolveTimeStepData(response, timeStep),
+            this.syncSteps,
           );
           this.plotFetcher.initialize().then(() => {
-            this.plotFetcher.setCurrentTimestep(this.currentTimeStep, true);
+            const step = this.loadingFromSaved
+              ? this.viewTimeStep
+              : this.currentTimeStep;
+            this.plotFetcher.setCurrentTimestep(step, true);
             this.loadVariable();
           });
         }
@@ -123,6 +128,22 @@ export default {
         }
       },
     },
+    // syncSteps: {
+    //   immediate: true,
+    //   handler(newVal, oldVal) {
+    //     if (newVal === oldVal) {
+    //       return;
+    //     }
+    //     if (this.plotFetcher && this.plotFetcher.initialized) {
+    //       this.plotFetcher.setSyncAnimation(newVal);
+    //       this.plotFetcher.setCurrentTimestep(this.localTimeStep, true);
+    //     }
+    //     this.setInitialLoad(true);
+    //     this.plotType = PlotType.None;
+    //     this.fetchTimeStepData(this.currentTimeStep);
+    //     // this.displayCurrentTimeStep();
+    //   },
+    // },
   },
 
   methods: {
@@ -193,7 +214,10 @@ export default {
      */
     resolveTimeStepData: function (response, timeStep) {
       const reader = new FileReader();
-      if (response.type === "application/msgpack") {
+      if (response.type.includes("image/")) {
+        reader.readAsDataURL(response);
+        this.plotType = PlotType.Image;
+      } else if (response.type === "application/msgpack") {
         reader.readAsArrayBuffer(response);
         this.plotType = PlotType.VTK;
       } else {
@@ -208,7 +232,16 @@ export default {
         reader.onload = () => {
           let img;
           const ltsd = this.loadedTimeStepData;
-          if (this.plotType === PlotType.VTK) {
+          if (this.plotType === PlotType.Image) {
+            this.setLoadedTimeStepData([
+              ...ltsd,
+              {
+                timestep: timeStep,
+                url: reader.result,
+                type: PlotType.Image,
+              },
+            ]);
+          } else if (this.plotType === PlotType.VTK) {
             img = decode(reader.result);
             this.$refs[`${this.row}-${this.col}`].addRenderer(img);
             if (!this.isTimeStepLoaded(timeStep)) {
@@ -274,6 +307,7 @@ export default {
       const response = await this.plotFetcher.fastEndpointFn(
         this.itemId,
         firstAvailableStep,
+        !this.syncSteps,
       );
       await this.plotFetcher.fetchTimeStepFn(response, firstAvailableStep);
 

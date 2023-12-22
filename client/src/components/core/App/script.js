@@ -110,7 +110,7 @@ export default {
           return this.girderRest.get(`/folder/${response.data.folderId}`);
         })
         .then((response) => {
-          this.runId = response.data.parentId;
+          this.setRunId(response.data.parentId);
           return this.poll();
         });
     },
@@ -150,8 +150,8 @@ export default {
       if (this.paused) {
         return;
       }
-      var wait_ms = 500;
-      if (this.numReady >= this.gridSize) {
+      var wait_ms = this.syncSteps ? 500 : 100;
+      if (!this.syncSteps || this.numReady >= this.gridSize) {
         this.incrementTimeStep(false);
       }
       this.setTickWait(wait_ms);
@@ -194,7 +194,7 @@ export default {
       this.setRows(1);
       this.setGridSize(1);
       this.dataLoaded = false;
-      this.runId = null;
+      this.setRunId(null);
       this.location = null;
     },
 
@@ -235,6 +235,7 @@ export default {
 
   asyncComputed: {
     ...mapGetters({
+      syncSteps: "UI_SYNC_ANIMATION",
       drawerCollapsed: "UI_NAV_DRAWER_COLLAPSED",
       autoSavedViewDialog: "UI_AUTO_SAVE_DIALOG",
       paused: "UI_PAUSE_GALLERY",

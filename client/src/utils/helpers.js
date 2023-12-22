@@ -11,3 +11,14 @@ export function extractRange(array) {
   }
   return [minValue, maxValue];
 }
+
+export function nextAvailableTimeStep(requested, available) {
+  let timeStep = requested;
+  if (!available.find((v) => v === timeStep)) {
+    let idx = available.findIndex((v) => v >= timeStep);
+    idx = idx === -1 ? available.length : idx;
+    idx = Math.max((idx -= 1), 0);
+    timeStep = available[idx];
+  }
+  return timeStep;
+}

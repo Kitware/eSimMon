@@ -30,6 +30,21 @@
           <v-tooltip left bottom>
             <template v-slot:activator="{on, attrs}">
               <div v-on="on" v-bind="attrs">
+                <v-switch
+                  v-model="stepSync"
+                  label="Sync animation"
+                  :disabled="!initialDataLoaded"
+                  hide-details
+                />
+              </div>
+            </template>
+            <p class="mb-0">Syncronize time step animation</p>
+          </v-tooltip>
+        </v-col>
+        <v-col sm="6">
+          <v-tooltip left bottom>
+            <template v-slot:activator="{on, attrs}">
+              <div v-on="on" v-bind="attrs">
                 <v-switch v-model="zoomSync" label="Sync zoom" hide-details />
               </div>
             </template>
@@ -37,7 +52,9 @@
             <p class="mb-0">plots with the same x-axis.</p>
           </v-tooltip>
         </v-col>
-        <v-col sm="6">
+      </v-row>
+      <v-row>
+        <v-col sm="12">
           <v-tooltip left bottom>
             <template v-slot:activator="{on, attrs}">
               <div v-on="on" v-bind="attrs">
@@ -50,20 +67,6 @@
             </template>
             <p class="mb-0">Double-click on a point on a time</p>
             <p class="mb-0">plot to jump to that time step.</p>
-          </v-tooltip>
-        </v-col>
-      </v-row>
-      <v-subheader> Mode </v-subheader>
-      <v-divider />
-      <v-row>
-        <v-col sm="12">
-          <v-tooltip left bottom>
-            <template v-slot:activator="{on, attrs}">
-              <div v-on="on" v-bind="attrs">
-                <v-switch label="View completed runs" hide-details disabled />
-              </div>
-            </template>
-            <span>This feature is not currently enabled.</span>
           </v-tooltip>
         </v-col>
       </v-row>
