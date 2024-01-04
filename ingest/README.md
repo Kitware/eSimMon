@@ -14,5 +14,5 @@ esimmon mock -s 1 -r 1 -i 10 -t 10 -d <path-to-simulation-data>
 
 ```bash
 
-esimmon watch -f <root-folder-id> -r http://localhost:5000 -k <girder-api-key> -u <girder-api-url> -v 5
+esimmon watch -f <root-folder-id> -r http://localhost:5000 -k <girder-api-key> -u <girder-api-url> -v 5 -a <fastapi-url>
 ```

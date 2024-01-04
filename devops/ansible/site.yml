@@ -83,51 +83,51 @@
             "pattern": "@princeton.edu"
           }]
         }
-        - {
-          "key": "core.email_verification",
-          "value": "required"
-        }
-        - {
-          "key": "core.registration_policy",
-          "value": "approve"
-        }
+        # - {
+        #   "key": "core.email_verification",
+        #   "value": "required"
+        # }
+        # - {
+        #   "key": "core.registration_policy",
+        #   "value": "approve"
+        # }
 
-    - name: Setup SMTP Server
-      girder:
-        host: "{{ girder_host }}"
-        port: "{{ girder_port }}"
-        scheme: "{{ girder_scheme }}"
-        username: "esimmon"
-        password: "{{ admin_password }}"
-        setting:
-          key: "{{ item.key }}"
-          value: "{{ item.value }}"
-        state: present
-      with_items:
-        - {
-          "key": "core.smtp_host",
-          "value": "{{ smtp_host }}"
-        }
-        - {
-          "key": "core.smtp.username",
-          "value": "{{ smtp_username }}"
-        }
-        - {
-          "key": "core.smtp.password",
-          "value": "{{ smtp_password }}"
-        }
-        - {
-          "key": "core.smtp.encryption",
-          "value": starttls
-        }
-        - {
-          "key": "core.email_from_address",
-          "value": "{{ email_from }}"
-        }
-        - {
-          "key": "core.email_host",
-          "value": "{{ email_host }}"
-        }
+    # - name: Setup SMTP Server
+    #   girder:
+    #     host: "{{ girder_host }}"
+    #     port: "{{ girder_port }}"
+    #     scheme: "{{ girder_scheme }}"
+    #     username: "esimmon"
+    #     password: "{{ admin_password }}"
+    #     setting:
+    #       key: "{{ item.key }}"
+    #       value: "{{ item.value }}"
+    #     state: present
+    #   with_items:
+    #     - {
+    #       "key": "core.smtp_host",
+    #       "value": "{{ smtp_host }}"
+    #     }
+    #     - {
+    #       "key": "core.smtp.username",
+    #       "value": "{{ smtp_username }}"
+    #     }
+    #     - {
+    #       "key": "core.smtp.password",
+    #       "value": "{{ smtp_password }}"
+    #     }
+    #     - {
+    #       "key": "core.smtp.encryption",
+    #       "value": starttls
+    #     }
+    #     - {
+    #       "key": "core.email_from_address",
+    #       "value": "{{ email_from }}"
+    #     }
+    #     - {
+    #       "key": "core.email_host",
+    #       "value": "{{ email_host }}"
+    #     }
 
     - name: Create eSimMon collection
       girder:
