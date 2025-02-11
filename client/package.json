@@ -16,7 +16,7 @@
     "core-js": "^3.8.3",
     "lodash": "^4.17.21",
     "plotly.js-basic-dist-min": "^2.1.0",
-    "serialize-javascript": "^6.0.0",
+    "serialize-javascript": "^6.0.2",
     "set-value": "^4.0.1",
     "splitpanes": "^2.3.6",
     "vue-mathjax": "^0.0.11",
