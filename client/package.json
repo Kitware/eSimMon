@@ -14,7 +14,7 @@
     "@msgpack/msgpack": "^2.7.2",
     "axios": "^1.8.2",
     "core-js": "^3.8.3",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "plotly.js-basic-dist-min": "^2.1.0",
     "serialize-javascript": "^6.0.0",
     "set-value": "^4.0.1",
